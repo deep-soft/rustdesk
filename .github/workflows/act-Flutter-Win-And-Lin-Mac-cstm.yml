@@ -1,0 +1,57 @@
+# 2023-04-29 23:50
+#
+#
+name: 0-act - Flutter - Win-And-Lin-Mac - cstm
+
+on:
+  workflow_call:
+  workflow_dispatch:
+#  schedule:
+#    # schedule build every night
+#    - cron: "0 0 * * *"
+
+env:
+  TAG_NAME: "Win-And-Lin-Mac-cstm"
+  # To make a custom build with your own servers set the below secret values
+  RS_PUB_KEY: '${{ secrets.RS_PUB_KEY }}'
+  RENDEZVOUS_SERVER: '${{ secrets.RENDEZVOUS_SERVER }}'
+  RDSK_PCH_SH_PRE: '${{ secrets.RDSK_PCH_SH_PRE }}'
+  RDSK_PCH_SH: '${{ secrets.RDSK_PCH_SH }}'
+  RDSK_PCH_HL: '${{ secrets.RDSK_PCH_HL }}'
+  RDSK_PCH_SH2: '${{ secrets.RDSK_PCH_SH2 }}'
+  RDSK_PCH_SH_CLN: '${{ secrets.RDSK_PCH_SH_CLN }}'
+  DEBUG_LS: "yes"
+  LLVM_VERSION: "15.0.6"
+  FLUTTER_VERSION: "3.7.0"
+  # vcpkg 2023.04.01 - msys2-runtime-3.4.6-1
+  VCPKG_COMMIT_ID: "69efe9cc2df0015f0bb2d37d55acde4a75c9a25b"
+  VERSION: "1.2.0"
+  NDK_VERSION: "r23"
+  #signing keys env variable checks
+  ANDROID_SIGNING_KEY: '${{ secrets.ANDROID_SIGNING_KEY }}'
+  #  signingKeyBase64: ${{ secrets.ANDROID_SIGNING_KEY }}
+  #  alias: ${{ secrets.ANDROID_ALIAS }}
+  #  keyStorePassword: ${{ secrets.ANDROID_KEY_STORE_PASSWORD }}
+  #  keyPassword: ${{ secrets.ANDROID_KEY_PASSWORD }}  
+  MACOS_P12_BASE64: '${{ secrets.MACOS_P12_BASE64 }}'
+
+jobs:
+  build-for-windows:
+    uses: ./.github/workflows/act-Flutter-Win-cstm.yml
+    secrets: inherit
+
+  build-for-android:
+    uses: ./.github/workflows/act-Flutter-And-cstm.yml
+    secrets: inherit
+
+  build-for-Linux:
+    uses: ./.github/workflows/act-Flutter-Lin-cstm.yml
+    secrets: inherit
+
+  build-for-macOS:
+    uses: ./.github/workflows/act-Flutter-Mac-cstm.yml
+    secrets: inherit
+
+  build-for-iOS:
+    uses: ./.github/workflows/act-Flutter-iOS-cstm.yml
+    secrets: inherit

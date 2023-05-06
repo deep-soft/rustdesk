@@ -1,0 +1,41 @@
+# 2023-04-20 06:00
+#
+#
+name: 0-act - sciter - Win-Win32-Arm - cstm
+
+on:
+  workflow_call:
+  workflow_dispatch:
+#  schedule:
+#    # schedule build every night
+#    - cron: "0 0 * * *"
+
+env:
+  TAG_NAME: "Win-Win32-Arm-cstm"
+  # To make a custom build with your own servers set the below secret values
+  RS_PUB_KEY: '${{ secrets.RS_PUB_KEY }}'
+  RENDEZVOUS_SERVER: '${{ secrets.RENDEZVOUS_SERVER }}'
+  RDSK_PCH_SH_PRE: '${{ secrets.RDSK_PCH_SH_PRE }}'
+  RDSK_PCH_SH: '${{ secrets.RDSK_PCH_SH }}'
+  RDSK_PCH_HL: '${{ secrets.RDSK_PCH_HL }}'
+  RDSK_PCH_SH2: '${{ secrets.RDSK_PCH_SH2 }}'
+  RDSK_PCH_SH_CLN: '${{ secrets.RDSK_PCH_SH_CLN }}'
+  DEBUG_LS: "yes"
+  LLVM_VERSION: "15.0.6"
+  # vcpkg 2023.04.01 - msys2-runtime-3.4.6-1
+  VCPKG_COMMIT_ID: "69efe9cc2df0015f0bb2d37d55acde4a75c9a25b"
+  VERSION: "1.2.0"
+  GUI: "sciter"
+
+jobs:
+  build-for-windows-sciter:
+    uses: ./.github/workflows/act-sciter-Win-cstm.yml
+    secrets: inherit
+
+  build-for-windows-sciter-32bit:
+    uses: ./.github/workflows/act-sciter-Win-32bit-cstm.yml
+    secrets: inherit
+
+  build-for-arm-sciter:
+    uses: ./.github/workflows/act-sciter-Arm-cstm.yml
+    secrets: inherit
