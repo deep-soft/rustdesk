@@ -2,19 +2,19 @@ name: Full Flutter CI
 
 on:
   workflow_dispatch:
-  pull_request:
-    paths-ignore:
-    - "docs/**"
-    - "README.md"
-  push:
-    branches:
-      - master
-    tags:
-      - '*'
-    paths-ignore:
-      - ".github/**"
-      - "docs/**"
-      - "README.md"
+#  pull_request:
+#    paths-ignore:
+#    - "docs/**"
+#    - "README.md"
+#  push:
+#    branches:
+#      - master
+#    tags:
+#      - '*'
+#    paths-ignore:
+#      - ".github/**"
+#      - "docs/**"
+#      - "README.md"
 
 jobs:
   run-ci:
