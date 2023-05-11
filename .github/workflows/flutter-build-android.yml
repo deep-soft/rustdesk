@@ -2,7 +2,8 @@
 name: Flutter - Android
 
 on:
-  workflow_call:
+  workflow_dispatch:
+#  workflow_call:
     inputs:
       upload-artifact:
         type: boolean
