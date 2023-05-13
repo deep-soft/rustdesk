@@ -321,6 +321,11 @@ impl Connection {
             #[cfg(not(any(feature = "flatpak", feature = "appimage")))]
             tx_desktop_ready: _tx_desktop_ready,
         };
+        if !conn.on_open(addr).await {
+            // sleep to ensure msg got received.
+            sleep(1.).await;
+            return;
+        }
         #[cfg(not(any(target_os = "android", target_os = "ios")))]
         tokio::spawn(async move {
             if let Err(err) =
@@ -331,10 +336,6 @@ impl Connection {
         });
         #[cfg(target_os = "android")]
         start_channel(rx_to_cm, tx_from_cm);
-
-        if !conn.on_open(addr).await {
-            return;
-        }
         if !conn.keyboard {
             conn.send_permission(Permission::Keyboard, false).await;
         }
@@ -794,8 +795,17 @@ impl Connection {
         self.send(msg_out).await;
     }
 
-    async fn on_open(&mut self, addr: SocketAddr) -> bool {
-        log::debug!("#{} Connection opened from {}.", self.inner.id, addr);
+    async fn check_privacy_mode_on(&mut self) -> bool {
+        if video_service::get_privacy_mode_conn_id() > 0 {
+            self.send_login_error("Someone turns on privacy mode, exit")
+                .await;
+            false
+        } else {
+            true
+        }
+    }
+
+    async fn check_whitelist(&mut self, addr: &SocketAddr) -> bool {
         let whitelist: Vec<String> = Config::get_option("whitelist")
             .split(",")
             .filter(|x| !x.is_empty())
@@ -818,11 +828,19 @@ impl Connection {
             Self::post_alarm_audit(
                 AlarmAuditType::IpWhitelist, //"ip whitelist",
                 true,
-                json!({
-                            "ip":addr.ip(),
-                }),
+                json!({ "ip":addr.ip() }),
             );
-            sleep(1.).await;
+            return false;
+        }
+        true
+    }
+
+    async fn on_open(&mut self, addr: SocketAddr) -> bool {
+        log::debug!("#{} Connection opened from {}.", self.inner.id, addr);
+        if !self.check_privacy_mode_on().await {
+            return false;
+        }
+        if !self.check_whitelist(&addr).await {
             return false;
         }
         self.ip = addr.ip().to_string();
