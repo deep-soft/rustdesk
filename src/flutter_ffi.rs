@@ -71,6 +71,7 @@ pub fn stop_global_event_stream(app_type: String) {
 pub enum EventToUI {
     Event(String),
     Rgba,
+    Texture,
 }
 
 pub fn host_stop_system_key_propagate(_stopped: bool) {
@@ -1412,8 +1413,16 @@ pub fn session_next_rgba(session_id: SessionID) -> SyncReturn<()> {
     SyncReturn(super::flutter::session_next_rgba(session_id))
 }
 
-pub fn session_register_texture(session_id: SessionID, ptr: usize) -> SyncReturn<()> {
-    SyncReturn(super::flutter::session_register_texture(session_id, ptr))
+pub fn session_register_pixelbuffer_texture(session_id: SessionID, ptr: usize) -> SyncReturn<()> {
+    SyncReturn(super::flutter::session_register_pixelbuffer_texture(
+        session_id, ptr,
+    ))
+}
+
+pub fn session_register_gpu_texture(session_id: SessionID, ptr: usize) -> SyncReturn<()> {
+    SyncReturn(super::flutter::session_register_gpu_texture(
+        session_id, ptr,
+    ))
 }
 
 pub fn query_onlines(ids: Vec<String>) {
@@ -1552,12 +1561,23 @@ pub fn main_hide_docker() -> SyncReturn<bool> {
     SyncReturn(true)
 }
 
-pub fn main_use_texture_render() -> SyncReturn<bool> {
+pub fn main_has_pixelbuffer_texture_render() -> SyncReturn<bool> {
     #[cfg(not(feature = "flutter_texture_render"))]
     {
         SyncReturn(false)
     }
     #[cfg(feature = "flutter_texture_render")]
+    {
+        SyncReturn(true)
+    }
+}
+
+pub fn main_has_gpu_texture_render() -> SyncReturn<bool> {
+    #[cfg(not(feature = "gpu_video_codec"))]
+    {
+        SyncReturn(false)
+    }
+    #[cfg(feature = "gpu_video_codec")]
     {
         SyncReturn(true)
     }

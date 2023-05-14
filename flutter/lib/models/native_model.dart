@@ -98,9 +98,12 @@ class PlatformFFI {
 
   int getRgbaSize(SessionID sessionId) =>
       _ffiBind.sessionGetRgbaSize(sessionId: sessionId);
-  void nextRgba(SessionID sessionId) => _ffiBind.sessionNextRgba(sessionId: sessionId);
-  void registerTexture(SessionID sessionId, int ptr) =>
-      _ffiBind.sessionRegisterTexture(sessionId: sessionId, ptr: ptr);
+  void nextRgba(SessionID sessionId) =>
+      _ffiBind.sessionNextRgba(sessionId: sessionId);
+  void registerPixelbufferTexture(SessionID sessionId, int ptr) => _ffiBind
+      .sessionRegisterPixelbufferTexture(sessionId: sessionId, ptr: ptr);
+  void registerGpuTexture(SessionID sessionId, int ptr) =>
+      _ffiBind.sessionRegisterGpuTexture(sessionId: sessionId, ptr: ptr);
 
   /// Init the FFI class, loads the native Rust core library.
   Future<void> init(String appType) async {
@@ -216,7 +219,8 @@ class PlatformFFI {
 
   /// Start listening to the Rust core's events and frames.
   void _startListenEvent(RustdeskImpl rustdeskImpl) {
-    final appType = _appType == kAppTypeDesktopRemote ? '$_appType,$kWindowId' : _appType;
+    final appType =
+        _appType == kAppTypeDesktopRemote ? '$_appType,$kWindowId' : _appType;
     var sink = rustdeskImpl.startGlobalEventStream(appType: appType);
     sink.listen((message) {
       () async {
