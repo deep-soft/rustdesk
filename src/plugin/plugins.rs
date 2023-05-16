@@ -11,12 +11,14 @@ use hbb_common::{
 };
 use serde_derive::Serialize;
 use std::{
-    collections::HashMap,
+    collections::{HashMap, HashSet},
     ffi::{c_char, c_void},
     path::PathBuf,
     sync::{Arc, RwLock},
 };
 
+pub const METHOD_HANDLE_STATUS: &[u8; 14] = b"handle_status\0";
+pub const METHOD_HANDLE_SIGNATURE_VERIFICATION: &[u8; 30] = b"handle_signature_verification\0";
 const METHOD_HANDLE_UI: &[u8; 10] = b"handle_ui\0";
 const METHOD_HANDLE_PEER: &[u8; 12] = b"handle_peer\0";
 pub const METHOD_HANDLE_LISTEN_EVENT: &[u8; 20] = b"handle_listen_event\0";
@@ -93,19 +95,21 @@ type CallbackNative = extern "C" fn(
     raw: *const c_void,
     raw_len: usize,
 ) -> super::native::NativeReturnValue;
-/// The main function of the plugin on the client(self) side.
+/// The main function of the plugin.
 ///
 /// method: The method. "handle_ui" or "handle_peer"
 /// peer:  The peer id.
 /// args: The arguments.
 /// len:  The length of the arguments.
-type PluginFuncClientCall = extern "C" fn(
+type PluginFuncCall = extern "C" fn(
     method: *const c_char,
     peer: *const c_char,
     args: *const c_void,
     len: usize,
 ) -> PluginReturn;
-/// The main function of the plugin on the server(remote) side.
+/// The main function of the plugin.
+/// This function is called mainly for handling messages from the peer,
+/// and then send messages back to the peer.
 ///
 /// method: The method. "handle_ui" or "handle_peer"
 /// peer:  The peer id.
@@ -114,7 +118,7 @@ type PluginFuncClientCall = extern "C" fn(
 /// out:  The output.
 ///       The plugin allocate memory with `libc::malloc` and return the pointer.
 /// out_len: The length of the output.
-type PluginFuncServerCall = extern "C" fn(
+type PluginFuncCallWithOutData = extern "C" fn(
     method: *const c_char,
     peer: *const c_char,
     args: *const c_void,
@@ -138,6 +142,7 @@ struct Callbacks {
 }
 
 #[derive(Serialize)]
+#[repr(C)]
 struct InitInfo {
     is_server: bool,
 }
@@ -247,8 +252,8 @@ make_plugin!(
     reset: PluginFuncReset,
     clear: PluginFuncClear,
     desc: PluginFuncDesc,
-    client_call: PluginFuncClientCall,
-    server_call: PluginFuncServerCall
+    call: PluginFuncCall,
+    call_with_out_data: PluginFuncCallWithOutData
 );
 
 #[derive(Serialize)]
@@ -263,7 +268,7 @@ const DYLIB_SUFFIX: &str = ".so";
 #[cfg(target_os = "macos")]
 const DYLIB_SUFFIX: &str = ".dylib";
 
-pub(super) fn load_plugins() -> ResultType<()> {
+pub(super) fn load_plugins(uninstalled_ids: &HashSet<String>) -> ResultType<()> {
     let plugins_dir = super::get_plugins_dir()?;
     if !plugins_dir.exists() {
         std::fs::create_dir_all(&plugins_dir)?;
@@ -273,7 +278,16 @@ pub(super) fn load_plugins() -> ResultType<()> {
                 Ok(entry) => {
                     let plugin_dir = entry.path();
                     if plugin_dir.is_dir() {
-                        load_plugin_dir(&plugin_dir);
+                        if let Some(plugin_id) = plugin_dir.file_name().and_then(|f| f.to_str()) {
+                            if uninstalled_ids.contains(plugin_id) {
+                                log::debug!(
+                                    "Ignore loading '{}' as it should be uninstalled",
+                                    plugin_id
+                                );
+                                continue;
+                            }
+                            load_plugin_dir(&plugin_dir);
+                        }
                     }
                 }
                 Err(e) => {
@@ -286,6 +300,7 @@ pub(super) fn load_plugins() -> ResultType<()> {
 }
 
 fn load_plugin_dir(dir: &PathBuf) {
+    log::debug!("Begin load plugin dir: {}", dir.display());
     if let Ok(rd) = std::fs::read_dir(dir) {
         for entry in rd {
             match entry {
@@ -339,11 +354,21 @@ pub fn reload_plugin(id: &str) -> ResultType<()> {
 }
 
 fn load_plugin_path(path: &str) -> ResultType<()> {
+    log::info!("Begin load plugin {}", path);
+
     let plugin = Plugin::new(path)?;
     let desc = plugin.desc()?;
 
     // to-do validate plugin
     // to-do check the plugin id (make sure it does not use another plugin's id)
+
+    let id = desc.meta().id.clone();
+    let plugin_info = PluginInfo {
+        path: path.to_string(),
+        uninstalled: false,
+        desc: desc.clone(),
+    };
+    PLUGIN_INFO.write().unwrap().insert(id.clone(), plugin_info);
 
     let init_info = serde_json::to_string(&InitInfo {
         is_server: crate::common::is_server(),
@@ -359,7 +384,10 @@ fn load_plugin_path(path: &str) -> ResultType<()> {
             native: super::native::cb_native_data,
         },
     };
-    plugin.init(&init_data, path)?;
+    // If do not load the plugin when init failed, the ui will not show the installed plugin.
+    if let Err(e) = plugin.init(&init_data, path) {
+        log::error!("Failed to init plugin '{}', {}", desc.meta().id, e);
+    }
 
     if is_server() {
         super::config::ManagerConfig::add_plugin(&desc.meta().id)?;
@@ -370,16 +398,9 @@ fn load_plugin_path(path: &str) -> ResultType<()> {
     reload_ui(&desc, None);
 
     // add plugins
-    let id = desc.meta().id.clone();
-    let plugin_info = PluginInfo {
-        path: path.to_string(),
-        uninstalled: false,
-        desc,
-    };
-    PLUGIN_INFO.write().unwrap().insert(id.clone(), plugin_info);
     PLUGINS.write().unwrap().insert(id.clone(), plugin);
 
-    log::info!("Plugin {} loaded", id);
+    log::info!("Plugin {} loaded, {}", id, path);
     Ok(())
 }
 
@@ -395,30 +416,43 @@ pub fn load_plugin(id: &str) -> ResultType<()> {
     Ok(())
 }
 
+#[inline]
 fn handle_event(method: &[u8], id: &str, peer: &str, event: &[u8]) -> ResultType<()> {
     let mut peer: String = peer.to_owned();
     peer.push('\0');
+    plugin_call(id, method, &peer, event)
+}
+
+pub fn plugin_call(id: &str, method: &[u8], peer: &str, event: &[u8]) -> ResultType<()> {
+    let mut ret = plugin_call_get_return(id, method, peer, event)?;
+    if ret.is_success() {
+        Ok(())
+    } else {
+        let (code, msg) = ret.get_code_msg();
+        bail!(
+            "Failed to handle plugin event, id: {}, method: {}, code: {}, msg: {}",
+            id,
+            std::string::String::from_utf8(method.to_vec()).unwrap_or_default(),
+            code,
+            msg
+        );
+    }
+}
+
+#[inline]
+pub fn plugin_call_get_return(
+    id: &str,
+    method: &[u8],
+    peer: &str,
+    event: &[u8],
+) -> ResultType<PluginReturn> {
     match PLUGINS.read().unwrap().get(id) {
-        Some(plugin) => {
-            let mut ret = (plugin.client_call)(
-                method.as_ptr() as _,
-                peer.as_ptr() as _,
-                event.as_ptr() as _,
-                event.len(),
-            );
-            if ret.is_success() {
-                Ok(())
-            } else {
-                let (code, msg) = ret.get_code_msg();
-                bail!(
-                    "Failed to handle plugin event, id: {}, method: {}, code: {}, msg: {}",
-                    id,
-                    std::string::String::from_utf8(method.to_vec()).unwrap_or_default(),
-                    code,
-                    msg
-                );
-            }
-        }
+        Some(plugin) => Ok((plugin.call)(
+            method.as_ptr() as _,
+            peer.as_ptr() as _,
+            event.as_ptr() as _,
+            event.len(),
+        )),
         None => bail!("Plugin {} not found", id),
     }
 }
@@ -455,7 +489,7 @@ fn _handle_listen_event(event: String, peer: String) {
         for id in plugins {
             match PLUGINS.read().unwrap().get(&id) {
                 Some(plugin) => {
-                    let mut ret = (plugin.client_call)(
+                    let mut ret = (plugin.call)(
                         METHOD_HANDLE_LISTEN_EVENT.as_ptr() as _,
                         peer.as_ptr() as _,
                         evt_bytes.as_ptr() as _,
@@ -493,7 +527,7 @@ pub fn handle_client_event(id: &str, peer: &str, event: &[u8]) -> Message {
         Some(plugin) => {
             let mut out = std::ptr::null_mut();
             let mut out_len: usize = 0;
-            let mut ret = (plugin.server_call)(
+            let mut ret = (plugin.call_with_out_data)(
                 METHOD_HANDLE_PEER.as_ptr() as _,
                 peer.as_ptr() as _,
                 event.as_ptr() as _,
