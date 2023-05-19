@@ -67,20 +67,6 @@ jobs:
           echo "REV: ${{ env.TAG_REVISION }}
           echo "BLD: ${{ env.TAG_BUILD }}
 
-      - name: Get revision, set build version
-        shell: bash
-        run: |
-          _revision_=$(git -C . rev-list --count HEAD)
-          echo "TAG_REVISION=$_revision_" >> $GITHUB_ENV
-          _build_=${{ env.TAG_BUILD }}.$_revision_
-          echo "TAG_BUILD=$_build_" >> $GITHUB_ENV
-
-      - name: Print revision, build version
-        shell: bash
-        run: |
-          echo "REV: ${{ env.TAG_REVISION }}
-          echo "BLD: ${{ env.TAG_BUILD }}
-
       - name: Create source archive
         continue-on-error: true
         shell: bash
