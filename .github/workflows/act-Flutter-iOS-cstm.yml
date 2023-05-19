@@ -1,4 +1,4 @@
-# 2023-05-06 09:30
+# 2023-05-19 12:30
 #
 #
 name: act - Flutter - iOS - cstm
@@ -11,6 +11,9 @@ on:
 #    - cron: "0 0 * * *"
 
 env:
+  TAG_VERSION: "rdsk-v1.2.0"
+  TAG_BUILD: "-b"
+  TAG_REVISION: "0000"
   TAG_NAME: "iOS-cstm"
   # To make a custom build with your own servers set the below secret values
   RS_PUB_KEY:        '${{ secrets.RS_PUB_KEY }}'
@@ -57,6 +60,20 @@ jobs:
 
       - name: Checkout source code
         uses: deep-soft/checkout@v3
+
+      - name: Get revision, set build version
+        shell: bash
+        run: |
+          _revision_=$(git -C . rev-list --count HEAD)
+          echo "TAG_REVISION=$_revision_" >> $GITHUB_ENV
+          _build_=${{ env.TAG_BUILD }}.$_revision_
+          echo "TAG_BUILD=$_build_" >> $GITHUB_ENV
+
+      - name: Print revision, build version
+        shell: bash
+        run: |
+          echo "REV: ${{ env.TAG_REVISION }}
+          echo "BLD: ${{ env.TAG_BUILD }}
 
       - name: Install flutter
         uses: deep-soft/flutter-action@v2
@@ -217,6 +234,15 @@ jobs:
             flutter/build/ios/ipa/*.ipa
             ${{ env.ASSET_SRC }}
             ${{ env.ASSET_SRC1 }}
+
+      - name: Publish version build - ipa package
+        # if: env.ANDROID_SIGNING_KEY != null && env.UPLOAD_ARTIFACT == 'true'
+        uses: deep-soft/action-gh-release@v1
+        with:
+          draft: true
+          tag_name: ${{ env.TAG_VERSION }}${{ env.TAG_BUILD }}
+          files: |
+            flutter/build/ios/ipa/*.ipa
 
       - name: Upload Artifacts
         # if: env.ANDROID_SIGNING_KEY != null && env.UPLOAD_ARTIFACT == 'true'

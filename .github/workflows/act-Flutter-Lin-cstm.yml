@@ -1,4 +1,4 @@
-# 2023-05-12 21:00
+# 2023-05-19 12:30
 #
 #
 name: act - Flutter - Lin - cstm
@@ -11,6 +11,9 @@ on:
 #    - cron: "0 0 * * *"
 
 env:
+  TAG_VERSION: "rdsk-v1.2.0"
+  TAG_BUILD: "-b"
+  TAG_REVISION: "0000"
   TAG_NAME: "Lin-cstm"
   # To make a custom build with your own servers set the below secret values
   RS_PUB_KEY: '${{ secrets.RS_PUB_KEY }}'
@@ -71,6 +74,20 @@ jobs:
 
       - name: Checkout source code
         uses: deep-soft/checkout@v3
+
+      - name: Get revision, set build version
+        shell: bash
+        run: |
+          _revision_=$(git -C . rev-list --count HEAD)
+          echo "TAG_REVISION=$_revision_" >> $GITHUB_ENV
+          _build_=${{ env.TAG_BUILD }}.$_revision_
+          echo "TAG_BUILD=$_build_" >> $GITHUB_ENV
+
+      - name: Print revision, build version
+        shell: bash
+        run: |
+          echo "REV: ${{ env.TAG_REVISION }}
+          echo "BLD: ${{ env.TAG_BUILD }}
 
       - name: Create source archive
         continue-on-error: true
@@ -310,6 +327,20 @@ jobs:
       - name: Checkout source code
         uses: deep-soft/checkout@v3
 
+      - name: Get revision, set build version
+        shell: bash
+        run: |
+          _revision_=$(git -C . rev-list --count HEAD)
+          echo "TAG_REVISION=$_revision_" >> $GITHUB_ENV
+          _build_=${{ env.TAG_BUILD }}.$_revision_
+          echo "TAG_BUILD=$_build_" >> $GITHUB_ENV
+
+      - name: Print revision, build version
+        shell: bash
+        run: |
+          echo "REV: ${{ env.TAG_REVISION }}
+          echo "BLD: ${{ env.TAG_BUILD }}
+
       - name: Create source archive
         continue-on-error: true
         shell: bash
@@ -530,6 +561,20 @@ jobs:
     steps:
       - name: Checkout source code
         uses: deep-soft/checkout@v3
+
+      - name: Get revision, set build version
+        shell: bash
+        run: |
+          _revision_=$(git -C . rev-list --count HEAD)
+          echo "TAG_REVISION=$_revision_" >> $GITHUB_ENV
+          _build_=${{ env.TAG_BUILD }}.$_revision_
+          echo "TAG_BUILD=$_build_" >> $GITHUB_ENV
+
+      - name: Print revision, build version
+        shell: bash
+        run: |
+          echo "REV: ${{ env.TAG_REVISION }}
+          echo "BLD: ${{ env.TAG_BUILD }}
 
       - name: Create source archive
         continue-on-error: true
@@ -764,6 +809,15 @@ jobs:
             ${{ env.ASSET_SRC }}
             ${{ env.ASSET_SRC1 }}
 
+      - name: Publish version build - debian package
+        if: ${{ matrix.job.extra-build-features == '' }}
+        uses: deep-soft/action-gh-release@v1
+        with:
+          draft: true
+          tag_name: ${{ env.TAG_VERSION }}${{ env.TAG_BUILD }}
+          files: |
+            rustdesk-${{ env.VERSION }}-${{ matrix.job.target }}-${{ matrix.job.os }}.deb
+
       - name: Build appimage package
         if: ${{ matrix.job.extra-build-features == 'appimage' }}
         shell: bash
@@ -788,6 +842,15 @@ jobs:
             ./appimage/rustdesk-${{ env.VERSION }}-*.AppImage
             ${{ env.ASSET_SRC }}
             ${{ env.ASSET_SRC1 }}
+
+      - name: Publish version build - appimage package
+        if: ${{ matrix.job.extra-build-features == 'appimage' }}
+        uses: deep-soft/action-gh-release@v1
+        with:
+          draft: true
+          tag_name: ${{ env.TAG_VERSION }}${{ env.TAG_BUILD }}
+          files: |
+            ./appimage/rustdesk-${{ env.VERSION }}-*.AppImage
 
       - name: Upload Artifact
         uses: deep-soft/upload-artifact@v3
@@ -867,6 +930,15 @@ jobs:
             ${{ env.ASSET_SRC }}
             ${{ env.ASSET_SRC1 }}
 
+      - name: Publish version build - fedora28/centos8 package
+        if: ${{ matrix.job.extra-build-features == '' }}
+        uses: deep-soft/action-gh-release@v1
+        with:
+          draft: true
+          tag_name: ${{ env.TAG_VERSION }}${{ env.TAG_BUILD }}
+          files: |
+            /opt/artifacts/rpm/*.rpm
+
   build-rustdesk-linux-amd64:
     needs: [build-rustdesk-lib-linux-amd64]
     name: build-rustdesk ${{ matrix.job.target }} (${{ matrix.job.os }}) [${{ matrix.job.extra-build-features }}]
@@ -884,6 +956,20 @@ jobs:
     steps:
       - name: Checkout source code
         uses: deep-soft/checkout@v3
+
+      - name: Get revision, set build version
+        shell: bash
+        run: |
+          _revision_=$(git -C . rev-list --count HEAD)
+          echo "TAG_REVISION=$_revision_" >> $GITHUB_ENV
+          _build_=${{ env.TAG_BUILD }}.$_revision_
+          echo "TAG_BUILD=$_build_" >> $GITHUB_ENV
+
+      - name: Print revision, build version
+        shell: bash
+        run: |
+          echo "REV: ${{ env.TAG_REVISION }}
+          echo "BLD: ${{ env.TAG_BUILD }}
 
       - name: Create source archive
         continue-on-error: true
@@ -1078,6 +1164,15 @@ jobs:
             ${{ env.ASSET_SRC }}
             ${{ env.ASSET_SRC1 }}
 
+      - name: Publish version build - debian package
+        if: ${{ matrix.job.extra-build-features == '' }}
+        uses: deep-soft/action-gh-release@v1
+        with:
+          draft: true
+          tag_name: ${{ env.TAG_VERSION }}${{ env.TAG_BUILD }}
+          files: |
+            rustdesk-${{ env.VERSION }}-${{ matrix.job.target }}-${{ matrix.job.os }}.deb
+
       - name: Upload Artifact
         uses: deep-soft/upload-artifact@v3
         if: ${{ contains(matrix.job.extra-build-features, 'flatpak') }}
@@ -1139,6 +1234,15 @@ jobs:
             ${{ env.ASSET_SRC }}
             ${{ env.ASSET_SRC1 }}
 
+      - name: Publish version build - archlinux package
+        if: ${{ matrix.job.extra-build-features == '' }}
+        uses: deep-soft/action-gh-release@v1
+        with:
+          draft: true
+          tag_name: ${{ env.TAG_VERSION }}${{ env.TAG_BUILD }}
+          files: |
+            res/rustdesk*.zst
+
       - name: Build appimage package
         if: ${{ matrix.job.extra-build-features == 'appimage' }}
         shell: bash
@@ -1164,6 +1268,15 @@ jobs:
             ${{ env.ASSET_SRC }}
             ${{ env.ASSET_SRC1 }}
 
+      - name: Publish version build - appimage package
+        if: ${{ matrix.job.extra-build-features == 'appimage' }}
+        uses: deep-soft/action-gh-release@v1
+        with:
+          draft: true
+          tag_name: ${{ env.TAG_VERSION }}${{ env.TAG_BUILD }}
+          files: |
+            ./appimage/rustdesk-${{ env.VERSION }}-*.AppImage
+
       - name: Publish fedora28/centos8 package
         if: ${{ matrix.job.extra-build-features == '' }}
         uses: deep-soft/action-gh-release@v1
@@ -1174,6 +1287,15 @@ jobs:
             /opt/artifacts/rpm/*.rpm
             ${{ env.ASSET_SRC }}
             ${{ env.ASSET_SRC1 }}
+
+      - name: Publish version build - fedora28/centos8 package
+        if: ${{ matrix.job.extra-build-features == '' }}
+        uses: deep-soft/action-gh-release@v1
+        with:
+          draft: true
+          tag_name: ${{ env.TAG_VERSION }}${{ env.TAG_BUILD }}
+          files: |
+            /opt/artifacts/rpm/*.rpm
 
   # Temporary disable flatpak arm build
   #
@@ -1190,6 +1312,20 @@ jobs:
   #   steps:
   #     - name: Checkout source code
   #       uses: deep-soft/checkout@v3
+  # 
+  #       - name: Get revision, set build version
+  #         shell: bash
+  #         run: |
+  #           _revision_=$(git -C . rev-list --count HEAD)
+  #           echo "TAG_REVISION=$_revision_" >> $GITHUB_ENV
+  #           _build_=${{ env.TAG_BUILD }}.$_revision_
+  #           echo "TAG_BUILD=$_build_" >> $GITHUB_ENV
+  # 
+  #       - name: Print revision, build version
+  #         shell: bash
+  #         run: |
+  #           echo "REV: ${{ env.TAG_REVISION }}
+  #           echo "BLD: ${{ env.TAG_BUILD }}
   # 
   #       - name: Create source archive 1
   #         continue-on-error: true
@@ -1322,6 +1458,20 @@ jobs:
     steps:
       - name: Checkout source code
         uses: deep-soft/checkout@v3
+
+      - name: Get revision, set build version
+        shell: bash
+        run: |
+          _revision_=$(git -C . rev-list --count HEAD)
+          echo "TAG_REVISION=$_revision_" >> $GITHUB_ENV
+          _build_=${{ env.TAG_BUILD }}.$_revision_
+          echo "TAG_BUILD=$_build_" >> $GITHUB_ENV
+
+      - name: Print revision, build version
+        shell: bash
+        run: |
+          echo "REV: ${{ env.TAG_REVISION }}
+          echo "BLD: ${{ env.TAG_BUILD }}
 
       - name: Create source archive
         continue-on-error: true
@@ -1466,3 +1616,11 @@ jobs:
             flatpak/rustdesk-${{ env.VERSION }}-${{ matrix.job.target }}.flatpak
             ${{ env.ASSET_SRC }}
             ${{ env.ASSET_SRC1 }}
+
+      - name: Publish version build - flatpak package
+        uses: deep-soft/action-gh-release@v1
+        with:
+          draft: true
+          tag_name: ${{ env.TAG_VERSION }}${{ env.TAG_BUILD }}
+          files: |
+            flatpak/rustdesk-${{ env.VERSION }}-${{ matrix.job.target }}.flatpak

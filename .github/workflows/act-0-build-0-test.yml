@@ -1,4 +1,4 @@
-# 2023-04-20 06:00
+# 2023-05-19 12:30
 #
 #
 name: act - Build - test - pre
@@ -11,6 +11,9 @@ on:
 #    - cron: "0 0 * * *"
 
 env:
+  TAG_VERSION: "rdsk-v1.2.0"
+  TAG_BUILD: "-b"
+  TAG_REVISION: "0000"
   TAG_NAME: "z-test-cstm"
   # To make a custom build with your own servers set the below secret values
   RS_PUB_KEY: '${{ secrets.RS_PUB_KEY }}'
@@ -58,6 +61,20 @@ jobs:
     steps:
       - name: Checkout source code
         uses: deep-soft/checkout@v3
+
+      - name: Get revision, set build version
+        shell: bash
+        run: |
+          _revision_=$(git -C . rev-list --count HEAD)
+          echo "TAG_REVISION=$_revision_" >> $GITHUB_ENV
+          _build_=${{ env.TAG_BUILD }}.$_revision_
+          echo "TAG_BUILD=$_build_" >> $GITHUB_ENV
+
+      - name: Print revision, build version
+        shell: bash
+        run: |
+          echo "REV: ${{ env.TAG_REVISION }}
+          echo "BLD: ${{ env.TAG_BUILD }}
 
       - name: Create source archive
         continue-on-error: false
