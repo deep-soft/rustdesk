@@ -67,10 +67,14 @@ jobs:
         shell: bash
         run: |
           _ref_all_=$(git log -1 --format='%H')
-          _ref_=$(echo ${$_ref_all_::7})
+          _ref_=$(echo ${_ref_all_::7})
           echo "TAG_REF=$_ref_" >> $GITHUB_ENV
           _build_=${{ env.TAG_BUILD }}.$_ref_
           echo "TAG_BUILD=$_build_" >> $GITHUB_ENV
+
+          echo $_ref_
+          _ref_=$(echo ${(git log -1 --format='%H')::7})
+          echo $_ref_
 
       - name: Print ref, build version
         shell: bash
