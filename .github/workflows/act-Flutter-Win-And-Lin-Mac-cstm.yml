@@ -1,4 +1,4 @@
-# 2023-05-19 12:30
+# 2023-05-21 21:00
 #
 #
 name: 0-act - Flutter - Win-And-Lin-Mac - cstm
@@ -13,7 +13,7 @@ on:
 env:
   TAG_VERSION: "rdsk-v1.2.0"
   TAG_BUILD: "-b"
-  TAG_REVISION: "0000"
+  TAG_REF: "0000000"
   TAG_NAME: "Win-And-Lin-Mac-cstm"
   # To make a custom build with your own servers set the below secret values
   RS_PUB_KEY: '${{ secrets.RS_PUB_KEY }}'

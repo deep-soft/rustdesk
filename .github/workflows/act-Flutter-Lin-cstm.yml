@@ -1,4 +1,4 @@
-# 2023-05-19 12:30
+# 2023-05-21 21:00
 #
 #
 name: act - Flutter - Lin - cstm
@@ -13,7 +13,7 @@ on:
 env:
   TAG_VERSION: "rdsk-v1.2.0"
   TAG_BUILD: "-b"
-  TAG_REVISION: "0000"
+  TAG_REF: "0000000"
   TAG_NAME: "Lin-cstm"
   # To make a custom build with your own servers set the below secret values
   RS_PUB_KEY: '${{ secrets.RS_PUB_KEY }}'
@@ -76,18 +76,19 @@ jobs:
       - name: Checkout source code
         uses: deep-soft/checkout@v3
 
-      - name: Get revision, set build version
+      - name: Get ref, set build version
         shell: bash
         run: |
-          _revision_=$(git -C . rev-list --count HEAD)
-          echo "TAG_REVISION=$_revision_" >> $GITHUB_ENV
-          _build_=${{ env.TAG_BUILD }}.$_revision_
+          _ref_all_=$(git log -1 --format='%H')
+          _ref_=$(echo ${_ref_all_::7})
+          echo "TAG_REF=$_ref_" >> $GITHUB_ENV
+          _build_=${{ env.TAG_BUILD }}.$_ref_
           echo "TAG_BUILD=$_build_" >> $GITHUB_ENV
 
-      - name: Print revision, build version
+      - name: Print ref, build version
         shell: bash
         run: |
-          echo "REV: ${{ env.TAG_REVISION }}
+          echo "REF: ${{ env.TAG_REF }}
           echo "BLD: ${{ env.TAG_BUILD }}
 
       - name: Create source archive
@@ -328,18 +329,19 @@ jobs:
       - name: Checkout source code
         uses: deep-soft/checkout@v3
 
-      - name: Get revision, set build version
+      - name: Get ref, set build version
         shell: bash
         run: |
-          _revision_=$(git -C . rev-list --count HEAD)
-          echo "TAG_REVISION=$_revision_" >> $GITHUB_ENV
-          _build_=${{ env.TAG_BUILD }}.$_revision_
+          _ref_all_=$(git log -1 --format='%H')
+          _ref_=$(echo ${_ref_all_::7})
+          echo "TAG_REF=$_ref_" >> $GITHUB_ENV
+          _build_=${{ env.TAG_BUILD }}.$_ref_
           echo "TAG_BUILD=$_build_" >> $GITHUB_ENV
 
-      - name: Print revision, build version
+      - name: Print ref, build version
         shell: bash
         run: |
-          echo "REV: ${{ env.TAG_REVISION }}
+          echo "REF: ${{ env.TAG_REF }}
           echo "BLD: ${{ env.TAG_BUILD }}
 
       - name: Create source archive
@@ -563,18 +565,19 @@ jobs:
       - name: Checkout source code
         uses: deep-soft/checkout@v3
 
-      - name: Get revision, set build version
+      - name: Get ref, set build version
         shell: bash
         run: |
-          _revision_=$(git -C . rev-list --count HEAD)
-          echo "TAG_REVISION=$_revision_" >> $GITHUB_ENV
-          _build_=${{ env.TAG_BUILD }}.$_revision_
+          _ref_all_=$(git log -1 --format='%H')
+          _ref_=$(echo ${_ref_all_::7})
+          echo "TAG_REF=$_ref_" >> $GITHUB_ENV
+          _build_=${{ env.TAG_BUILD }}.$_ref_
           echo "TAG_BUILD=$_build_" >> $GITHUB_ENV
 
-      - name: Print revision, build version
+      - name: Print ref, build version
         shell: bash
         run: |
-          echo "REV: ${{ env.TAG_REVISION }}
+          echo "REF: ${{ env.TAG_REF }}
           echo "BLD: ${{ env.TAG_BUILD }}
 
       - name: Create source archive
@@ -958,18 +961,19 @@ jobs:
       - name: Checkout source code
         uses: deep-soft/checkout@v3
 
-      - name: Get revision, set build version
+      - name: Get ref, set build version
         shell: bash
         run: |
-          _revision_=$(git -C . rev-list --count HEAD)
-          echo "TAG_REVISION=$_revision_" >> $GITHUB_ENV
-          _build_=${{ env.TAG_BUILD }}.$_revision_
+          _ref_all_=$(git log -1 --format='%H')
+          _ref_=$(echo ${_ref_all_::7})
+          echo "TAG_REF=$_ref_" >> $GITHUB_ENV
+          _build_=${{ env.TAG_BUILD }}.$_ref_
           echo "TAG_BUILD=$_build_" >> $GITHUB_ENV
 
-      - name: Print revision, build version
+      - name: Print ref, build version
         shell: bash
         run: |
-          echo "REV: ${{ env.TAG_REVISION }}
+          echo "REF: ${{ env.TAG_REF }}
           echo "BLD: ${{ env.TAG_BUILD }}
 
       - name: Create source archive
@@ -1314,18 +1318,19 @@ jobs:
   #     - name: Checkout source code
   #       uses: deep-soft/checkout@v3
   # 
-  #       - name: Get revision, set build version
+  #       - name: Get ref, set build version
   #         shell: bash
   #         run: |
-  #           _revision_=$(git -C . rev-list --count HEAD)
-  #           echo "TAG_REVISION=$_revision_" >> $GITHUB_ENV
-  #           _build_=${{ env.TAG_BUILD }}.$_revision_
+  #           _ref_all_=$(git log -1 --format='%H')
+  #           _ref_=$(echo ${_ref_all_::7})
+  #           echo "TAG_REF=$_ref_" >> $GITHUB_ENV
+  #           _build_=${{ env.TAG_BUILD }}.$_ref_
   #           echo "TAG_BUILD=$_build_" >> $GITHUB_ENV
   # 
-  #       - name: Print revision, build version
+  #       - name: Print ref, build version
   #         shell: bash
   #         run: |
-  #           echo "REV: ${{ env.TAG_REVISION }}
+  #           echo "REF: ${{ env.TAG_REF }}
   #           echo "BLD: ${{ env.TAG_BUILD }}
   # 
   #       - name: Create source archive 1
@@ -1460,18 +1465,19 @@ jobs:
       - name: Checkout source code
         uses: deep-soft/checkout@v3
 
-      - name: Get revision, set build version
+      - name: Get ref, set build version
         shell: bash
         run: |
-          _revision_=$(git -C . rev-list --count HEAD)
-          echo "TAG_REVISION=$_revision_" >> $GITHUB_ENV
-          _build_=${{ env.TAG_BUILD }}.$_revision_
+          _ref_all_=$(git log -1 --format='%H')
+          _ref_=$(echo ${_ref_all_::7})
+          echo "TAG_REF=$_ref_" >> $GITHUB_ENV
+          _build_=${{ env.TAG_BUILD }}.$_ref_
           echo "TAG_BUILD=$_build_" >> $GITHUB_ENV
 
-      - name: Print revision, build version
+      - name: Print ref, build version
         shell: bash
         run: |
-          echo "REV: ${{ env.TAG_REVISION }}
+          echo "REF: ${{ env.TAG_REF }}
           echo "BLD: ${{ env.TAG_BUILD }}
 
       - name: Create source archive
