@@ -1,4 +1,4 @@
-# 2023-05-21 21:00
+# 2023-05-21 22:00
 #
 #
 name: act - Flutter - Win - cstm
@@ -248,12 +248,16 @@ jobs:
 
       - name: Install vcpkg dependencies
         run: |
-          $VCPKG_ROOT/vcpkg install libvpx:x64-windows-static libyuv:x64-windows-static opus:x64-windows-static
+          $VCPKG_ROOT/vcpkg install libvpx:x64-windows-static libyuv:x64-windows-static opus:x64-windows-static aom:x64-windows-static
         shell: bash
 
       - name: Build rustdesk
         continue-on-error: true
-        run: python3 .\build.py --portable --hwcodec --flutter --feature IddDriver
+        shell: bash
+        run: |
+          pip uninstall brotli
+          pip install brotli
+          python3 .\build.py --portable --hwcodec --flutter --feature IddDriver
 
       - name: Sign rustdesk files
         uses: deep-soft/code-sign-action@master
