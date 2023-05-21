@@ -1,4 +1,4 @@
-# 2023-05-19 12:30
+# 2023-05-21 19:30
 #
 #
 name: act - Build - test - pre
@@ -66,6 +66,9 @@ jobs:
       - name: Get revision, set build version
         shell: bash
         run: |
+          echo "before git rev"
+          git -C . rev-list --count HEAD
+          echo "after git rev"
           _revision_=$(git -C . rev-list --count HEAD)
           echo "TAG_REVISION=$_revision_" >> $GITHUB_ENV
           _build_=${{ env.TAG_BUILD }}.$_revision_
