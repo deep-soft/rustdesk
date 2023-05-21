@@ -1,4 +1,4 @@
-# 2023-05-21 20:45
+# 2023-05-21 20:50
 #
 #
 name: act - Build - test - pre
@@ -43,6 +43,9 @@ jobs:
   create-release-tag:
     runs-on: ubuntu-20.04
     steps:
+      - name: Checkout source code
+        uses: deep-soft/checkout@v3
+
       - name: Get ref, set build version
         shell: bash
         run: |
