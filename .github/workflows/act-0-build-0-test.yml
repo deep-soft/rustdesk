@@ -1,4 +1,4 @@
-# 2023-05-21 21:30
+# 2023-05-21 21:40
 #
 #
 name: act - Build - test - pre
@@ -51,7 +51,8 @@ jobs:
         run: |
           _ref_all_=$(git log -1 --format='%H')
           # _ref_=$(echo ${_ref_all_::7})
-          _ref_len_=${#${{env.TAG_REF}}}
+          _ref_org_=${{ env.TAG_REF }}
+          _ref_len_="${#_ref_org_}"
           _ref_=$(echo ${_ref_all_::$_ref_len_})
           echo "TAG_REF=$_ref_" >> $GITHUB_ENV
           _build_=${{ env.TAG_BUILD }}.$_ref_
@@ -102,7 +103,8 @@ jobs:
         run: |
           _ref_all_=$(git log -1 --format='%H')
           # _ref_=$(echo ${_ref_all_::7})
-          _ref_len_=${#${{env.TAG_REF}}}
+          _ref_org_=${{ env.TAG_REF }}
+          _ref_len_="${#_ref_org_}"
           _ref_=$(echo ${_ref_all_::$_ref_len_})
           echo "TAG_REF=$_ref_" >> $GITHUB_ENV
           _build_=${{ env.TAG_BUILD }}.$_ref_
