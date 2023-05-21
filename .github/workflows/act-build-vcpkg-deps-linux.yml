@@ -1,4 +1,4 @@
-# 2023-05-19 12:30
+# 2023-05-21 19:30
 # This yaml shares the build vcpkg deps steps with ci and nightly.
 #and act-Flutter-Win-Arm-And-Mac-cstm
 name: act - Build vcpkg dependencies for linux clients
@@ -26,8 +26,9 @@ env:
   DEBUG_LS: "yes"
   LLVM_VERSION: "15.0.6"
   FLUTTER_VERSION: "3.7.0"
-  # vcpkg 2023.04.01 - msys2-runtime-3.4.6-1
-  VCPKG_COMMIT_ID: "69efe9cc2df0015f0bb2d37d55acde4a75c9a25b"
+  # vcpkg version: 2023.04.15
+  # for multiarch gcc compatibility
+  VCPKG_COMMIT_ID: "501db0f17ef6df184fcdbfbe0f87cde2313b6ab1"
   VERSION: "1.2.0"
   NDK_VERSION: "r23"
   #signing keys env variable checks
@@ -99,7 +100,7 @@ jobs:
                 pushd vcpkg
                 git reset --hard ${{ env.VCPKG_COMMIT_ID }}
                 ./bootstrap-vcpkg.sh
-                ./vcpkg install libvpx libyuv opus
+                ./vcpkg install libvpx libyuv opus aom
                 ;;
               aarch64)
                 pushd /artifacts
