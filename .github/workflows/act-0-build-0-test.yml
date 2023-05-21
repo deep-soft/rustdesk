@@ -41,30 +41,31 @@ env:
 
 jobs:
   create-release-tag:
-    - name: Get ref, set build version
-      shell: bash
-      run: |
-        _ref_all_=$(git log -1 --format='%H')
-        _ref_=$(echo ${_ref_all_::7})
-        echo "TAG_REF=$_ref_" >> $GITHUB_ENV
-        _build_=${{ env.TAG_BUILD }}.$_ref_
-        echo "TAG_BUILD=$_build_" >> $GITHUB_ENV
+    steps:
+      - name: Get ref, set build version
+        shell: bash
+        run: |
+          _ref_all_=$(git log -1 --format='%H')
+          _ref_=$(echo ${_ref_all_::7})
+          echo "TAG_REF=$_ref_" >> $GITHUB_ENV
+          _build_=${{ env.TAG_BUILD }}.$_ref_
+          echo "TAG_BUILD=$_build_" >> $GITHUB_ENV
 
-    - name: Print ref, build version
-      shell: bash
-      run: |
-        echo "REF: ${{ env.TAG_REF }}
-        echo "BLD: ${{ env.TAG_BUILD }}
-        echo "${{ env.TAG_NAME }}-${{ env.TAG_BUILD }}" > _tag_name_.txt
+      - name: Print ref, build version
+        shell: bash
+        run: |
+          echo "REF: ${{ env.TAG_REF }}
+          echo "BLD: ${{ env.TAG_BUILD }}
+          echo "${{ env.TAG_NAME }}-${{ env.TAG_BUILD }}" > _tag_name_.txt
 
-    - name: Publish _tag_name_.txt
-      continue-on-error: false
-      uses: deep-soft/action-gh-release@v1
-      with:
-        draft: true
-        tag_name: ${{ env.TAG_NAME }}-${{ env.TAG_BUILD }}
-        files: |
-          _tag_name_.txt
+      - name: Publish _tag_name_.txt
+        continue-on-error: false
+        uses: deep-soft/action-gh-release@v1
+        with:
+          draft: true
+          tag_name: ${{ env.TAG_NAME }}-${{ env.TAG_BUILD }}
+          files: |
+            _tag_name_.txt
 
   test-patch:
     name: ${{ matrix.job.target }} (${{ matrix.job.os }})
