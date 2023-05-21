@@ -1,4 +1,4 @@
-# 2023-05-21 22:10
+# 2023-05-21 23:00
 #
 #
 name: act - Flutter - Win - cstm
@@ -251,17 +251,46 @@ jobs:
           vcpkgGitCommitId: ${{ env.VCPKG_COMMIT_ID }}
 
       - name: Install vcpkg dependencies
+        shell: bash
         run: |
           $VCPKG_ROOT/vcpkg install libvpx:x64-windows-static libyuv:x64-windows-static opus:x64-windows-static aom:x64-windows-static
-        shell: bash
 
-      - name: Build rustdesk
+###
+      - name: Create vcpkg-installed archive
         continue-on-error: true
+        shell: bash
+        run: |
+          staging="vcpkg-installed-${{ env.VERSION }}-${{ matrix.job.target }}"
+          touch "$staging.tar.xz"
+          #tar -cfJ "$staging.tar.xz" --exclude "$staging.tar.xz" .
+          tar --exclude=*.tar* --exclude=target/*  -cv vcpkg/installed | xz -9 > "$staging.tar.xz"
+          echo "ASSET_VCPKG=$staging.tar.xz" >> $GITHUB_ENV
+          if [ "${{ env.DEBUG_LS }}" = "yes" ]; then
+            echo "ASSET_VCPKG archive name: "
+            ls -l "$staging.tar.xz"
+          fi
+          if [ "${{ env.DEBUG_LS }}" = "yes" ]; then
+            ls -l
+          fi
+
+      - name: Publish vcpkg-installed archive
+        continue-on-error: true
+        uses: deep-soft/action-gh-release@v1
+        with:
+          draft: true
+          tag_name: vcpkg-installed-${{ env.VERSION }}-${{ matrix.job.target }}
+          files: |
+            ${{ env.ASSET_VCPKG }}
+
+      - name: Install brotli
         shell: bash
         run: |
           pip uninstall brotli
           pip install brotli
-          python3 .\build.py --portable --hwcodec --flutter --feature IddDriver
+
+      - name: Build rustdesk
+        continue-on-error: false
+        run: python3 .\build.py --portable --hwcodec --flutter --feature IddDriver
 
       - name: Sign rustdesk files
         uses: deep-soft/code-sign-action@master
@@ -274,6 +303,7 @@ jobs:
           recursive: true
 
       - name: Build self-extracted executable
+        continue-on-error: false
         shell: bash
         run: |
           pushd ./libs/portable
@@ -290,6 +320,7 @@ jobs:
       #     done
 
       - name: Sign rustdesk self-extracted file
+        continue-on-error: false
         uses: deep-soft/code-sign-action@master
         with:
           certificate: '${{ secrets.WINDOWS_PFX_BASE64 }}'
@@ -300,6 +331,7 @@ jobs:
           recursive: false
 
       - name: Publish Release
+        continue-on-error: true
         uses: deep-soft/action-gh-release@v1
         with:
           draft: true
@@ -310,6 +342,7 @@ jobs:
             ${{ env.ASSET_SRC1 }}
 
       - name: Publish version build - Release
+        continue-on-error: false
         uses: deep-soft/action-gh-release@v1
         with:
           draft: true
