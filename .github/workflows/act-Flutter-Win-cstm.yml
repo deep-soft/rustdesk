@@ -1,4 +1,4 @@
-# 2023-05-21 22:00
+# 2023-05-21 22:10
 #
 #
 name: act - Flutter - Win - cstm
@@ -58,7 +58,10 @@ jobs:
         shell: bash
         run: |
           _ref_all_=$(git log -1 --format='%H')
-          _ref_=$(echo ${_ref_all_::7})
+          # _ref_=$(echo ${_ref_all_::7})
+          _ref_org_=${{ env.TAG_REF }}
+          _ref_len_="${#_ref_org_}"
+          _ref_=$(echo ${_ref_all_::$_ref_len_})
           echo "TAG_REF=$_ref_" >> $GITHUB_ENV
           _build_=${{ env.TAG_BUILD }}.$_ref_
           echo "TAG_BUILD=$_build_" >> $GITHUB_ENV
@@ -68,6 +71,7 @@ jobs:
         run: |
           echo "REF: ${{ env.TAG_REF }}
           echo "BLD: ${{ env.TAG_BUILD }}
+          echo "${{ env.TAG_NAME }}-${{ env.TAG_BUILD }}" > _tag_name_.txt
 
       - name: Create source archive
         continue-on-error: true
