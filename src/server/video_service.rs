@@ -540,14 +540,12 @@ fn run(sp: GenericService) -> ResultType<()> {
             EncoderCfg::VPX(VpxEncoderConfig {
                 width: c.width as _,
                 height: c.height as _,
-                timebase: [1, 1000], // Output timestamp precision
                 bitrate,
                 codec: if name == scrap::CodecName::VP8 {
                     VpxVideoCodecId::VP8
                 } else {
                     VpxVideoCodecId::VP9
                 },
-                num_threads: (num_cpus::get() / 2) as _,
             })
         }
         scrap::CodecName::AV1 => EncoderCfg::AOM(AomEncoderConfig {
@@ -727,8 +725,14 @@ fn run(sp: GenericService) -> ResultType<()> {
                     would_block_count += 1;
                     if !scrap::is_x11() {
                         if would_block_count >= 100 {
-                            super::wayland::release_resource();
-                            bail!("Wayland capturer none 100 times, try restart capture");
+                            // to-do: Unknown reason for WouldBlock 100 times (seconds = 100 * 1 / fps)
+                            // https://github.com/rustdesk/rustdesk/blob/63e6b2f8ab51743e77a151e2b7ff18816f5fa2fb/libs/scrap/src/common/wayland.rs#L81
+                            //
+                            // Do not reset the capturer for now, as it will cause the prompt to show every few minutes.
+                            // https://github.com/rustdesk/rustdesk/issues/4276
+                            //
+                            // super::wayland::release_resource();
+                            // bail!("Wayland capturer none 100 times, try restart capture");
                         }
                     }
                 }
