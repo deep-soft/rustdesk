@@ -1,4 +1,4 @@
-# 2023-05-21 22:10
+# 2023-05-24 08:00
 #
 #
 name: act - Flutter - Lin - cstm
@@ -16,20 +16,23 @@ env:
   TAG_REF: "0000000"
   TAG_NAME: "Lin-cstm"
   # To make a custom build with your own servers set the below secret values
-  RS_PUB_KEY: '${{ secrets.RS_PUB_KEY }}'
+  RS_PUB_KEY:        '${{ secrets.RS_PUB_KEY }}'
   RENDEZVOUS_SERVER: '${{ secrets.RENDEZVOUS_SERVER }}'
-  RDSK_PCH_SH_PRE: '${{ secrets.RDSK_PCH_SH_PRE }}'
-  RDSK_PCH_SH: '${{ secrets.RDSK_PCH_SH }}'
-  RDSK_PCH_HL: '${{ secrets.RDSK_PCH_HL }}'
-  RDSK_PCH_SH2: '${{ secrets.RDSK_PCH_SH2 }}'
-  RDSK_PCH_SH_CLN: '${{ secrets.RDSK_PCH_SH_CLN }}'
+  RDSK_PCH_SH_PRE:   '${{ secrets.RDSK_PCH_SH_PRE }}'
+  RDSK_PCH_SH:       '${{ secrets.RDSK_PCH_SH }}'
+  RDSK_PCH_HL:       '${{ secrets.RDSK_PCH_HL }}'
+  RDSK_PCH_SH2:      '${{ secrets.RDSK_PCH_SH2 }}'
+  RDSK_PCH_SH_CLN:   '${{ secrets.RDSK_PCH_SH_CLN }}'
   DEBUG_LS: "yes"
-  LLVM_VERSION: "15.0.6"
-  FLUTTER_VERSION: "3.7.0"
+  LLVM_VERSION:    "15.0.6"
+  FLUTTER_VERSION: "3.10.1"
+  # for arm64 linux
+  FLUTTER_ELINUX_VERSION: "3.10.1"
+  FLUTTER_ELINUX_COMMIT_ID: "410b3ca42f2cd0c485edf517a1666652bab442d4"
   # vcpkg version: 2023.04.15
   # for multiarch gcc compatibility
   VCPKG_COMMIT_ID: "501db0f17ef6df184fcdbfbe0f87cde2313b6ab1"
-  VERSION: "1.2.0"
+  VERSION:     "1.2.0"
   NDK_VERSION: "r23"
   #signing keys env variable checks
   ANDROID_SIGNING_KEY: '${{ secrets.ANDROID_SIGNING_KEY }}'
@@ -38,6 +41,7 @@ env:
   #  keyStorePassword: ${{ secrets.ANDROID_KEY_STORE_PASSWORD }}
   #  keyPassword: ${{ secrets.ANDROID_KEY_PASSWORD }}  
   MACOS_P12_BASE64: '${{ secrets.MACOS_P12_BASE64 }}'
+  GUI: 'Linux'
 
 jobs:
   build-vcpkg-deps-linux:
@@ -716,12 +720,14 @@ jobs:
           # disable git safe.directory
           git config --global --add safe.directory "*"
           pushd /opt
-          # clone repo and reset to flutter 3.7.0
+#20230524          # clone repo and reset to flutter 3.7.0
+          # clone repo and reset to flutter ${{ env.FLUTTER_VERSION }}
           git clone https://github.com/sony/flutter-elinux.git || true
           pushd flutter-elinux
             # reset to flutter 3.7.0
             git fetch
-            git reset --hard 51a1d685901f79fbac51665a967c3a1a789ecee5 
+#20230524            git reset --hard 51a1d685901f79fbac51665a967c3a1a789ecee5 
+            git reset --hard ${{ env.FLUTTER_ELINUX_COMMIT_ID }} 
           popd
 
       - uses: deep-soft/run-on-arch-action@amd64-support
@@ -754,9 +760,14 @@ jobs:
             # Patch arm64 engine for flutter 3.6.0+
             flutter-elinux precache --linux
             pushd /tmp
-            curl -O https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_3.7.0-stable.tar.xz
-            tar -xvf flutter_linux_3.7.0-stable.tar.xz flutter/bin/cache/artifacts/engine/linux-x64/shader_lib
+#20230524            curl -O https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_3.7.0-stable.tar.xz
+#20230524            tar -xvf flutter_linux_3.7.0-stable.tar.xz flutter/bin/cache/artifacts/engine/linux-x64/shader_lib
+            curl -O https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_${{ env.FLUTTER_ELINUX_VERSION }}-stable.tar.xz
+            tar -xvf flutter_linux_${{ env.FLUTTER_ELINUX_VERSION }}-stable.tar.xz flutter/bin/cache/artifacts/engine/linux-x64/shader_lib
             cp -R flutter/bin/cache/artifacts/engine/linux-x64/shader_lib /opt/flutter-elinux/flutter/bin/cache/artifacts/engine/linux-arm64
+
+           
+
             popd
             # edit to corresponding arch
             case ${{ matrix.job.arch }} in

@@ -1,4 +1,4 @@
-# 2023-05-21 22:10
+# 2023-05-24 08:00
 #
 #
 name: act - sciter - Arm - cstm
@@ -16,19 +16,19 @@ env:
   TAG_REF: "0000000"
   TAG_NAME: "Arm-sciter-cstm-act"
   # To make a custom build with your own servers set the below secret values
-  RS_PUB_KEY: '${{ secrets.RS_PUB_KEY }}'
+  RS_PUB_KEY:        '${{ secrets.RS_PUB_KEY }}'
   RENDEZVOUS_SERVER: '${{ secrets.RENDEZVOUS_SERVER }}'
-  RDSK_PCH_SH_PRE: '${{ secrets.RDSK_PCH_SH_PRE }}'
-  RDSK_PCH_SH: '${{ secrets.RDSK_PCH_SH }}'
-  RDSK_PCH_HL: '${{ secrets.RDSK_PCH_HL }}'
-  RDSK_PCH_SH2: '${{ secrets.RDSK_PCH_SH2 }}'
-  RDSK_PCH_SH_CLN: '${{ secrets.RDSK_PCH_SH_CLN }}'
+  RDSK_PCH_SH_PRE:   '${{ secrets.RDSK_PCH_SH_PRE }}'
+  RDSK_PCH_SH:       '${{ secrets.RDSK_PCH_SH }}'
+  RDSK_PCH_HL:       '${{ secrets.RDSK_PCH_HL }}'
+  RDSK_PCH_SH2:      '${{ secrets.RDSK_PCH_SH2 }}'
+  RDSK_PCH_SH_CLN:   '${{ secrets.RDSK_PCH_SH_CLN }}'
   DEBUG_LS: "yes"
-  LLVM_VERSION: "15.0.6"
+  LLVM_VERSION:    "15.0.6"
   # vcpkg version: 2023.04.15
   # for multiarch gcc compatibility
   VCPKG_COMMIT_ID: "501db0f17ef6df184fcdbfbe0f87cde2313b6ab1"
-  VERSION: "1.2.0"
+  VERSION:     "1.2.0"
   GUI: "sciter"
 
 jobs:
