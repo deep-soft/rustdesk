@@ -1,4 +1,4 @@
-# 2023-05-24 08:00
+# 2023-05-26 00:10
 #
 #
 name: 0-act - sciter - Win-Win32-Arm - cstm
@@ -11,10 +11,10 @@ on:
 #    - cron: "0 0 * * *"
 
 env:
+  TAG_NAME: "Win-Win32-Arm-cstm"
   TAG_VERSION: "rdsk-v1.2.0"
   TAG_BUILD: "-b"
   TAG_REF: "0000000"
-  TAG_NAME: "Win-Win32-Arm-cstm"
   # To make a custom build with your own servers set the below secret values
   RS_PUB_KEY:        '${{ secrets.RS_PUB_KEY }}'
   RENDEZVOUS_SERVER: '${{ secrets.RENDEZVOUS_SERVER }}'

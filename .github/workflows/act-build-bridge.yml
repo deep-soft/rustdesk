@@ -1,4 +1,4 @@
-# 2023-05-24 08:00
+# 2023-05-26 00:10
 # This yaml shares the build bridge steps with ci and nightly.
 #and act-Flutter-Win-Arm-And-Mac-cstm
 name: act - Build flutter-rust-bridge
@@ -11,10 +11,10 @@ on:
 #    - cron: "0 0 * * *"
 
 env:
+  TAG_NAME: "Win-And-Lin-Mac-cstm"
   TAG_VERSION: "rdsk-v1.2.0"
   TAG_BUILD: "-b"
   TAG_REF: "0000000"
-  TAG_NAME: "Win-And-Lin-Mac-cstm"
   # To make a custom build with your own servers set the below secret values
   RS_PUB_KEY:        '${{ secrets.RS_PUB_KEY }}'
   RENDEZVOUS_SERVER: '${{ secrets.RENDEZVOUS_SERVER }}'
@@ -26,6 +26,7 @@ env:
   DEBUG_LS: "yes"
   LLVM_VERSION:    "15.0.6"
   FLUTTER_VERSION: "3.10.1"
+  FLUTTER_RUST_BRIDGE_VERSION: "1.75.3"
   # for arm64 linux
   FLUTTER_ELINUX_VERSION: "3.10.1"
   FLUTTER_ELINUX_COMMIT_ID: "410b3ca42f2cd0c485edf517a1666652bab442d4"
@@ -33,7 +34,8 @@ env:
   # for multiarch gcc compatibility
   VCPKG_COMMIT_ID: "501db0f17ef6df184fcdbfbe0f87cde2313b6ab1"
   VERSION:     "1.2.0"
-  NDK_VERSION: "r23"
+  NDK_VERSION: "r25"
+  CARGO_NDK_VERSION: "3.1.2"
   #signing keys env variable checks
   ANDROID_SIGNING_KEY: '${{ secrets.ANDROID_SIGNING_KEY }}'
   #  signingKeyBase64: ${{ secrets.ANDROID_SIGNING_KEY }}
@@ -198,7 +200,7 @@ jobs:
       - name: Install flutter rust bridge deps
         shell: bash
         run: |
-          cargo install flutter_rust_bridge_codegen
+          cargo install flutter_rust_bridge_codegen --version ${{ env.FLUTTER_RUST_BRIDGE_VERSION }}
           pushd flutter && flutter pub get && popd
 
       - name: Run flutter rust bridge
