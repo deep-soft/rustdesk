@@ -1,14 +1,7 @@
-# 2023-05-26 00:10
+# 2023-05-26 02:00
 #
 #
 name: act - sciter - Win - 32bit - cstm
-
-on:
-  workflow_call:
-  workflow_dispatch:
-#  schedule:
-#    # schedule build every night
-#    - cron: "0 0 * * *"
 
 env:
   TAG_NAME: "Win-sciter-cstm-act"
@@ -30,6 +23,13 @@ env:
   VCPKG_COMMIT_ID: "501db0f17ef6df184fcdbfbe0f87cde2313b6ab1"
   VERSION:     "1.2.0"
   GUI: "sciter"
+
+on:
+  workflow_call:
+  workflow_dispatch:
+#  schedule:
+#    # schedule build every night
+#    - cron: "0 0 * * *"
 
 jobs:
   build-for-windows-sciter-32bit:

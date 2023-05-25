@@ -1,14 +1,7 @@
-# 2023-05-26 00:10
+# 2023-05-26 02:00
 #
 #
 name: act - Flutter - iOS - cstm
-
-on:
-  workflow_call:
-  workflow_dispatch:
-#  schedule:
-#    # schedule build every night
-#    - cron: "0 0 * * *"
 
 env:
   TAG_NAME: "iOS-cstm"
@@ -44,6 +37,13 @@ env:
   #  keyPassword: ${{ secrets.ANDROID_KEY_PASSWORD }}  
   MACOS_P12_BASE64: '${{ secrets.MACOS_P12_BASE64 }}'
   GUI: 'iOS'
+
+on:
+  workflow_call:
+  workflow_dispatch:
+#  schedule:
+#    # schedule build every night
+#    - cron: "0 0 * * *"
 
 jobs:
   generate-bridge-linux:

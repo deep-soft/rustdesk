@@ -1,14 +1,7 @@
-# 2023-05-26 00:10
+# 2023-05-26 02:00
 # This yaml shares the build bridge steps with ci and nightly.
 #and act-Flutter-Win-Arm-And-Mac-cstm
 name: act - Build flutter-rust-bridge
-
-on:
-  workflow_call:
-  workflow_dispatch:
-#  schedule:
-#    # schedule build every night
-#    - cron: "0 0 * * *"
 
 env:
   TAG_NAME: "Win-And-Lin-Mac-cstm"
@@ -43,6 +36,14 @@ env:
   #  keyStorePassword: ${{ secrets.ANDROID_KEY_STORE_PASSWORD }}
   #  keyPassword: ${{ secrets.ANDROID_KEY_PASSWORD }}  
   MACOS_P12_BASE64: '${{ secrets.MACOS_P12_BASE64 }}'
+
+
+on:
+  workflow_call:
+  workflow_dispatch:
+#  schedule:
+#    # schedule build every night
+#    - cron: "0 0 * * *"
 
 jobs:
    generate-bridge-linux:
