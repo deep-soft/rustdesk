@@ -1173,6 +1173,8 @@ pub struct LocalConfig {
     size: Size,
     #[serde(default, deserialize_with = "deserialize_vec_string")]
     pub fav: Vec<String>,
+    #[serde(default, deserialize_with = "deserialize_vec_string")]
+    pub custms: Vec<String>,
     #[serde(default, deserialize_with = "deserialize_hashmap_string_string")]
     options: HashMap<String, String>,
     // Various data for flutter ui
@@ -1237,6 +1239,19 @@ impl LocalConfig {
 
     pub fn get_fav() -> Vec<String> {
         LOCAL_CONFIG.read().unwrap().fav.clone()
+    }
+
+    pub fn set_custms(custms: Vec<String>) {
+        let mut lock = LOCAL_CONFIG.write().unwrap();
+        if lock.custms == custms {
+            return;
+        }
+        lock.custms = custms;
+        lock.store();
+    }
+
+    pub fn get_custms() -> Vec<String> {
+        LOCAL_CONFIG.read().unwrap().custms.clone()
     }
 
     pub fn get_option(k: &str) -> String {
