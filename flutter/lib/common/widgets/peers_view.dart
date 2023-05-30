@@ -33,6 +33,7 @@ class PeerSortType {
 class LoadEvent {
   static const String recent = 'load_recent_peers';
   static const String favorite = 'load_fav_peers';
+  static const String custms = 'load_custms_peers';
   static const String lan = 'load_lan_peers';
   static const String addressBook = 'load_address_book_peers';
 }
@@ -71,6 +72,7 @@ class _PeersViewState extends State<_PeersView> with WindowListener {
   final HashMap<String, String> _emptyMessages = HashMap.from({
     LoadEvent.recent: 'empty_recent_tip',
     LoadEvent.favorite: 'empty_favorite_tip',
+    LoadEvent.custms: 'empty_custms_tip',
     LoadEvent.lan: 'empty_lan_tip',
     LoadEvent.addressBook: 'empty_address_book_tip',
   });
@@ -356,6 +358,28 @@ class FavoritePeersView extends BasePeersView {
   Widget build(BuildContext context) {
     final widget = super.build(context);
     bind.mainLoadFavPeers();
+    return widget;
+  }
+}
+
+class CustmsPeersView extends BasePeersView {
+  CustmsPeersView(
+      {Key? key, EdgeInsets? menuPadding, ScrollController? scrollController})
+      : super(
+          key: key,
+          name: 'custms peer',
+          loadEvent: LoadEvent.custms,
+          peerCardBuilder: (Peer peer) => CustmsPeerCard(
+            peer: peer,
+            menuPadding: menuPadding,
+          ),
+          initPeers: [],
+        );
+
+  @override
+  Widget build(BuildContext context) {
+    final widget = super.build(context);
+    bind.mainLoadCustmsPeers();
     return widget;
   }
 }

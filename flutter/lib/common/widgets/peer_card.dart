@@ -637,6 +637,73 @@ abstract class BasePeerCard extends StatelessWidget {
   }
 
   @protected
+  MenuEntryBase<String> _addCustmsAction(String id) {
+    return MenuEntryButton<String>(
+      childBuilder: (TextStyle? style) => Row(
+        children: [
+          Text(
+            translate('Add to Customs'),
+            style: style,
+          ),
+          Expanded(
+              child: Align(
+            alignment: Alignment.centerRight,
+            child: Transform.scale(
+              scale: 0.8,
+              child: Icon(Icons.star_outline),
+            ),
+          ).marginOnly(right: 4)),
+        ],
+      ),
+      proc: () {
+        () async {
+          final custms = (await bind.mainGetCustms()).toList();
+          if (!custms.contains(id)) {
+            custms.add(id);
+            await bind.mainStoreCustms(custms: custms);
+          }
+        }();
+      },
+      padding: menuPadding,
+      dismissOnClicked: true,
+    );
+  }
+
+  @protected
+  MenuEntryBase<String> _rmCustAction(
+      String id, Future<void> Function() reloadFunc) {
+    return MenuEntryButton<String>(
+      childBuilder: (TextStyle? style) => Row(
+        children: [
+          Text(
+            translate('Remove from Customs'),
+            style: style,
+          ),
+          Expanded(
+              child: Align(
+            alignment: Alignment.centerRight,
+            child: Transform.scale(
+              scale: 0.8,
+              child: Icon(Icons.star),
+            ),
+          ).marginOnly(right: 4)),
+        ],
+      ),
+      proc: () {
+        () async {
+          final custms = (await bind.mainGetCustms()).toList();
+          if (custms.remove(id)) {
+            await bind.mainStoreCustms(custms: custms);
+            await reloadFunc();
+          }
+        }();
+      },
+      padding: menuPadding,
+      dismissOnClicked: true,
+    );
+  }
+
+  @protected
   MenuEntryBase<String> _addToAb(Peer peer) {
     return MenuEntryButton<String>(
       childBuilder: (TextStyle? style) => Text(
@@ -733,6 +800,10 @@ abstract class BasePeerCard extends StatelessWidget {
             if (favs.remove(id)) {
               await bind.mainStoreFav(favs: favs);
             }
+            final custms = (await bind.mainGetCustms()).toList();
+            if (custms.remove(id)) {
+              await bind.mainStoreCustms(custms: custms);
+            }
             await bind.mainRemovePeer(id: id);
           }
           removePreference(id);
@@ -788,6 +859,7 @@ class RecentPeerCard extends BasePeerCard {
     ];
 
     final List favs = (await bind.mainGetFav()).toList();
+    final List custms = (await bind.mainGetCustms()).toList();
 
     if (isDesktop && peer.platform != 'Android') {
       menuItems.add(_tcpTunnelingAction(context, peer.id));
@@ -810,6 +882,12 @@ class RecentPeerCard extends BasePeerCard {
       menuItems.add(_addFavAction(peer.id));
     } else {
       menuItems.add(_rmFavAction(peer.id, () async {}));
+    }
+
+    if (!custms.contains(peer.id)) {
+      menuItems.add(_addCustmsAction(peer.id));
+    } else {
+      menuItems.add(_rmCustmsAction(peer.id, () async {}));
     }
 
     if (gFFI.userModel.userName.isNotEmpty) {
@@ -879,6 +957,55 @@ class FavoritePeerCard extends BasePeerCard {
   void _update() => bind.mainLoadFavPeers();
 }
 
+class CustmsPeerCard extends BasePeerCard {
+  CustmsPeerCard({required Peer peer, EdgeInsets? menuPadding, Key? key})
+      : super(peer: peer, menuPadding: menuPadding, key: key);
+
+  @override
+  Future<List<MenuEntryBase<String>>> _buildMenuItems(
+      BuildContext context) async {
+    final List<MenuEntryBase<String>> menuItems = [
+      _connectAction(context, peer),
+      _transferFileAction(context, peer.id),
+    ];
+    if (isDesktop && peer.platform != 'Android') {
+      menuItems.add(_tcpTunnelingAction(context, peer.id));
+    }
+    menuItems.add(await _forceAlwaysRelayAction(peer.id));
+    if (peer.platform == 'Windows') {
+      menuItems.add(_rdpAction(context, peer.id));
+    }
+    menuItems.add(_wolAction(peer.id));
+    if (Platform.isWindows) {
+      menuItems.add(_createShortCutAction(peer.id));
+    }
+    menuItems.add(MenuEntryDivider());
+    menuItems.add(_renameAction(peer.id));
+    if (await bind.mainPeerHasPassword(id: peer.id)) {
+      menuItems.add(_unrememberPasswordAction(peer.id));
+    }
+    menuItems.add(_rmCustmsAction(peer.id, () async {
+      await bind.mainLoadCustmsPeers();
+    }));
+
+    if (gFFI.userModel.userName.isNotEmpty) {
+      if (!gFFI.abModel.idContainBy(peer.id)) {
+        menuItems.add(_addToAb(peer));
+      }
+    }
+
+    menuItems.add(MenuEntryDivider());
+    menuItems.add(_removeAction(peer.id, () async {
+      await bind.mainLoadCustmsPeers();
+    }));
+    return menuItems;
+  }
+
+  @protected
+  @override
+  void _update() => bind.mainLoadCustmsPeers();
+}
+
 class DiscoveredPeerCard extends BasePeerCard {
   DiscoveredPeerCard({required Peer peer, EdgeInsets? menuPadding, Key? key})
       : super(peer: peer, menuPadding: menuPadding, key: key);
@@ -892,6 +1019,7 @@ class DiscoveredPeerCard extends BasePeerCard {
     ];
 
     final List favs = (await bind.mainGetFav()).toList();
+    final List custms = (await bind.mainGetCustms()).toList();
 
     if (isDesktop && peer.platform != 'Android') {
       menuItems.add(_tcpTunnelingAction(context, peer.id));
@@ -909,6 +1037,12 @@ class DiscoveredPeerCard extends BasePeerCard {
       menuItems.add(_addFavAction(peer.id));
     } else {
       menuItems.add(_rmFavAction(peer.id, () async {}));
+    }
+
+    if (!custms.contains(peer.id)) {
+      menuItems.add(_addCustmsAction(peer.id));
+    } else {
+      menuItems.add(_rmCustmsAction(peer.id, () async {}));
     }
 
     if (gFFI.userModel.userName.isNotEmpty) {

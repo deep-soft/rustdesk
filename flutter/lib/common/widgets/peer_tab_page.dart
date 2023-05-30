@@ -55,6 +55,11 @@ class _PeerTabPageState extends State<PeerTabPage>
         ),
         bind.mainLoadFavPeers),
     _TabEntry(
+        CustmsPeersView(
+          menuPadding: _menuPadding(),
+        ),
+        bind.mainLoadCustmsPeers),
+    _TabEntry(
         DiscoveredPeersView(
           menuPadding: _menuPadding(),
         ),
