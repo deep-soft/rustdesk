@@ -333,10 +333,13 @@ class SessionList: Reactor.Component {
                     <div .separator />
                     {this.type != "lan" && <li #rename>{translate('Rename')}</li>}
                     {this.type != "fav" && <li #remove>{translate('Remove')}</li>}
+                    {this.type != "custms" && <li #remove>{translate('Remove')}</li>}
                     {is_win && <li #shortcut>{translate('Create Desktop Shortcut')}</li>}
                     <li #forget-password>{translate('Unremember Password')}</li>
                     {(!this.type || this.type == "fav") && <li #add-fav>{translate('Add to Favorites')}</li>}
                     {(!this.type || this.type == "fav") && <li #remove-fav>{translate('Remove from Favorites')}</li>}
+                    {(!this.type || this.type == "custms") && <li #add-custms>{translate('Add to Custom')}</li>}
+                    {(!this.type || this.type == "custms") && <li #remove-custms>{translate('Remove from Custom')}</li>}
                     {this.type == "ab" && <li #edit-tag>{translate('Edit Tag')}</li>}
                 </menu>
             </popup>
@@ -398,6 +401,15 @@ class SessionList: Reactor.Component {
             };
             this.$(#remove-fav).style.set{
                 display: in_fav ? "block" : "none",
+            };
+        }
+        if (!this.type || this.type == "custms") {
+            var in_custms = handler.get_custms().indexOf(id) >= 0;
+            this.$(#add-custms).style.set{
+                display: in_custms ? "none" : "block",
+            };
+            this.$(#remove-custms).style.set{
+                display: in_custms ? "block" : "none",
             };
         }
         // https://sciter.com/forums/topic/replacecustomize-context-menu/
@@ -473,6 +485,21 @@ class SessionList: Reactor.Component {
             favs.splice(i, 1);
             handler.store_fav(favs);
             app.multipleSessions.update();
+
+        } else if (action == "add-custms") {
+            var custms = handler.get_custms();
+            if (custms.indexOf(id) < 0) {
+                custms = [id].concat(custms);
+                handler.store_custms(custms);
+            }
+            app.multipleSessions.update();
+            app.update();
+        } else if (action == "remove-custms") {
+            var custms = handler.get_custms();
+            var i = custms.indexOf(id);
+            custms.splice(i, 1);
+            handler.store_custms(custms);
+            app.multipleSessions.update();
         } else if (action == "tunnel") {
             createNewConnect(id, "port-forward");
         } else if (action == "rename") {
@@ -534,6 +561,15 @@ class Favorites: Reactor.Component {
     }
 }
 
+class Custms: Reactor.Component {
+    function render() {
+        var sessions = handler.get_custms().map(function(f) {
+            return handler.get_peer(f);
+        });
+        return <SessionList sessions={sessions} type="custms" />;
+    }
+}
+
 class MultipleSessions: Reactor.Component {
     function render() {
         var type = getSessionsType();
@@ -542,6 +578,7 @@ class MultipleSessions: Reactor.Component {
                     <div style="width:*" .sessions-tab #sessions-type>
                         <span class={!type ? 'active' : 'inactive'}>{translate('Recent Sessions')}</span>
                         <span #fav class={type == "fav" ? 'active' : 'inactive'}>{translate('Favorites')}</span>
+                        <span #custms class={type == "custms" ? 'active' : 'inactive'}>{translate('Custom')}</span>
                         {handler.is_installed() && <span #lan class={type == "lan" ? 'active' : 'inactive'}>{translate('Discovered')}</span>}
                         <span #ab class={type == "ab" ? 'active' : 'inactive'}>{translate('Address Book')}</span>
                     </div>
@@ -550,6 +587,7 @@ class MultipleSessions: Reactor.Component {
                 </div>
                 {!this.hidden && 
                 ((type == "fav" && <Favorites />) ||
+                ((type == "custms" && <Custom />) ||
                 (type == "lan" && handler.is_installed() && <LanPeers />) ||
                 (type == "ab" && <AddressBook />) ||
                 <SessionList sessions={handler.get_recent_sessions()} />)}

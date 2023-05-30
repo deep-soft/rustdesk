@@ -405,6 +405,22 @@ impl UI {
         store_fav(tmp);
     }
 
+    fn get_custms(&self) -> Value {
+        Value::from_iter(get_custms())
+    }
+
+    fn store_custms(&self, custms: Value) {
+        let mut tmp = vec![];
+        custms.values().for_each(|v| {
+            if let Some(v) = v.as_string() {
+                if !v.is_empty() {
+                    tmp.push(v);
+                }
+            }
+        });
+        store_custms(tmp);
+    }
+
     fn get_recent_sessions(&mut self) -> Value {
         // to-do: limit number of recent sessions, and remove old peer file
         let peers: Vec<Value> = PeerConfig::peers()
@@ -617,6 +633,8 @@ impl sciter::EventHandler for UI {
         fn get_peer(String);
         fn get_fav();
         fn store_fav(Value);
+        fn get_custms();
+        fn store_custms(Value);
         fn recent_sessions_updated();
         fn get_icon();
         fn install_me(String, String);

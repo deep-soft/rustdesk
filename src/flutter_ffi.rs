@@ -641,6 +641,14 @@ pub fn main_store_fav(favs: Vec<String>) {
     store_fav(favs)
 }
 
+pub fn main_get_custms() -> Vec<String> {
+    get_custms()
+}
+
+pub fn main_store_custms(favs: Vec<String>) {
+    store_custms(custms)
+}
+
 pub fn main_get_peer(id: String) -> String {
     let conf = get_peer(id);
     serde_json::to_string(&conf).unwrap_or("".to_string())
@@ -809,6 +817,55 @@ pub fn main_load_fav_peers() {
 
         let data = HashMap::from([
             ("name", "load_fav_peers".to_owned()),
+            (
+                "peers",
+                serde_json::ser::to_string(&peers).unwrap_or("".to_owned()),
+            ),
+        ]);
+        let _res = flutter::push_global_event(
+            flutter::APP_TYPE_MAIN,
+            serde_json::ser::to_string(&data).unwrap_or("".to_owned()),
+        );
+    }
+}
+
+pub fn main_load_custms_peers() {
+    if !config::APP_DIR.read().unwrap().is_empty() {
+        let custms = get_custms();
+        let mut recent = PeerConfig::peers();
+        let mut lan = config::LanPeers::load()
+            .peers
+            .iter()
+            .filter(|d| recent.iter().all(|r| r.0 != d.id))
+            .map(|d| {
+                (
+                    d.id.clone(),
+                    SystemTime::UNIX_EPOCH,
+                    PeerConfig {
+                        info: PeerInfoSerde {
+                            username: d.username.clone(),
+                            hostname: d.hostname.clone(),
+                            platform: d.platform.clone(),
+                        },
+                        ..Default::default()
+                    },
+                )
+            })
+            .collect();
+        recent.append(&mut lan);
+        let peers: Vec<HashMap<&str, String>> = recent
+            .into_iter()
+            .filter_map(|(id, _, p)| {
+                if custms.contains(&id) {
+                    Some(peer_to_map(id, p))
+                } else {
+                    None
+                }
+            })
+            .collect();
+
+        let data = HashMap::from([
+            ("name", "load_custms_peers".to_owned()),
             (
                 "peers",
                 serde_json::ser::to_string(&peers).unwrap_or("".to_owned()),

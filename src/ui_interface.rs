@@ -474,6 +474,16 @@ pub fn store_fav(fav: Vec<String>) {
 }
 
 #[inline]
+pub fn get_custms() -> Vec<String> {
+    LocalConfig::get_custms()
+}
+
+#[inline]
+pub fn store_custms(custms: Vec<String>) {
+    LocalConfig::set_custms(custms);
+}
+
+#[inline]
 pub fn is_process_trusted(_prompt: bool) -> bool {
     #[cfg(target_os = "macos")]
     return crate::platform::macos::is_process_trusted(_prompt);
