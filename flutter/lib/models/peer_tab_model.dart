@@ -32,6 +32,7 @@ class PeerTabModel with ChangeNotifier {
   List<String> tabNames = [
     'Recent Sessions',
     'Favorites',
+    'Custom',
     'Discovered',
     'Address Book',
     defaultGroupTabname,
