@@ -645,7 +645,7 @@ pub fn main_get_custms() -> Vec<String> {
     get_custms()
 }
 
-pub fn main_store_custms(favs: Vec<String>) {
+pub fn main_store_custms(custms: Vec<String>) {
     store_custms(custms)
 }
 
