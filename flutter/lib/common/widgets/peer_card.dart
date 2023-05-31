@@ -670,7 +670,7 @@ abstract class BasePeerCard extends StatelessWidget {
   }
 
   @protected
-  MenuEntryBase<String> _rmCustAction(
+  MenuEntryBase<String> _rmCustmsAction(
       String id, Future<void> Function() reloadFunc) {
     return MenuEntryButton<String>(
       childBuilder: (TextStyle? style) => Row(
