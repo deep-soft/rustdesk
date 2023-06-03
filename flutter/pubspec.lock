@@ -292,12 +292,11 @@ packages:
   dash_chat_2:
     dependency: "direct main"
     description:
-      path: "."
-      ref: HEAD
-      resolved-ref: "8d850ab63532c36ed1d594ad4c81d4391ec3b1e1"
-      url: "https://github.com/Kingtous/Dash-Chat-2.git"
-    source: git
-    version: "0.0.16"
+      name: dash_chat_2
+      sha256: e9e08b2a030d340d60f7adbeb977d3d6481db1f172b51440bfa02488b92fa19c
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.0.17"
   debounce_throttle:
     dependency: "direct main"
     description:
@@ -310,18 +309,18 @@ packages:
     dependency: "direct main"
     description:
       path: "packages/desktop_drop"
-      ref: ba76531701885d9de8a69ee0167e1610cf76e440
-      resolved-ref: ba76531701885d9de8a69ee0167e1610cf76e440
-      url: "https://github.com/Kingtous/mixin-flutter-plugins.git"
+      ref: HEAD
+      resolved-ref: "21725af7fd5be4e928acfb84146ebd10d1364a97"
+      url: "https://github.com/rustdesk-org/flutter-plugins"
     source: git
     version: "0.4.1"
   desktop_multi_window:
     dependency: "direct main"
     description:
       path: "."
-      ref: "30518303e28702bf6b8110465293c05d21bc4cd2"
+      ref: HEAD
       resolved-ref: "30518303e28702bf6b8110465293c05d21bc4cd2"
-      url: "https://github.com/Kingtous/rustdesk_desktop_multi_window"
+      url: "https://github.com/rustdesk-org/rustdesk_desktop_multi_window"
     source: git
     version: "0.1.0"
   device_info_plus:
@@ -485,9 +484,9 @@ packages:
     dependency: "direct main"
     description:
       path: "."
-      ref: "62f09545149f320616467c306c8c5f71714a18e6"
+      ref: HEAD
       resolved-ref: "62f09545149f320616467c306c8c5f71714a18e6"
-      url: "https://github.com/Kingtous/flutter_improved_scrolling"
+      url: "https://github.com/rustdesk-org/flutter_improved_scrolling"
     source: git
     version: "0.0.3"
   flutter_keyboard_visibility:
@@ -1238,9 +1237,9 @@ packages:
     dependency: "direct main"
     description:
       path: "."
-      ref: "276b2206d0a7bd7574bc6f061d804c9b7be1d031"
-      resolved-ref: "276b2206d0a7bd7574bc6f061d804c9b7be1d031"
-      url: "https://github.com/Kingtous/rustdesk_uni_links_desktop"
+      ref: HEAD
+      resolved-ref: e1d25263ae7c214ff52a66a9cf28aea8f408742e
+      url: "https://github.com/rustdesk-org/uni_links_desktop"
     source: git
     version: "0.1.6"
   uni_links_platform_interface:
@@ -1495,9 +1494,9 @@ packages:
     dependency: "direct main"
     description:
       path: "."
-      ref: "8cb5bf683e6b7b3f73280449900fe8d2c6bfe011"
-      resolved-ref: "8cb5bf683e6b7b3f73280449900fe8d2c6bfe011"
-      url: "https://github.com/Kingtous/rustdesk_window_manager"
+      ref: HEAD
+      resolved-ref: "2c4b242e668acf4e652b09b13f650bcfbbaa3871"
+      url: "https://github.com/rustdesk-org/window_manager"
     source: git
     version: "0.3.4"
   window_size:
