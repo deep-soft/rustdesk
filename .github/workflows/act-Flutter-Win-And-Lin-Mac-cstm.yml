@@ -1,4 +1,4 @@
-# 2023-05-26 02:00
+# 2023-06-05 09:00
 #
 #
 name: 0-act - Flutter - Win-And-Lin-Mac - cstm
@@ -18,10 +18,10 @@ env:
   RDSK_PCH_SH_CLN:   '${{ secrets.RDSK_PCH_SH_CLN }}'
   DEBUG_LS: "yes"
   LLVM_VERSION:    "15.0.6"
-  FLUTTER_VERSION: "3.10.1"
+  FLUTTER_VERSION: "3.10.2"
   FLUTTER_RUST_BRIDGE_VERSION: "1.75.3"
   # for arm64 linux
-  FLUTTER_ELINUX_VERSION: "3.10.1"
+  FLUTTER_ELINUX_VERSION: "3.10.2"
   FLUTTER_ELINUX_COMMIT_ID: "410b3ca42f2cd0c485edf517a1666652bab442d4"
   # vcpkg version: 2023.04.15
   # for multiarch gcc compatibility
