@@ -127,9 +127,6 @@ pub fn core_main() -> Option<Vec<String>> {
                     log::error!("Failed to before-uninstall: {}", err);
                 }
                 return None;
-            } else if args[0] == "--update" {
-                hbb_common::allow_err!(platform::update_me());
-                return None;
             } else if args[0] == "--reinstall" {
                 hbb_common::allow_err!(platform::uninstall_me(false));
                 hbb_common::allow_err!(platform::install_me(
@@ -150,6 +147,10 @@ pub fn core_main() -> Option<Vec<String>> {
             } else if args[0] == "--install-cert" {
                 #[cfg(windows)]
                 hbb_common::allow_err!(crate::platform::windows::install_cert(&args[1]));
+                return None;
+            } else if args[0] == "--uninstall-cert" {
+                #[cfg(windows)]
+                hbb_common::allow_err!(crate::platform::windows::uninstall_cert());
                 return None;
             } else if args[0] == "--portable-service" {
                 crate::platform::elevate_or_run_as_system(
