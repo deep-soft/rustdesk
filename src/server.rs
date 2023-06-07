@@ -8,6 +8,8 @@ use std::{
 use bytes::Bytes;
 
 pub use connection::*;
+#[cfg(not(any(target_os = "android", target_os = "ios")))]
+use hbb_common::config::Config2;
 use hbb_common::tcp::{self, new_listener};
 use hbb_common::{
     allow_err,
@@ -22,8 +24,6 @@ use hbb_common::{
     sodiumoxide::crypto::{box_, sign},
     timeout, tokio, ResultType, Stream,
 };
-#[cfg(not(any(target_os = "android", target_os = "ios")))]
-use hbb_common::{anyhow::anyhow, config::Config2};
 #[cfg(not(any(target_os = "android", target_os = "ios")))]
 use service::ServiceTmpl;
 use service::{GenericService, Service, Subscriber};
@@ -388,7 +388,7 @@ pub async fn start_server(is_server: bool) {
         if crate::platform::current_is_wayland() {
             allow_err!(input_service::setup_uinput(0, 1920, 0, 1080).await);
         }
-        #[cfg(target_os = "macos")]
+        #[cfg(any(target_os = "macos", target_os = "linux"))]
         tokio::spawn(async { sync_and_watch_config_dir().await });
         crate::RendezvousMediator::start_all().await;
     } else {
@@ -460,7 +460,7 @@ pub async fn start_ipc_url_server() {
     }
 }
 
-#[cfg(target_os = "macos")]
+#[cfg(any(target_os = "macos", target_os = "linux"))]
 async fn sync_and_watch_config_dir() {
     if crate::platform::is_root() {
         return;
