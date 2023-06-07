@@ -183,7 +183,13 @@ class MyTheme {
     ),
   );
 
-  static const SwitchThemeData switchTheme = SwitchThemeData(splashRadius: 0);
+  static SwitchThemeData switchTheme() {
+    return SwitchThemeData(splashRadius: isDesktop ? 0 : kRadialReactionRadius);
+  }
+
+  static RadioThemeData radioTheme() {
+    return RadioThemeData(splashRadius: isDesktop ? 0 : kRadialReactionRadius);
+  }
 
   // Checkbox
   static const CheckboxThemeData checkboxTheme = CheckboxThemeData(
@@ -309,7 +315,8 @@ class MyTheme {
         ),
       ),
     ),
-    switchTheme: switchTheme,
+    switchTheme: switchTheme(),
+    radioTheme: radioTheme(),
     checkboxTheme: checkboxTheme,
     listTileTheme: listTileTheme,
     menuBarTheme: MenuBarThemeData(
@@ -404,7 +411,8 @@ class MyTheme {
         ),
       ),
     ),
-    switchTheme: switchTheme,
+    switchTheme: switchTheme(),
+    radioTheme: radioTheme(),
     checkboxTheme: checkboxTheme,
     listTileTheme: listTileTheme,
     menuBarTheme: MenuBarThemeData(
@@ -2033,5 +2041,14 @@ void onCopyFingerprint(String value) {
     showToast('$value\n${translate("Copied")}');
   } else {
     showToast(translate("no fingerprints"));
+  }
+}
+
+Future<void> start_service(bool is_start) async {
+  bool checked = !bind.mainIsInstalled() ||
+      !Platform.isMacOS ||
+      await bind.mainCheckSuperUserPermission();
+  if (checked) {
+    bind.mainSetOption(key: "stop-service", value: is_start ? "" : "Y");
   }
 }
