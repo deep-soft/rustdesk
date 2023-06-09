@@ -1054,6 +1054,7 @@ pub async fn get_next_nonkeyexchange_msg(
     None
 }
 
+#[cfg(not(any(target_os = "android", target_os = "ios")))]
 pub fn check_process(arg: &str, same_uid: bool) -> bool {
     use hbb_common::sysinfo::{ProcessExt, System, SystemExt};
     let mut sys = System::new();
@@ -1070,17 +1071,17 @@ pub fn check_process(arg: &str, same_uid: bool) -> bool {
         .map(|x| x.user_id())
         .unwrap_or_default();
     for (_, p) in sys.processes().iter() {
+        if p.pid().to_string() == std::process::id().to_string() {
+            continue;
+        }
         if same_uid && p.user_id() != my_uid {
             continue;
         }
-        if p.cmd().is_empty() || p.cmd()[0] != app {
+        if p.exe().to_string_lossy() != app {
             continue;
         }
-        if arg.is_empty() {
-            if p.cmd().len() == 1 {
-                return true;
-            }
-        } else if p.cmd().len() > 1 && p.cmd()[1] == arg {
+        let parg = if p.cmd().len() <= 1 { "" } else { &p.cmd()[1] };
+        if arg == parg {
             return true;
         }
     }

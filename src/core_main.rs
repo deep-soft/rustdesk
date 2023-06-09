@@ -41,6 +41,14 @@ pub fn core_main() -> Option<Vec<String>> {
         }
         i += 1;
     }
+    #[cfg(any(target_os = "linux", target_os = "windows"))]
+    if args.is_empty() {
+        #[cfg(target_os = "linux")]
+        hbb_common::allow_err!(crate::platform::check_autostart_config());
+        if crate::check_process("--server", false) && !crate::check_process("--tray", true) {
+            hbb_common::allow_err!(crate::run_me(vec!["--tray"]));
+        }
+    }
     #[cfg(not(debug_assertions))]
     #[cfg(not(any(target_os = "android", target_os = "ios")))]
     register_breakdown_handler(breakdown_callback);
@@ -172,15 +180,6 @@ pub fn core_main() -> Option<Vec<String>> {
             log::info!("start --server with user {}", crate::username());
             #[cfg(any(target_os = "linux", target_os = "windows"))]
             {
-                #[cfg(target_os = "linux")]
-                std::thread::spawn(move || {
-                    std::thread::sleep(std::time::Duration::from_secs(3));
-                    if crate::platform::is_root() {
-                        hbb_common::allow_err!(crate::platform::run_as_user(vec!["--tray"], None));
-                    } else {
-                        hbb_common::allow_err!(crate::run_me(vec!["--tray"]));
-                    }
-                });
                 crate::start_server(true);
                 return None;
             }
