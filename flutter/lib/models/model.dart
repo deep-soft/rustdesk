@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
-import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
@@ -38,7 +37,8 @@ import 'platform_model.dart';
 
 typedef HandleMsgBox = Function(Map<String, dynamic> evt, String id);
 typedef ReconnectHandle = Function(OverlayDialogManager, SessionID, bool);
-final _waitForImage = <String, bool>{};
+final _waitForImage = <UuidValue, bool>{};
+final _constSessionId = Uuid().v4obj();
 
 class FfiModel with ChangeNotifier {
   PeerInfo _pi = PeerInfo();
@@ -491,7 +491,7 @@ class FfiModel with ChangeNotifier {
         parent.target?.dialogManager.showLoading(
             translate('Connected, waiting for image...'),
             onCancel: closeConnection);
-        _waitForImage[peerId] = true;
+        _waitForImage[sessionId] = true;
         _reconnects = 1;
       }
       Map<String, dynamic> features = json.decode(evt['features']);
@@ -637,14 +637,14 @@ class ImageModel with ChangeNotifier {
   addCallbackOnFirstImage(Function(String) cb) => callbacksOnFirstImage.add(cb);
 
   onRgba(Uint8List rgba) {
-    final waitforImage = _waitForImage[id];
+    final waitforImage = _waitForImage[sessionId];
     if (waitforImage == null) {
       debugPrint('Exception, peer $id not found for waiting image');
       return;
     }
 
     if (waitforImage == true) {
-      _waitForImage[id] = false;
+      _waitForImage[sessionId] = false;
       parent.target?.dialogManager.dismissAll();
       if (isDesktop) {
         for (final cb in callbacksOnFirstImage) {
@@ -1580,14 +1580,15 @@ enum ConnType { defaultConn, fileTransfer, portForward, rdp }
 
 /// Flutter state manager and data communication with the Rust core.
 class FFI {
-  final sessionId = Uuid().v4obj();
   var id = '';
   var version = '';
   var connType = ConnType.defaultConn;
+  var closed = false;
 
   /// dialogManager use late to ensure init after main page binding [globalKey]
   late final dialogManager = OverlayDialogManager();
 
+  late final SessionID sessionId;
   late final ImageModel imageModel; // session
   late final FfiModel ffiModel; // session
   late final CursorModel cursorModel; // session
@@ -1605,6 +1606,7 @@ class FFI {
   late final ElevationModel elevationModel; // session
 
   FFI() {
+    sessionId = isDesktop ? Uuid().v4obj() : _constSessionId;
     imageModel = ImageModel(WeakReference(this));
     ffiModel = FfiModel(WeakReference(this));
     cursorModel = CursorModel(WeakReference(this));
@@ -1630,6 +1632,7 @@ class FFI {
       String? switchUuid,
       String? password,
       bool? forceRelay}) {
+    closed = false;
     assert(!(isFileTransfer && isPortForward), 'more than one connect type');
     if (isFileTransfer) {
       connType = ConnType.fileTransfer;
@@ -1655,13 +1658,16 @@ class FFI {
     );
     final stream = bind.sessionStart(sessionId: sessionId, id: id);
     final cb = ffiModel.startEventListener(sessionId, id);
-    () async {
-      final useTextureRender = bind.mainUseTextureRender();
-      // Preserved for the rgba data.
-      await for (final message in stream) {
+    final useTextureRender = bind.mainUseTextureRender();
+    // Preserved for the rgba data.
+    stream.listen((message) {
+      if (closed) return;
+      () async {
         if (message is EventToUI_Event) {
           if (message.field0 == "close") {
-            break;
+            closed = true;
+            debugPrint('Exit session event loop');
+            return;
           }
 
           Map<String, dynamic>? event;
@@ -1675,8 +1681,8 @@ class FFI {
           }
         } else if (message is EventToUI_Rgba) {
           if (useTextureRender) {
-            if (_waitForImage[id]!) {
-              _waitForImage[id] = false;
+            if (_waitForImage[sessionId]!) {
+              _waitForImage[sessionId] = false;
               dialogManager.dismissAll();
               for (final cb in imageModel.callbacksOnFirstImage) {
                 cb(id);
@@ -1696,9 +1702,8 @@ class FFI {
             }
           }
         }
-      }
-      debugPrint('Exit session event loop');
-    }();
+      }();
+    });
     // every instance will bind a stream
     this.id = id;
   }
@@ -1716,6 +1721,7 @@ class FFI {
 
   /// Close the remote session.
   Future<void> close() async {
+    closed = true;
     chatModel.close();
     if (imageModel.image != null && !isWebDesktop) {
       await setCanvasConfig(

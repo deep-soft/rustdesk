@@ -1119,20 +1119,32 @@ pub fn run_me_with(secs: u32) {
         .ok();
 }
 
+fn switch_service(stop: bool) -> String {
+    let home = std::env::var("HOME").unwrap_or_default();
+    Config::set_option("stop-service".into(), if stop { "Y" } else { "" }.into());
+    if home != "/root" && !Config::get().is_empty() {
+        format!("cp -f {home}/.config/rustdesk/RustDesk.toml /root/.config/rustdesk/; cp -f {home}/.config/rustdesk/RustDesk2.toml /root/.config/rustdesk/;")
+    } else {
+        "".to_owned()
+    }
+}
+
 pub fn uninstall_service(show_new_window: bool) -> bool {
     if !has_cmd("systemctl") {
         return false;
     }
     log::info!("Uninstalling service...");
-    Config::set_option("stop-service".into(), "Y".into());
-    if !run_cmds_pkexec("systemctl disable rustdesk; systemctl stop rustdesk") {
+    let cp = switch_service(true);
+    if !run_cmds_pkexec(&format!(
+        "systemctl disable rustdesk; systemctl stop rustdesk; {cp}"
+    )) {
         Config::set_option("stop-service".into(), "".into());
         return true;
     }
     if show_new_window {
         run_me_with(2);
     }
-    std::process::exit(0);
+    true
 }
 
 pub fn install_service() -> bool {
@@ -1140,13 +1152,7 @@ pub fn install_service() -> bool {
         return false;
     }
     log::info!("Installing service...");
-    let home = std::env::var("HOME").unwrap_or_default();
-    let cp = if home != "/root" && !Config::get().is_empty() {
-        format!("cp -f {home}/.config/rustdesk/RustDesk.toml /root/.config/rustdesk/; cp -f {home}/.config/rustdesk/RustDesk2.toml /root/.config/rustdesk/;")
-    } else {
-        "".to_owned()
-    };
-    Config::set_option("stop-service".into(), "".into());
+    let cp = switch_service(false);
     if !run_cmds_pkexec(&format!(
         "{cp}systemctl enable rustdesk; systemctl start rustdesk"
     )) {
