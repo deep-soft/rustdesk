@@ -336,8 +336,8 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("Ratio", "Pomer"),
         ("Image Quality", "Kvalita obrazu"),
         ("Scroll Style", "Štýl posúvania"),
-        ("Show Menubar", "Zobraziť panel s ponukami"),
-        ("Hide Menubar", "skryť panel s ponukami"),
+        ("Show Toolbar", ""),
+        ("Hide Toolbar", ""),
         ("Direct Connection", "Priame pripojenie"),
         ("Relay Connection", "Reléové pripojenie"),
         ("Secure Connection", "Zabezpečené pripojenie"),
@@ -366,8 +366,8 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("Use IP Whitelisting", ""),
         ("Network", ""),
         ("Enable RDP", ""),
-        ("Pin menubar", "Pripnúť panel s ponukami"),
-        ("Unpin menubar", "Uvoľniť panel s ponukami"),
+        ("Pin Toolbar", ""),
+        ("Unpin Toolbar", ""),
         ("Recording", ""),
         ("Directory", ""),
         ("Automatically record incoming sessions", ""),
@@ -508,5 +508,6 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("resolution_original_tip", ""),
         ("resolution_fit_local_tip", ""),
         ("resolution_custom_tip", ""),
+        ("Collapse toolbar", ""),
     ].iter().cloned().collect();
 }

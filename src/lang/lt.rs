@@ -336,8 +336,8 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("Ratio", "Santykis"),
         ("Image Quality", "Vaizdo kokybė"),
         ("Scroll Style", "Slinkimo stilius"),
-        ("Show Menubar", "Rodyti meniu juostą"),
-        ("Hide Menubar", "Slėpti meniu juostą"),
+        ("Show Toolbar", ""),
+        ("Hide Toolbar", ""),
         ("Direct Connection", "Tiesioginis ryšys"),
         ("Relay Connection", "Tarpinė jungtis"),
         ("Secure Connection", "Saugus ryšys"),
@@ -366,8 +366,8 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("Use IP Whitelisting", "Naudoti patikimą IP sąrašą"),
         ("Network", "Tinklas"),
         ("Enable RDP", "Įgalinti RDP"),
-        ("Pin menubar", "Prisegti meniu juostą"),
-        ("Unpin menubar", "Atsegti meniu juostą"),
+        ("Pin Toolbar", ""),
+        ("Unpin Toolbar", ""),
         ("Recording", "Įrašymas"),
         ("Directory", "Katalogas"),
         ("Automatically record incoming sessions", "Automatiškai įrašyti įeinančius seansus"),
@@ -508,5 +508,6 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("resolution_original_tip", ""),
         ("resolution_fit_local_tip", ""),
         ("resolution_custom_tip", ""),
+        ("Collapse toolbar", ""),
     ].iter().cloned().collect();
 }

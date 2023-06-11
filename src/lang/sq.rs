@@ -336,8 +336,8 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("Ratio", "Raport"),
         ("Image Quality", "Cilësia e imazhit"),
         ("Scroll Style", "Stili i lëvizjes"),
-        ("Show Menubar", "Shfaq shiritin e menusë"),
-        ("Hide Menubar", "Fshih menunë"),
+        ("Show Toolbar", ""),
+        ("Hide Toolbar", ""),
         ("Direct Connection", "Lidhja e drejtpërdrejtë"),
         ("Relay Connection", "Lidhja rele"),
         ("Secure Connection", "Lidhje e sigurt"),
@@ -366,8 +366,8 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("Use IP Whitelisting", "Përdor listën e bardhë IP"),
         ("Network", "Rrjeti"),
         ("Enable RDP", "Aktivizo RDP"),
-        ("Pin menubar", "Pin menubar"),
-        ("Unpin menubar", "Zgjidh shiritin e menusë"),
+        ("Pin Toolbar", ""),
+        ("Unpin Toolbar", ""),
         ("Recording", "Regjistrimi"),
         ("Directory", "Direktoria"),
         ("Automatically record incoming sessions", "Regjistro automatikisht seancat hyrëse"),
@@ -508,5 +508,6 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("resolution_original_tip", ""),
         ("resolution_fit_local_tip", ""),
         ("resolution_custom_tip", ""),
+        ("Collapse toolbar", ""),
     ].iter().cloned().collect();
 }

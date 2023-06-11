@@ -336,8 +336,8 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("Ratio", "Razão"),
         ("Image Quality", "Qualidade da imagem"),
         ("Scroll Style", "Estilo de rolagem"),
-        ("Show Menubar", "Mostrar barra de menus"),
-        ("Hide Menubar", "ocultar barra de menu"),
+        ("Show Toolbar", ""),
+        ("Hide Toolbar", ""),
         ("Direct Connection", "Conexão direta"),
         ("Relay Connection", "Conexão de relé"),
         ("Secure Connection", "Conexão segura"),
@@ -366,8 +366,8 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("Use IP Whitelisting", ""),
         ("Network", ""),
         ("Enable RDP", ""),
-        ("Pin menubar", "Fixar barra de menu"),
-        ("Unpin menubar", "Desenganxa la barra de menús"),
+        ("Pin Toolbar", ""),
+        ("Unpin Toolbar", ""),
         ("Recording", ""),
         ("Directory", ""),
         ("Automatically record incoming sessions", ""),
@@ -508,5 +508,6 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("resolution_original_tip", ""),
         ("resolution_fit_local_tip", ""),
         ("resolution_custom_tip", ""),
+        ("Collapse toolbar", ""),
     ].iter().cloned().collect();
 }

@@ -336,8 +336,8 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("Ratio", "Razmerje"),
         ("Image Quality", "Kakovost slike"),
         ("Scroll Style", "Način drsenja"),
-        ("Show Menubar", "Prikaži meni"),
-        ("Hide Menubar", "Skrij meni"),
+        ("Show Toolbar", ""),
+        ("Hide Toolbar", ""),
         ("Direct Connection", "Neposredna povezava"),
         ("Relay Connection", "Posredovana povezava"),
         ("Secure Connection", "Zavarovana povezava"),
@@ -366,8 +366,8 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("Use IP Whitelisting", "Omogoči seznam dovoljenih IP naslovov"),
         ("Network", "Mreža"),
         ("Enable RDP", "Omogoči RDP"),
-        ("Pin menubar", "Pripni menijsko vrstico"),
-        ("Unpin menubar", "Odpni menijsko vrstico"),
+        ("Pin Toolbar", ""),
+        ("Unpin Toolbar", ""),
         ("Recording", "Snemanje"),
         ("Directory", "Imenik"),
         ("Automatically record incoming sessions", "Samodejno snemaj vhodne seje"),
@@ -508,5 +508,6 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("resolution_original_tip", ""),
         ("resolution_fit_local_tip", ""),
         ("resolution_custom_tip", ""),
+        ("Collapse toolbar", ""),
     ].iter().cloned().collect();
 }

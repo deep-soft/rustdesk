@@ -336,8 +336,8 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("Ratio", "比率"),
         ("Image Quality", "画質"),
         ("Scroll Style", "スクロール スタイル"),
-        ("Show Menubar", "メニューバーを表示"),
-        ("Hide Menubar", "メニューバーを隠す"),
+        ("Show Toolbar", ""),
+        ("Hide Toolbar", ""),
         ("Direct Connection", "直接接続"),
         ("Relay Connection", "リレー接続"),
         ("Secure Connection", "安全な接続"),
@@ -366,8 +366,8 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("Use IP Whitelisting", ""),
         ("Network", ""),
         ("Enable RDP", ""),
-        ("Pin menubar", "メニューバーを固定する"),
-        ("Unpin menubar", "メニューバーのピン留めを外す"),
+        ("Pin Toolbar", ""),
+        ("Unpin Toolbar", ""),
         ("Recording", ""),
         ("Directory", ""),
         ("Automatically record incoming sessions", ""),
@@ -508,5 +508,6 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("resolution_original_tip", ""),
         ("resolution_fit_local_tip", ""),
         ("resolution_custom_tip", ""),
+        ("Collapse toolbar", ""),
     ].iter().cloned().collect();
 }
