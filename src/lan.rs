@@ -113,16 +113,6 @@ fn get_mac(_ip: &IpAddr) -> String {
     "".to_owned()
 }
 
-fn get_all_ipv4s() -> ResultType<Vec<Ipv4Addr>> {
-    let mut ipv4s = Vec::new();
-    for interface in default_net::get_interfaces() {
-        for ipv4 in &interface.ipv4 {
-            ipv4s.push(ipv4.addr.clone());
-        }
-    }
-    Ok(ipv4s)
-}
-
 #[cfg(not(any(target_os = "android", target_os = "ios")))]
 fn get_mac_by_ip(ip: &IpAddr) -> ResultType<String> {
     for interface in default_net::get_interfaces() {
@@ -164,23 +154,30 @@ fn get_ipaddr_by_peer<A: ToSocketAddrs>(peer: A) -> Option<IpAddr> {
     };
 }
 
-fn create_broadcast_sockets() -> ResultType<Vec<UdpSocket>> {
-    let mut sockets = Vec::new();
-    for v4_addr in get_all_ipv4s()? {
-        if v4_addr.is_private() {
-            let s = UdpSocket::bind(SocketAddr::from((v4_addr, 0)))?;
-            s.set_broadcast(true)?;
-            log::debug!("Bind socket to {}", &v4_addr);
-            sockets.push(s)
+fn create_broadcast_sockets() -> Vec<UdpSocket> {
+    let mut ipv4s = Vec::new();
+    for interface in default_net::get_interfaces() {
+        for ipv4 in &interface.ipv4 {
+            ipv4s.push(ipv4.addr.clone());
         }
     }
-    Ok(sockets)
+    ipv4s.push(Ipv4Addr::UNSPECIFIED); // for robustness
+    let mut sockets = Vec::new();
+    for v4_addr in ipv4s {
+        // removing v4_addr.is_private() check, https://github.com/rustdesk/rustdesk/issues/4663
+        if let Ok(s) = UdpSocket::bind(SocketAddr::from((v4_addr, 0))) {
+            if s.set_broadcast(true).is_ok() {
+                sockets.push(s);
+            }
+        }
+    }
+    sockets
 }
 
 fn send_query() -> ResultType<Vec<UdpSocket>> {
-    let sockets = create_broadcast_sockets()?;
+    let sockets = create_broadcast_sockets();
     if sockets.is_empty() {
-        bail!("Found no ipv4 addresses");
+        bail!("Found no bindable ipv4 addresses");
     }
 
     let mut msg_out = Message::new();
@@ -189,9 +186,10 @@ fn send_query() -> ResultType<Vec<UdpSocket>> {
         ..Default::default()
     };
     msg_out.set_peer_discovery(peer);
+    let out = msg_out.write_to_bytes()?;
     let maddr = SocketAddr::from(([255, 255, 255, 255], get_broadcast_port()));
     for socket in &sockets {
-        socket.send_to(&msg_out.write_to_bytes()?, maddr)?;
+        allow_err!(socket.send_to(&out, maddr));
     }
     log::info!("discover ping sent");
     Ok(sockets)
