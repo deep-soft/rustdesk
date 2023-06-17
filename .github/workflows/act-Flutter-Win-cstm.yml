@@ -1,4 +1,4 @@
-# 2023-06-05 09:00
+# 2023-06-17 20:20
 #
 #
 name: act - Flutter - Win - cstm
@@ -18,7 +18,7 @@ env:
   RDSK_PCH_SH_CLN:   '${{ secrets.RDSK_PCH_SH_CLN }}'
   DEBUG_LS: "yes"
   LLVM_VERSION:    "15.0.6"
-  FLUTTER_VERSION: "3.10.2"
+  FLUTTER_VERSION: "3.10.5"
   FLUTTER_RUST_BRIDGE_VERSION: "1.75.3"
   # for arm64 linux
   FLUTTER_ELINUX_VERSION: "3.10.2"
