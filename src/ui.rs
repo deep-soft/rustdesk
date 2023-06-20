@@ -72,10 +72,6 @@ pub fn start(args: &mut [String]) {
     allow_err!(sciter::set_options(sciter::RuntimeOptions::GfxLayer(
         sciter::GFX_LAYER::WARP
     )));
-    #[cfg(all(windows, not(feature = "inline")))]
-    unsafe {
-        winapi::um::shellscalingapi::SetProcessDpiAwareness(2);
-    }
     use sciter::SCRIPT_RUNTIME_FEATURES::*;
     allow_err!(sciter::set_options(sciter::RuntimeOptions::ScriptFeatures(
         ALLOW_FILE_IO as u8 | ALLOW_SOCKET_IO as u8 | ALLOW_EVAL as u8 | ALLOW_SYSINFO as u8
@@ -589,6 +585,10 @@ impl UI {
     fn handle_relay_id(&self, id: String) -> String {
         handle_relay_id(id)
     }
+
+    fn get_hostname(&self) -> String {
+        get_hostname()
+    }
 }
 
 impl sciter::EventHandler for UI {
@@ -673,6 +673,7 @@ impl sciter::EventHandler for UI {
         fn get_langs();
         fn default_video_save_directory();
         fn handle_relay_id(String);
+        fn get_hostname();
     }
 }
 
