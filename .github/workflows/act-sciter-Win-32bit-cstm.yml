@@ -1,4 +1,4 @@
-# 2023-06-21 19:00
+# 2023-06-21 20:00
 #
 #
 name: act - sciter - Win - 32bit - cstm
@@ -22,6 +22,7 @@ env:
   # for multiarch gcc compatibility
   # VCPKG_COMMIT_ID: "501db0f17ef6df184fcdbfbe0f87cde2313b6ab1"
   VCPKG_COMMIT_ID: "662dbb50e63af15baa2909b7eac5b1b87e86a0aa"
+  VCPKG_MAX_CONCURRENCY: "1"
   VERSION:     "1.2.0"
   GUI: "sciter"
 
