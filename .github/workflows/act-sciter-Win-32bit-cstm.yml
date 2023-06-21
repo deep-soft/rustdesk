@@ -1,4 +1,4 @@
-# 2023-06-21 21:00
+# 2023-06-21 23:40
 #
 #
 name: act - sciter - Win - 32bit - cstm
@@ -234,14 +234,17 @@ jobs:
         shell: bash
         run: |
           echo "VCPKG_BUILD_FAILED=true" >> $GITHUB_ENV
+          find ./vcpkg -name profile.cmake -type f -exec cat {} \;
+          find $VCPKG_ROOT/vcpkg -name profile.cmake -type f -exec bash -c "printf '%s\n%s' '-DCMAKE_C_FLAGS=\"/Zm500\"' '-DCMAKE_C_FLAGS=\"/Zm500\"' >> {}" \;
+          find ./vcpkg -name profile.cmake -type f -exec cat {} \;
           $VCPKG_ROOT/vcpkg install libvpx:x86-windows-static libyuv:x86-windows-static opus:x86-windows-static aom:x86-windows-static
           echo "VCPKG_BUILD_FAILED=false" >> $GITHUB_ENV
 
       - name: vcpkg - aom log
         continue-on-error: true
         shell: bash
-        run:
-          echo VCPKG_BUILD_FAILED=${{ env.VCPKG_BUILD_FAILED }}
+        run: |
+          echo "VCPKG_BUILD_FAILED=${{ env.VCPKG_BUILD_FAILED }}";
           cat D:/a/rustdesk/rustdesk/vcpkg/buildtrees/aom/install-x86-windows-static-rel-out.log
 
 ###
@@ -273,6 +276,7 @@ jobs:
 
 ###
       - name: Create vcpkg-buildtrees archive
+        if: ${{ env.VCPKG_BUILD_FAILED }}
         continue-on-error: true
         shell: bash
         run: |
@@ -290,6 +294,7 @@ jobs:
           fi
 
       - name: Publish vcpkg-buildtrees archive
+        if: ${{ env.VCPKG_BUILD_FAILED }}
         continue-on-error: true
         uses: deep-soft/action-gh-release@v1
         with:
@@ -298,13 +303,42 @@ jobs:
           files: |
             ${{ env.ASSET_VCPKG_BUILDTREES }}
 
+###
+      - name: Create vcpkg-all archive
+        if: ${{ env.VCPKG_BUILD_FAILED }}
+        continue-on-error: true
+        shell: bash
+        run: |
+          staging="vcpkg-all-${{ env.VERSION }}-${{ matrix.job.target }}-${{ env.GUI }}"
+          touch "$staging.tar.xz"
+          #tar -cfJ "$staging.tar.xz" --exclude "$staging.tar.xz" .
+          tar --exclude=*.tar* --exclude=target/*  -cv vcpkg | xz -9 > "$staging.tar.xz"
+          echo "ASSET_VCPKG_ALL=$staging.tar.xz" >> $GITHUB_ENV
+          if [ "${{ env.DEBUG_LS }}" = "yes" ]; then
+            echo "ASSET_VCPKG_ALL archive name: "
+            ls -l "$staging.tar.xz"
+          fi
+          if [ "${{ env.DEBUG_LS }}" = "yes" ]; then
+            ls -l
+          fi
+
+      - name: Publish vcpkg-all archive
+        if: ${{ env.VCPKG_BUILD_FAILED }}
+        continue-on-error: true
+        uses: deep-soft/action-gh-release@v1
+        with:
+          draft: true
+          tag_name: vcpkg-all-${{ env.VERSION }}-${{ matrix.job.target }}-${{ env.GUI }}
+          files: |
+            ${{ env.ASSET_VCPKG_ALL }}
+
       - name: Cancel workflow if error on vcpkg build
         if: ${{ env.VCPKG_BUILD_FAILED }}
         uses: deep-soft/cancel-action@0.3
         
       # needed since the run is not cancelled immediately
       - name: wait for run cancellation
-        if: steps.changed-files.outputs.any_changed != 'true'
+        if: ${{ env.VCPKG_BUILD_FAILED }} && steps.changed-files.outputs.any_changed != 'true'
         shell: bash
         run: |
           while true;
