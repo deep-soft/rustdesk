@@ -1,4 +1,4 @@
-# 2023-06-17 20:20
+# 2023-06-21 19:00
 #
 #
 name: act - Flutter - Win - cstm
@@ -267,7 +267,7 @@ jobs:
         continue-on-error: true
         shell: bash
         run: |
-          staging="vcpkg-installed-${{ env.VERSION }}-${{ matrix.job.target }}"
+          staging="vcpkg-installed-${{ env.VERSION }}-${{ matrix.job.target }}-${{ env.GUI }}"
           touch "$staging.tar.xz"
           #tar -cfJ "$staging.tar.xz" --exclude "$staging.tar.xz" .
           tar --exclude=*.tar* --exclude=target/*  -cv vcpkg/installed | xz -9 > "$staging.tar.xz"
@@ -285,7 +285,7 @@ jobs:
         uses: deep-soft/action-gh-release@v1
         with:
           draft: true
-          tag_name: vcpkg-installed-${{ env.VERSION }}-${{ matrix.job.target }}
+          tag_name: vcpkg-installed-${{ env.VERSION }}-${{ matrix.job.target }}-${{ env.GUI }}
           files: |
             ${{ env.ASSET_VCPKG }}
 

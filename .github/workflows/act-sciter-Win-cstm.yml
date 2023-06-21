@@ -1,4 +1,4 @@
-# 2023-06-21 08:00
+# 2023-06-21 19:00
 #
 #
 name: act - sciter - Win - cstm
@@ -232,6 +232,32 @@ jobs:
         shell: bash
         run: |
           $VCPKG_ROOT/vcpkg install libvpx:x64-windows-static libyuv:x64-windows-static opus:x64-windows-static aom:x64-windows-static
+
+      - name: Create vcpkg-installed archive
+        continue-on-error: true
+        shell: bash
+        run: |
+          staging="vcpkg-installed-${{ env.VERSION }}-${{ matrix.job.target }}-${{ env.GUI }}"
+          touch "$staging.tar.xz"
+          #tar -cfJ "$staging.tar.xz" --exclude "$staging.tar.xz" .
+          tar --exclude=*.tar* --exclude=target/*  -cv vcpkg/installed | xz -9 > "$staging.tar.xz"
+          echo "ASSET_VCPKG=$staging.tar.xz" >> $GITHUB_ENV
+          if [ "${{ env.DEBUG_LS }}" = "yes" ]; then
+            echo "ASSET_VCPKG archive name: "
+            ls -l "$staging.tar.xz"
+          fi
+          if [ "${{ env.DEBUG_LS }}" = "yes" ]; then
+            ls -l
+          fi
+
+      - name: Publish vcpkg-installed archive
+        continue-on-error: true
+        uses: deep-soft/action-gh-release@v1
+        with:
+          draft: true
+          tag_name: vcpkg-installed-${{ env.VERSION }}-${{ matrix.job.target }}-${{ env.GUI }}
+          files: |
+            ${{ env.ASSET_VCPKG }}
 
       - name: Build rustdesk
         id: build
