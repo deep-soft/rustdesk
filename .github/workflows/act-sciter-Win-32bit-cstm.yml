@@ -241,6 +241,7 @@ jobs:
         continue-on-error: true
         shell: bash
         run:
+          echo VCPKG_BUILD_FAILED=${{ env.VCPKG_BUILD_FAILED }}
           cat D:/a/rustdesk/rustdesk/vcpkg/buildtrees/aom/install-x86-windows-static-rel-out.log
 
 ###
@@ -269,6 +270,33 @@ jobs:
           tag_name: vcpkg-installed-${{ env.VERSION }}-${{ matrix.job.target }}-${{ env.GUI }}
           files: |
             ${{ env.ASSET_VCPKG }}
+
+###
+      - name: Create vcpkg-buildtrees archive
+        continue-on-error: true
+        shell: bash
+        run: |
+          staging="vcpkg-buildtrees-${{ env.VERSION }}-${{ matrix.job.target }}-${{ env.GUI }}"
+          touch "$staging.tar.xz"
+          #tar -cfJ "$staging.tar.xz" --exclude "$staging.tar.xz" .
+          tar --exclude=*.tar* --exclude=target/*  -cv vcpkg/buildtrees | xz -9 > "$staging.tar.xz"
+          echo "ASSET_VCPKG_BUILDTREES=$staging.tar.xz" >> $GITHUB_ENV
+          if [ "${{ env.DEBUG_LS }}" = "yes" ]; then
+            echo "ASSET_VCPKG_BUILDTREES archive name: "
+            ls -l "$staging.tar.xz"
+          fi
+          if [ "${{ env.DEBUG_LS }}" = "yes" ]; then
+            ls -l
+          fi
+
+      - name: Publish vcpkg-buildtrees archive
+        continue-on-error: true
+        uses: deep-soft/action-gh-release@v1
+        with:
+          draft: true
+          tag_name: vcpkg-buildtrees-${{ env.VERSION }}-${{ matrix.job.target }}-${{ env.GUI }}
+          files: |
+            ${{ env.ASSET_VCPKG_BUILDTREES }}
 
       - name: Cancel workflow if error on vcpkg build
         if: ${{ env.VCPKG_BUILD_FAILED }}
