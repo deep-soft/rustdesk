@@ -1,4 +1,4 @@
-# 2023-06-21 20:00
+# 2023-06-21 21:00
 #
 #
 name: act - sciter - Win - 32bit - cstm
@@ -230,9 +230,18 @@ jobs:
           vcpkgGitCommitId: ${{ env.VCPKG_COMMIT_ID }}
 
       - name: Install vcpkg dependencies
+        continue-on-error: true
         shell: bash
         run: |
+          echo "VCPKG_BUILD_FAILED=true" >> $GITHUB_ENV
           $VCPKG_ROOT/vcpkg install libvpx:x86-windows-static libyuv:x86-windows-static opus:x86-windows-static aom:x86-windows-static
+          echo "VCPKG_BUILD_FAILED=false" >> $GITHUB_ENV
+
+      - name: vcpkg - aom log
+        continue-on-error: true
+        shell: bash
+        run:
+          cat D:\a\rustdesk\rustdesk\vcpkg\buildtrees\aom\install-x86-windows-static-rel-out.log
 
 ###
       - name: Create vcpkg-installed archive
@@ -260,6 +269,20 @@ jobs:
           tag_name: vcpkg-installed-${{ env.VERSION }}-${{ matrix.job.target }}-${{ env.GUI }}
           files: |
             ${{ env.ASSET_VCPKG }}
+
+      - name: Cancel workflow if error on vcpkg build
+        if: ${{ env.VCPKG_BUILD_FAILED }}
+        uses: deep-soft/cancel-action@0.3
+        
+      # needed since the run is not cancelled immediately
+      - name: wait for run cancellation
+        if: steps.changed-files.outputs.any_changed != 'true'
+        shell: bash
+        run: |
+          while true;
+            do echo "Waiting for job to be cancelled";
+            sleep 5;
+          done
 
       - name: Build rustdesk
         id: build
