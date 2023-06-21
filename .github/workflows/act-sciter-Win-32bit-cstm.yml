@@ -229,14 +229,26 @@ jobs:
 #          setupOnly: true
           vcpkgGitCommitId: ${{ env.VCPKG_COMMIT_ID }}
 
+      - name: Try to fix vcpkg build on aom
+        # https://github.com/microsoft/vcpkg/issues/28389#issuecomment-1555426138
+        # 21pages commented on May 20 2023
+        # vcpkg install aom:x86-windows-static still has this problem, but vcpkg install aom:x64-windows-static is OK.
+        # Have set VCPKG_MAX_CONCURRENCY=1 and add options
+        # -DCMAKE_C_FLAGS="/Zm500"
+        # -DCMAKE_CXX_FLAGS="/Zm500"
+        # in profile.cmake.
+        continue-on-error: true
+        shell: bash
+        run: |
+          find ./vcpkg -name profile.cmake -type f -exec cat {} \;
+          find $VCPKG_ROOT/vcpkg -name profile.cmake -type f -exec bash -c "printf '%s\n%s' '-DCMAKE_C_FLAGS=\"/Zm500\"' '-DCMAKE_C_FLAGS=\"/Zm500\"' >> {}" \;
+          find ./vcpkg -name profile.cmake -type f -exec cat {} \;
+
       - name: Install vcpkg dependencies
         continue-on-error: true
         shell: bash
         run: |
           echo "VCPKG_BUILD_FAILED=true" >> $GITHUB_ENV
-          find ./vcpkg -name profile.cmake -type f -exec cat {} \;
-          find $VCPKG_ROOT/vcpkg -name profile.cmake -type f -exec bash -c "printf '%s\n%s' '-DCMAKE_C_FLAGS=\"/Zm500\"' '-DCMAKE_C_FLAGS=\"/Zm500\"' >> {}" \;
-          find ./vcpkg -name profile.cmake -type f -exec cat {} \;
           $VCPKG_ROOT/vcpkg install libvpx:x86-windows-static libyuv:x86-windows-static opus:x86-windows-static aom:x86-windows-static
           echo "VCPKG_BUILD_FAILED=false" >> $GITHUB_ENV
 
