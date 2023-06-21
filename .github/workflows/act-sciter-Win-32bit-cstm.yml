@@ -241,7 +241,7 @@ jobs:
         continue-on-error: true
         shell: bash
         run:
-          cat D:\a\rustdesk\rustdesk\vcpkg\buildtrees\aom\install-x86-windows-static-rel-out.log
+          cat D:/a/rustdesk/rustdesk/vcpkg/buildtrees/aom/install-x86-windows-static-rel-out.log
 
 ###
       - name: Create vcpkg-installed archive
