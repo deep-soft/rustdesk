@@ -416,7 +416,7 @@ Future<bool?> loginDialog() async {
             password: password.text,
             id: await bind.mainGetMyId(),
             uuid: await bind.mainGetUuid(),
-            trustThisDevice: false,
+            autoLogin: true,
             type: HttpType.kAuthReqTypeAccount));
 
         switch (resp.type) {
@@ -444,10 +444,8 @@ Future<bool?> loginDialog() async {
         }
       } on RequestException catch (err) {
         passwordMsg = translate(err.cause);
-        debugPrintStack(label: err.toString());
       } catch (err) {
         passwordMsg = "Unknown Error: $err";
-        debugPrintStack(label: err.toString());
       }
       curOP.value = '';
       setState(() => isInProgress = false);
@@ -531,7 +529,7 @@ Future<bool?> loginDialog() async {
 }
 
 Future<bool?> verificationCodeDialog(UserPayload? user) async {
-  var trustThisDevice = false;
+  var autoLogin = true;
   var isInProgress = false;
   String? errorText;
 
@@ -564,7 +562,7 @@ Future<bool?> verificationCodeDialog(UserPayload? user) async {
             username: user?.name,
             id: await bind.mainGetMyId(),
             uuid: await bind.mainGetUuid(),
-            trustThisDevice: trustThisDevice,
+            autoLogin: autoLogin,
             type: HttpType.kAuthReqTypeEmailCode));
 
         switch (resp.type) {
@@ -582,10 +580,8 @@ Future<bool?> verificationCodeDialog(UserPayload? user) async {
         }
       } on RequestException catch (err) {
         errorText = translate(err.cause);
-        debugPrintStack(label: err.toString());
       } catch (err) {
         errorText = "Unknown Error: $err";
-        debugPrintStack(label: err.toString());
       }
 
       setState(() => isInProgress = false);
