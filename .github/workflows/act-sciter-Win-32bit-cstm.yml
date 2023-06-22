@@ -247,6 +247,10 @@ jobs:
           echo -DCMAKE_C_FLAGS=\"/Zm500\" >> $VCPKG_ROOT/ports/aom/profile.cmake
           echo -DCMAKE_CXX_FLAGS=\"/Zm500\" >> $VCPKG_ROOT/ports/aom/profile.cmake
           cat $VCPKG_ROOT/ports/aom/profile.cmake
+          echo "" >> $VCPKG_ROOT/triplets/x86-windows.cmake
+          echo "" >> $VCPKG_ROOT/triplets/community/x86-windows-static.cmake
+          echo "" >> $VCPKG_ROOT/triplets/community/x86-windows-static-md.cmake
+          echo "" >> $VCPKG_ROOT/triplets/community/x86-mingw-static.cmake
           echo "set(VCPKG_BUILD_TYPE release)" >> $VCPKG_ROOT/triplets/x86-windows.cmake
           echo "set(VCPKG_BUILD_TYPE release)" >> $VCPKG_ROOT/triplets/community/x86-windows-static.cmake
           echo "set(VCPKG_BUILD_TYPE release)" >> $VCPKG_ROOT/triplets/community/x86-windows-static-md.cmake
