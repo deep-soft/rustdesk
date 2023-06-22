@@ -59,8 +59,6 @@ pub struct UserInfo {
     #[serde(default)]
     pub settings: UserSettings,
     #[serde(default)]
-    pub login_ip_whitelist: Vec<WhitelistItem>,
-    #[serde(default)]
     pub login_device_whitelist: Vec<WhitelistItem>,
     #[serde(default)]
     pub other: HashMap<String, String>,
@@ -82,14 +80,6 @@ pub enum UserStatus {
     Unverified = -1,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Serialize_repr, Deserialize_repr)]
-#[repr(i64)]
-pub enum UserRole {
-    Owner = 10,
-    Admin = 1,
-    Member = 0,
-}
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UserPayload {
     pub name: String,
@@ -97,8 +87,8 @@ pub struct UserPayload {
     pub note: Option<String>,
     pub status: UserStatus,
     pub info: UserInfo,
-    pub role: UserRole,
     pub is_admin: bool,
+    pub third_auth_type: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -226,7 +216,7 @@ impl OidcSession {
         let query_timeout = OIDC_SESSION.read().unwrap().query_timeout;
         while OIDC_SESSION.read().unwrap().keep_querying && begin.elapsed() < query_timeout {
             match Self::query(&code_url.code, &id, &uuid) {
-                Ok(HbbHttpResponse::<_>::Data(auth_body)) => {
+                Ok(HbbHttpResponse::<_>::Data(mut auth_body)) => {
                     if remember_me {
                         LocalConfig::set_option(
                             "access_token".to_owned(),
@@ -234,7 +224,7 @@ impl OidcSession {
                         );
                         LocalConfig::set_option(
                             "user_info".to_owned(),
-                            serde_json::to_string(&auth_body.user).unwrap_or_default(),
+                            serde_json::json!({ "name": auth_body.user.name, "status": auth_body.user.status }).to_string(),
                         );
                     }
                     OIDC_SESSION
