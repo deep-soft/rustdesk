@@ -43,7 +43,7 @@ on:
         description: Build for windows sciter 32bit
         type: boolean
         required: true
-        default: true
+        default: false
       # if: ${{ inputs.build-for-arm-sciter }}
       build-for-arm-sciter:
         description: Build for arm sciter
