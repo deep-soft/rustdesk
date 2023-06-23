@@ -134,7 +134,7 @@ class _ConnectionPageState extends State<ConnectionPage>
                   Divider().paddingOnly(right: 12),
                 ])),
                 SliverFillRemaining(
-                  hasScrollBody: true,
+                  hasScrollBody: false,
                   child: PeerTabPage().paddingOnly(right: 12.0),
                 )
               ],
@@ -245,8 +245,6 @@ class _ConnectionPageState extends State<ConnectionPage>
     final em = 14.0;
     return Container(
       height: 3 * em,
-      color: Theme.of(context)
-          .scaffoldBackgroundColor, // has to set this if using hasScrollBody in above silvers
       child: Obx(() => Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
@@ -346,13 +344,6 @@ class _ConnectionPageState extends State<ConnectionPage>
       }
     } else {
       stateGlobal.svcStatus.value = SvcStatus.notReady;
-    }
-    if (stateGlobal.svcStatus.value != SvcStatus.ready) {
-      gFFI.userModel.isAdmin.value = false;
-      gFFI.groupModel.reset();
-    }
-    if (preStatus != stateGlobal.svcStatus.value) {
-      UserModel.updateOtherModels();
     }
     svcIsUsingPublicServer.value = await bind.mainIsUsingPublicServer();
   }
