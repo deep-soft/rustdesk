@@ -1,4 +1,4 @@
-# 2023-06-21 08:00
+# 2023-06-23 16:00
 #
 #
 name: 0-act - sciter - Win-Win32-Arm - cstm
@@ -31,16 +31,38 @@ on:
 #  schedule:
 #    # schedule build every night
 #    - cron: "0 0 * * *"
+    inputs:
+      # if: ${{ inputs.build-for-windows-sciter }}
+      build-for-windows-sciter:
+        description: Build for windows sciter
+        type: boolean
+        required: true
+        default: true
+      # if: ${{ inputs.build-for-windows-sciter-32bit }}
+      build-for-windows-sciter-32bit:
+        description: Build for windows sciter 32bit
+        type: boolean
+        required: true
+        default: true
+      # if: ${{ inputs.build-for-arm-sciter }}
+      build-for-arm-sciter:
+        description: Build for arm sciter
+        type: boolean
+        required: true
+        default: false
 
 jobs:
   build-for-windows-sciter:
+    if: ${{ inputs.build-for-windows-sciter }}  
     uses: ./.github/workflows/act-sciter-Win-cstm.yml
     secrets: inherit
 
   build-for-windows-sciter-32bit:
+    if: ${{ inputs.build-for-windows-sciter-32bit }}
     uses: ./.github/workflows/act-sciter-Win-32bit-cstm.yml
     secrets: inherit
 
   build-for-arm-sciter:
+    if: ${{ inputs.build-for-arm-sciter }}
     uses: ./.github/workflows/act-sciter-Arm-cstm.yml
     secrets: inherit
