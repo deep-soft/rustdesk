@@ -253,14 +253,14 @@ jobs:
           echo "" >> $VCPKG_ROOT/triplets/community/x86-windows-static-md.cmake
           echo "" >> $VCPKG_ROOT/triplets/community/x86-mingw-static.cmake
 
-          echo "set(VCPKG_C_FLAGS \" -DCMAKE_C_FLAGS=/Zm2000\")" >> $VCPKG_ROOT/triplets/community/x86-windows.cmake
-          echo "set(VCPKG_CXX_FLAGS \" -DCMAKE_CXX_FLAGS=/Zm2000\")" >> $VCPKG_ROOT/triplets/community/x86-windows.cmake
-          echo "set(VCPKG_C_FLAGS \" -DCMAKE_C_FLAGS=/Zm2000\")" >> $VCPKG_ROOT/triplets/community/x86-windows-static.cmake
-          echo "set(VCPKG_CXX_FLAGS \" -DCMAKE_CXX_FLAGS=/Zm2000\")" >> $VCPKG_ROOT/triplets/community/x86-windows-static.cmake
-          echo "set(VCPKG_C_FLAGS \" -DCMAKE_C_FLAGS=/Zm2000\")" >> $VCPKG_ROOT/triplets/community/x86-windows-static-md.cmake
-          echo "set(VCPKG_CXX_FLAGS \" -DCMAKE_CXX_FLAGS=/Zm2000\")" >> $VCPKG_ROOT/triplets/community/x86-windows-static-md.cmake
-          echo "set(VCPKG_C_FLAGS \" -DCMAKE_C_FLAGS=/Zm2000\")" >> $VCPKG_ROOT/triplets/community/x86-mingw-static.cmake
-          echo "set(VCPKG_CXX_FLAGS \" -DCMAKE_CXX_FLAGS=/Zm2000\")" >> $VCPKG_ROOT/triplets/community/x86-mingw-static.cmake
+          #echo "set(VCPKG_C_FLAGS \" -DCMAKE_C_FLAGS=/Zm2000\")" >> $VCPKG_ROOT/triplets/community/x86-windows.cmake
+          #echo "set(VCPKG_CXX_FLAGS \" -DCMAKE_CXX_FLAGS=/Zm2000\")" >> $VCPKG_ROOT/triplets/community/x86-windows.cmake
+          #echo "set(VCPKG_C_FLAGS \" -DCMAKE_C_FLAGS=/Zm2000\")" >> $VCPKG_ROOT/triplets/community/x86-windows-static.cmake
+          #echo "set(VCPKG_CXX_FLAGS \" -DCMAKE_CXX_FLAGS=/Zm2000\")" >> $VCPKG_ROOT/triplets/community/x86-windows-static.cmake
+          #echo "set(VCPKG_C_FLAGS \" -DCMAKE_C_FLAGS=/Zm2000\")" >> $VCPKG_ROOT/triplets/community/x86-windows-static-md.cmake
+          #echo "set(VCPKG_CXX_FLAGS \" -DCMAKE_CXX_FLAGS=/Zm2000\")" >> $VCPKG_ROOT/triplets/community/x86-windows-static-md.cmake
+          #echo "set(VCPKG_C_FLAGS \" -DCMAKE_C_FLAGS=/Zm2000\")" >> $VCPKG_ROOT/triplets/community/x86-mingw-static.cmake
+          #echo "set(VCPKG_CXX_FLAGS \" -DCMAKE_CXX_FLAGS=/Zm2000\")" >> $VCPKG_ROOT/triplets/community/x86-mingw-static.cmake
 
           echo "set(VCPKG_BUILD_TYPE release)" >> $VCPKG_ROOT/triplets/x86-windows.cmake
           echo "set(VCPKG_BUILD_TYPE release)" >> $VCPKG_ROOT/triplets/community/x86-windows-static.cmake
