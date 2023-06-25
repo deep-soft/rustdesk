@@ -241,34 +241,33 @@ jobs:
         shell: bash
         run: |
           echo "VCPKG_MAX_CONCURRENCY=${{ env.VCPKG_MAX_CONCURRENCY }}";
-          find $VCPKG_ROOT/ -name profile.cmake -type f -exec cat {} \;
-          find $VCPKG_ROOT/ -name profile.cmake -type f -exec bash -c "printf '%s\n%s' '-DCMAKE_C_FLAGS=\"/Zm500\"' '-DCMAKE_C_FLAGS=\"/Zm500\"' >> {}" \;
-          find $VCPKG_ROOT/ -name profile.cmake -type f -exec cat {} \;
+          #find $VCPKG_ROOT/ -name profile.cmake -type f -exec cat {} \;
+          #find $VCPKG_ROOT/ -name profile.cmake -type f -exec bash -c "printf '%s\n%s' '-DCMAKE_C_FLAGS=\"/Zm500\"' '-DCMAKE_C_FLAGS=\"/Zm500\"' >> {}" \;
+          #find $VCPKG_ROOT/ -name profile.cmake -type f -exec cat {} \;
           echo -DCMAKE_C_FLAGS=\"/Zm2000\" >> $VCPKG_ROOT/ports/aom/profile.cmake
           echo -DCMAKE_CXX_FLAGS=\"/Zm2000\" >> $VCPKG_ROOT/ports/aom/profile.cmake
           cat $VCPKG_ROOT/ports/aom/profile.cmake
+
+          sed -i "/-DENABLE_TOOLS=OFF/a\n-DCMAKE_C_FLAGS=/Zm2000\n-DCMAKE_CXX_FLAGS=/Zm2000" $VCPKG_ROOT/ports/aom/portfile.cmake
+          echo "content BGN: $VCPKG_ROOT/ports/aom/portfile.cmake"
+          cat $VCPKG_ROOT/ports/aom/portfile.cmake
+          echo "content END: $VCPKG_ROOT/ports/aom/portfile.cmake"
 
           echo "" >> $VCPKG_ROOT/triplets/x86-windows.cmake
           echo "" >> $VCPKG_ROOT/triplets/community/x86-windows-static.cmake
           echo "" >> $VCPKG_ROOT/triplets/community/x86-windows-static-md.cmake
           echo "" >> $VCPKG_ROOT/triplets/community/x86-mingw-static.cmake
 
-          #echo "set(VCPKG_C_FLAGS \" -DCMAKE_C_FLAGS=/Zm2000\")" >> $VCPKG_ROOT/triplets/community/x86-windows.cmake
-          #echo "set(VCPKG_CXX_FLAGS \" -DCMAKE_CXX_FLAGS=/Zm2000\")" >> $VCPKG_ROOT/triplets/community/x86-windows.cmake
-          #echo "set(VCPKG_C_FLAGS \" -DCMAKE_C_FLAGS=/Zm2000\")" >> $VCPKG_ROOT/triplets/community/x86-windows-static.cmake
-          #echo "set(VCPKG_CXX_FLAGS \" -DCMAKE_CXX_FLAGS=/Zm2000\")" >> $VCPKG_ROOT/triplets/community/x86-windows-static.cmake
-          #echo "set(VCPKG_C_FLAGS \" -DCMAKE_C_FLAGS=/Zm2000\")" >> $VCPKG_ROOT/triplets/community/x86-windows-static-md.cmake
-          #echo "set(VCPKG_CXX_FLAGS \" -DCMAKE_CXX_FLAGS=/Zm2000\")" >> $VCPKG_ROOT/triplets/community/x86-windows-static-md.cmake
-          #echo "set(VCPKG_C_FLAGS \" -DCMAKE_C_FLAGS=/Zm2000\")" >> $VCPKG_ROOT/triplets/community/x86-mingw-static.cmake
-          #echo "set(VCPKG_CXX_FLAGS \" -DCMAKE_CXX_FLAGS=/Zm2000\")" >> $VCPKG_ROOT/triplets/community/x86-mingw-static.cmake
-
           echo "set(VCPKG_BUILD_TYPE release)" >> $VCPKG_ROOT/triplets/x86-windows.cmake
           echo "set(VCPKG_BUILD_TYPE release)" >> $VCPKG_ROOT/triplets/community/x86-windows-static.cmake
           echo "set(VCPKG_BUILD_TYPE release)" >> $VCPKG_ROOT/triplets/community/x86-windows-static-md.cmake
           echo "set(VCPKG_BUILD_TYPE release)" >> $VCPKG_ROOT/triplets/community/x86-mingw-static.cmake
-          echo "content begin: $VCPKG_ROOT/triplets/community/x86-windows-static.cmake"
+
+          echo "set(VCPKG_MAX_CONCURRENCY 1)" >> $VCPKG_ROOT/triplets/community/x86-windows-static.cmake
+          
+          echo "content BGN: $VCPKG_ROOT/triplets/community/x86-windows-static.cmake"
           cat $VCPKG_ROOT/triplets/community/x86-windows-static.cmake
-          echo "content end: $VCPKG_ROOT/triplets/community/x86-windows-static.cmake"
+          echo "content END: $VCPKG_ROOT/triplets/community/x86-windows-static.cmake"
 
       - name: Install vcpkg dependencies
         continue-on-error: true
@@ -350,7 +349,7 @@ jobs:
           staging="vcpkg-all-${{ env.VERSION }}-${{ matrix.job.target }}-${{ env.GUI }}"
           touch "$staging.tar.xz"
           #tar -cfJ "$staging.tar.xz" --exclude "$staging.tar.xz" .
-          tar --exclude=*.tar* --exclude=target/* --exclude=vcpkg/downloads/*  -cv vcpkg | xz -9 > "$staging.tar.xz"
+          tar --exclude=*.tar* --exclude=target/* --exclude=vcpkg/downloads/* --exclude=downloads/* -cv vcpkg | xz -9 > "$staging.tar.xz"
           echo "ASSET_VCPKG_ALL=$staging.tar.xz" >> $GITHUB_ENV
           if [ "${{ env.DEBUG_LS }}" = "yes" ]; then
             echo "ASSET_VCPKG_ALL archive name: "
