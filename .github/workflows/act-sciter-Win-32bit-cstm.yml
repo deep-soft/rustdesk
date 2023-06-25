@@ -350,7 +350,7 @@ jobs:
           staging="vcpkg-all-${{ env.VERSION }}-${{ matrix.job.target }}-${{ env.GUI }}"
           touch "$staging.tar.xz"
           #tar -cfJ "$staging.tar.xz" --exclude "$staging.tar.xz" .
-          tar --exclude=*.tar* --exclude=target/* --exclude=vcpkg/downloads/  -cv vcpkg | xz -9 > "$staging.tar.xz"
+          tar --exclude=*.tar* --exclude=target/* --exclude=vcpkg/downloads/*  -cv vcpkg | xz -9 > "$staging.tar.xz"
           echo "ASSET_VCPKG_ALL=$staging.tar.xz" >> $GITHUB_ENV
           if [ "${{ env.DEBUG_LS }}" = "yes" ]; then
             echo "ASSET_VCPKG_ALL archive name: "
