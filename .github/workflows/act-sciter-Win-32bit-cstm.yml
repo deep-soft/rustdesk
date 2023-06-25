@@ -1,4 +1,4 @@
-# 2023-06-22 02:00
+# 2023-06-25 07:00
 #
 #
 name: act - sciter - Win - 32bit - cstm
@@ -244,17 +244,31 @@ jobs:
           find $VCPKG_ROOT/ -name profile.cmake -type f -exec cat {} \;
           find $VCPKG_ROOT/ -name profile.cmake -type f -exec bash -c "printf '%s\n%s' '-DCMAKE_C_FLAGS=\"/Zm500\"' '-DCMAKE_C_FLAGS=\"/Zm500\"' >> {}" \;
           find $VCPKG_ROOT/ -name profile.cmake -type f -exec cat {} \;
-          echo -DCMAKE_C_FLAGS=\"/Zm500\" >> $VCPKG_ROOT/ports/aom/profile.cmake
-          echo -DCMAKE_CXX_FLAGS=\"/Zm500\" >> $VCPKG_ROOT/ports/aom/profile.cmake
+          echo -DCMAKE_C_FLAGS=\"/Zm2000\" >> $VCPKG_ROOT/ports/aom/profile.cmake
+          echo -DCMAKE_CXX_FLAGS=\"/Zm2000\" >> $VCPKG_ROOT/ports/aom/profile.cmake
           cat $VCPKG_ROOT/ports/aom/profile.cmake
+
           echo "" >> $VCPKG_ROOT/triplets/x86-windows.cmake
           echo "" >> $VCPKG_ROOT/triplets/community/x86-windows-static.cmake
           echo "" >> $VCPKG_ROOT/triplets/community/x86-windows-static-md.cmake
           echo "" >> $VCPKG_ROOT/triplets/community/x86-mingw-static.cmake
+
+          echo "set(VCPKG_C_FLAGS \" -DCMAKE_C_FLAGS=/Zm2000\")" >> $VCPKG_ROOT/triplets/community/x86-windows.cmake
+          echo "set(VCPKG_CXX_FLAGS \" -DCMAKE_CXX_FLAGS=/Zm2000\")" >> $VCPKG_ROOT/triplets/community/x86-windows.cmake
+          echo "set(VCPKG_C_FLAGS \" -DCMAKE_C_FLAGS=/Zm2000\")" >> $VCPKG_ROOT/triplets/community/x86-windows-static.cmake
+          echo "set(VCPKG_CXX_FLAGS \" -DCMAKE_CXX_FLAGS=/Zm2000\")" >> $VCPKG_ROOT/triplets/community/x86-windows-static.cmake
+          echo "set(VCPKG_C_FLAGS \" -DCMAKE_C_FLAGS=/Zm2000\")" >> $VCPKG_ROOT/triplets/community/x86-windows-static-md.cmake
+          echo "set(VCPKG_CXX_FLAGS \" -DCMAKE_CXX_FLAGS=/Zm2000\")" >> $VCPKG_ROOT/triplets/community/x86-windows-static-md.cmake
+          echo "set(VCPKG_C_FLAGS \" -DCMAKE_C_FLAGS=/Zm2000\")" >> $VCPKG_ROOT/triplets/community/x86-mingw-static.cmake
+          echo "set(VCPKG_CXX_FLAGS \" -DCMAKE_CXX_FLAGS=/Zm2000\")" >> $VCPKG_ROOT/triplets/community/x86-mingw-static.cmake
+
           echo "set(VCPKG_BUILD_TYPE release)" >> $VCPKG_ROOT/triplets/x86-windows.cmake
           echo "set(VCPKG_BUILD_TYPE release)" >> $VCPKG_ROOT/triplets/community/x86-windows-static.cmake
           echo "set(VCPKG_BUILD_TYPE release)" >> $VCPKG_ROOT/triplets/community/x86-windows-static-md.cmake
           echo "set(VCPKG_BUILD_TYPE release)" >> $VCPKG_ROOT/triplets/community/x86-mingw-static.cmake
+          echo "content begin: $VCPKG_ROOT/triplets/community/x86-windows-static.cmake"
+          cat $VCPKG_ROOT/triplets/community/x86-windows-static.cmake
+          echo "content end: $VCPKG_ROOT/triplets/community/x86-windows-static.cmake"
 
       - name: Install vcpkg dependencies
         continue-on-error: true
