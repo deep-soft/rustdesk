@@ -27,6 +27,7 @@ class ServerPage extends StatefulWidget implements PageShape {
         itemBuilder: (context) {
           return [
             PopupMenuItem(
+              enabled: gFFI.serverModel.connectStatus > 0,
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               value: "changeID",
               child: Text(translate("Change ID")),

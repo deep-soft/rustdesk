@@ -21,7 +21,7 @@ var svg_menu = <svg #menu viewBox="0 0 512 512">
 </svg>;
 var svg_refresh_password = <svg #refresh-password xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 2v6h6M2.66 15.57a10 10 0 1 0 .57-8.38"/></svg>;
 
-var my_id = "";
+var my_id = handler.get_id();
 function get_id() {
   my_id = handler.get_id();
   return my_id;
@@ -316,7 +316,7 @@ class MyIdMenu: Reactor.Component {
                 {username ? 
                 <li #logout>{translate('Logout')} ({username})</li> :
                 <li #login>{translate('Login')}</li>}
-                {handler.is_ok_change_id() && key_confirmed ? <li #change-id>{translate('Change ID')}</li> : ""}
+                {handler.is_ok_change_id() && key_confirmed && connect_status > 0 ? <li #change-id>{translate('Change ID')}</li> : ""}
                 <div .separator />
                 <li #allow-darktheme><span>{svg_checkmark}</span>{translate('Dark Theme')}</li>
                 <Languages />
@@ -1117,6 +1117,7 @@ function checkConnectStatus() {
         if (tmp[0] != connect_status) {
             connect_status = tmp[0];
             app.connect_status.update();
+            myIdMenu.update();
         }
         if (tmp[1] != key_confirmed) {
             key_confirmed = tmp[1];
