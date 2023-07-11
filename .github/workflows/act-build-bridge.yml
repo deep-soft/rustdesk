@@ -1,0 +1,225 @@
+# 2023-07-10 16:50
+# This yaml shares the build bridge steps with ci and nightly.
+#and act-Flutter-Win-Arm-And-Mac-cstm
+name: act - Build flutter-rust-bridge
+
+env:
+  TAG_NAME: "Win-And-Lin-Mac-cstm"
+  TAG_VERSION: "rdsk-v1.2.1"
+  TAG_BUILD: "-b"
+  TAG_REF: "0000000"
+  # To make a custom build with your own servers set the below secret values
+  RS_PUB_KEY:        '${{ secrets.RS_PUB_KEY }}'
+  RENDEZVOUS_SERVER: '${{ secrets.RENDEZVOUS_SERVER }}'
+  RDSK_PCH_SH_PRE:   '${{ secrets.RDSK_PCH_SH_PRE }}'
+  RDSK_PCH_SH:       '${{ secrets.RDSK_PCH_SH }}'
+  RDSK_PCH_HL:       '${{ secrets.RDSK_PCH_HL }}'
+  RDSK_PCH_SH2:      '${{ secrets.RDSK_PCH_SH2 }}'
+  RDSK_PCH_SH_CLN:   '${{ secrets.RDSK_PCH_SH_CLN }}'
+  DEBUG_LS: "yes"
+  RUST_VERSION:    "rust-1.70.0"
+  LLVM_VERSION:    "15.0.6"
+  FLUTTER_VERSION: "3.10.5"
+  FLUTTER_RUST_BRIDGE_VERSION: "1.75.3"
+  # for arm64 linux
+  FLUTTER_ELINUX_VERSION: "3.10.2"
+  FLUTTER_ELINUX_COMMIT_ID: "410b3ca42f2cd0c485edf517a1666652bab442d4"
+  # vcpkg version: 2023.04.15
+  # for multiarch gcc compatibility
+  # VCPKG_COMMIT_ID: "501db0f17ef6df184fcdbfbe0f87cde2313b6ab1"
+  VCPKG_COMMIT_ID: "662dbb50e63af15baa2909b7eac5b1b87e86a0aa"
+  VERSION:     "1.2.1"
+  NDK_VERSION: "r25"
+  CARGO_NDK_VERSION: "3.1.2"
+  #signing keys env variable checks
+  ANDROID_SIGNING_KEY: '${{ secrets.ANDROID_SIGNING_KEY }}'
+  #  signingKeyBase64: ${{ secrets.ANDROID_SIGNING_KEY }}
+  #  alias: ${{ secrets.ANDROID_ALIAS }}
+  #  keyStorePassword: ${{ secrets.ANDROID_KEY_STORE_PASSWORD }}
+  #  keyPassword: ${{ secrets.ANDROID_KEY_PASSWORD }}  
+  MACOS_P12_BASE64: '${{ secrets.MACOS_P12_BASE64 }}'
+
+
+on:
+  workflow_call:
+  workflow_dispatch:
+#  schedule:
+#    # schedule build every night
+#    - cron: "0 0 * * *"
+
+jobs:
+   generate-bridge-linux:
+    runs-on: ${{ matrix.job.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        job:
+          - { target: x86_64-unknown-linux-gnu, os: ubuntu-20.04, extra-build-args: "",            }
+    steps:
+      - name: Checkout source code
+        uses: deep-soft/checkout@v3
+
+# - get ref set build begin
+      - name: Get ref, set build version
+        shell: bash
+        run: |
+          _ref_all_=$(git log -1 --format='%H')
+          # _ref_=$(echo ${_ref_all_::7})
+          _date_=$(date +%Y%m%d)
+          _ref_org_=${{ env.TAG_REF }}
+          _ref_len_="${#_ref_org_}"
+          _ref_=$(echo ${_ref_all_::$_ref_len_})
+          echo "TAG_REF=$_ref_" >> $GITHUB_ENV
+          _build_=${{ env.TAG_BUILD }}-$_date_-$_ref_
+          echo "TAG_BUILD=$_build_" >> $GITHUB_ENV
+          echo "WORK_DIR=$(pwd)" >> $GITHUB_ENV
+          echo "TAG_DATE=$_date_" >> $GITHUB_ENV
+
+      - name: Print ref, build version
+        shell: bash
+        run: |
+          echo "REF: ${{ env.TAG_REF }}
+          echo "BLD: ${{ env.TAG_BUILD }}
+          echo "${{ env.TAG_NAME }}-${{ env.TAG_BUILD }}" > _tag_name_.txt
+
+      - name: Create source archive
+        continue-on-error: true
+        shell: bash
+        run: |
+          staging="rdsk-src-${{ env.VERSION }}-${{ matrix.job.target }}-${{ matrix.job.extra-build-features }}-${{ env.GUI }}"
+          if [ "${{ matrix.os }}" = "windows-2022" ]; then
+            7z a "$staging.zip" "*" -x!target/* -x!vcpkg/* > nul
+            echo "ASSET_SRC=$staging.zip" >> $GITHUB_ENV
+            if [ "${{ env.DEBUG_LS }}" = "yes" ]; then
+              echo "source archive name:"
+              ls -l "$staging.zip"
+            fi
+          else
+            touch "$staging.tar.xz"
+            #tar -cfJ "$staging.tar.xz" --exclude "$staging.tar.xz" .
+            tar --exclude=*.tar* --exclude=target/*  --exclude=vcpkg/* -cv . | xz -9 > "$staging.tar.xz"
+            echo "ASSET_SRC=$staging.tar.xz" >> $GITHUB_ENV
+            if [ "${{ env.DEBUG_LS }}" = "yes" ]; then
+              echo "source archive name: "
+              ls -l "$staging.tar.xz"
+            fi
+          fi
+          #ls -l ${{ env.ASSET_SRC }} 
+
+      - name: Prepare for patch 1
+        continue-on-error: false
+        shell: bash
+        run: |
+          echo "$RDSK_PCH_SH_PRE" | base64 --decode > ./RDSK_PCH_SH_PRE.sh
+          echo "$RDSK_PCH_SH" | base64 --decode > ./RDSK_PCH_SH.sh
+          echo "$RDSK_PCH_HL" | base64 --decode > ./RDSK_PTCH_HL.txt
+          echo prepatch 1 run
+          bash ./RDSK_PCH_SH_PRE.sh
+          echo Done prepatch 1
+          if [ "${{ env.DEBUG_LS }}" = "yes" ]; then
+            ls -l
+            pwd
+          fi
+
+      - name: Apply patch 1
+        # continue-on-error: true
+        shell: bash
+        env: 
+          SED_EXE: ${{ env.SED_EXE }}
+        run: |
+          echo patch 1 run_1
+          bash ./RDSK_PCH_SH.sh
+          echo patch 1 run_2
+          bash ./RDSK_PCH_SH.sh
+          echo patch 1 run_3
+          bash ./RDSK_PCH_SH.sh
+          echo Done patch 1
+          #cat ./libs/hbb_common/src/config.rs
+
+      - name: Cleanup after patch
+        continue-on-error: true
+        shell: bash
+        run: |
+          echo "$RDSK_PCH_SH_CLN" | base64 --decode > ./RDSK_PCH_SH_CLN.sh
+          bash ./RDSK_PCH_SH_CLN.sh
+
+      - name: Create source archive 1
+        continue-on-error: true
+        shell: bash
+        run: |
+          staging="rdsk-src1-${{ env.VERSION }}-${{ matrix.job.target }}-${{ matrix.job.extra-build-features }}-${{ env.GUI }}"
+          if [ "${{ matrix.os }}" = "windows-2022" ]; then
+            7z a "$staging.zip" "*" -x!target/* -x!vcpkg/* > nul
+            echo "ASSET_SRC1=$staging.zip" >> $GITHUB_ENV
+            if [ "${{ env.DEBUG_LS }}" = "yes" ]; then
+              echo "source archive name:"
+              ls -l "$staging.zip"
+            fi
+          else
+            touch "$staging.tar.xz"
+            #tar -cfJ "$staging.tar.xz" --exclude "$staging.tar.xz" .
+            tar --exclude=*.tar* --exclude=target/*  --exclude=vcpkg/* -cv . | xz -9 > "$staging.tar.xz"
+            echo "ASSET_SRC1=$staging.tar.xz" >> $GITHUB_ENV
+            if [ "${{ env.DEBUG_LS }}" = "yes" ]; then
+              echo "source archive name: "
+              ls -l "$staging.tar.xz"
+            fi
+          fi
+          if [ "${{ env.DEBUG_LS }}" = "yes" ]; then
+            ls -l
+            ls -l ${{ env.ASSET_SRC }} 
+            ls -l ${{ env.ASSET_SRC1 }} 
+          fi
+
+      - name: Install prerequisites
+        run: |
+          sudo apt install ca-certificates -y
+          sudo apt update -y
+          sudo apt install -y g++ gcc git curl wget nasm yasm libgtk-3-dev clang cmake libclang-dev ninja-build llvm-dev libclang-10-dev llvm-10-dev pkg-config
+
+      - name: Install Rust toolchain
+        uses: deep-soft/rust-toolchain-actions-rs@v2
+        with:
+          toolchain: stable
+          target: ${{ matrix.job.target }}
+#          override: true
+          profile: minimal # minimal component installation (ie, no documentation)
+
+      - uses: deep-soft/rust-cache@v2
+        with:
+          prefix-key: bridge-${{ matrix.job.os }}
+          workspace: "/tmp/flutter_rust_bridge/frb_codegen"
+
+      - name: Cache Bridge
+        id: cache-bridge
+        uses: deep-soft/cache@v3
+        with:
+          path: /tmp/flutter_rust_bridge
+          key: vcpkg-${{ matrix.job.arch }}
+
+      - name: Install flutter
+        uses: deep-soft/flutter-action@v2
+        with:
+          channel: "stable"
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+
+      - name: Install flutter rust bridge deps
+        shell: bash
+        run: |
+          cargo install flutter_rust_bridge_codegen --version ${{ env.FLUTTER_RUST_BRIDGE_VERSION }}
+          pushd flutter && flutter pub get && popd
+
+      - name: Run flutter rust bridge
+        run: |
+          ~/.cargo/bin/flutter_rust_bridge_codegen --rust-input ./src/flutter_ffi.rs --dart-output ./flutter/lib/generated_bridge.dart
+
+      - name: Upload Artifact
+        uses: deep-soft/upload-artifact@v3
+        with:
+          name: bridge-artifact
+          path: |
+            ./src/bridge_generated.rs
+            ./src/bridge_generated.io.rs
+            ./flutter/lib/generated_bridge.dart 
+            ./flutter/lib/generated_bridge.freezed.dart

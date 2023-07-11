@@ -1,0 +1,116 @@
+# 2023-07-10 16:50
+#
+#
+name: 0-act - Flutter - Win-And-Lin-Mac - cstm
+
+env:
+  TAG_NAME: "Win-And-Lin-Mac-cstm"
+  TAG_VERSION: "rdsk-v1.2.1"
+  TAG_BUILD: "-b"
+  TAG_REF: "0000000"
+  # To make a custom build with your own servers set the below secret values
+  RS_PUB_KEY:        '${{ secrets.RS_PUB_KEY }}'
+  RENDEZVOUS_SERVER: '${{ secrets.RENDEZVOUS_SERVER }}'
+  RDSK_PCH_SH_PRE:   '${{ secrets.RDSK_PCH_SH_PRE }}'
+  RDSK_PCH_SH:       '${{ secrets.RDSK_PCH_SH }}'
+  RDSK_PCH_HL:       '${{ secrets.RDSK_PCH_HL }}'
+  RDSK_PCH_SH2:      '${{ secrets.RDSK_PCH_SH2 }}'
+  RDSK_PCH_SH_CLN:   '${{ secrets.RDSK_PCH_SH_CLN }}'
+  DEBUG_LS: "yes"
+  RUST_VERSION:    "rust-1.70.0"
+  LLVM_VERSION:    "15.0.6"
+  FLUTTER_VERSION: "3.10.5"
+  FLUTTER_RUST_BRIDGE_VERSION: "1.75.3"
+  # for arm64 linux
+  FLUTTER_ELINUX_VERSION: "3.10.2"
+  FLUTTER_ELINUX_COMMIT_ID: "410b3ca42f2cd0c485edf517a1666652bab442d4"
+  # vcpkg version: 2023.04.15
+  # for multiarch gcc compatibility
+  # VCPKG_COMMIT_ID: "501db0f17ef6df184fcdbfbe0f87cde2313b6ab1"
+  VCPKG_COMMIT_ID: "662dbb50e63af15baa2909b7eac5b1b87e86a0aa"
+  VERSION:     "1.2.1"
+  NDK_VERSION: "r25"
+  CARGO_NDK_VERSION: "3.1.2"
+  #signing keys env variable checks
+  ANDROID_SIGNING_KEY: '${{ secrets.ANDROID_SIGNING_KEY }}'
+  #  signingKeyBase64: ${{ secrets.ANDROID_SIGNING_KEY }}
+  #  alias: ${{ secrets.ANDROID_ALIAS }}
+  #  keyStorePassword: ${{ secrets.ANDROID_KEY_STORE_PASSWORD }}
+  #  keyPassword: ${{ secrets.ANDROID_KEY_PASSWORD }}  
+  MACOS_P12_BASE64: '${{ secrets.MACOS_P12_BASE64 }}'
+  GUI: "Win-And-Lin-Mac-iOS"
+
+on:
+  workflow_call:
+  workflow_dispatch:
+#  schedule:
+#    # schedule build every night
+#    - cron: "0 0 * * *"
+    inputs:
+      # if: ${{ inputs.build-for-windows }}
+      build-for-windows:
+        description: Build for windows
+        type: boolean
+        required: true
+        default: true
+      # if: ${{ inputs.build-for-android }}
+      build-for-android:
+        description: Build for android
+        type: boolean
+        required: true
+        default: false
+      # if: ${{ inputs.build-for-Linux-amd }}
+      build-for-Linux-amd:
+        description: Build for linux-amd
+        type: boolean
+        required: true
+        default: false
+      # if: ${{ inputs.build-for-Linux-arm }}
+      build-for-Linux-arm:
+        description: Build for linux-arm
+        type: boolean
+        required: true
+        default: false
+      # if: ${{ inputs.build-for-macOS }}
+      build-for-macOS:
+        description: Build for macOS
+        type: boolean
+        required: true
+        default: false
+      # if: ${{ inputs.build-for-iOS }}
+      build-for-iOS:
+        description: Build for iOS
+        type: boolean
+        required: true
+        default: false
+
+jobs:
+  build-for-windows:
+    if: ${{ inputs.build-for-windows }}
+    uses: ./.github/workflows/act-Flutter-Win-cstm.yml
+    secrets: inherit
+
+  build-for-android:
+    if: ${{ inputs.build-for-android }}
+    uses: ./.github/workflows/act-Flutter-And-cstm.yml
+    secrets: inherit
+
+  build-for-Linux-amd:
+    if: ${{ inputs.build-for-Linux-amd }}
+    uses: ./.github/workflows/act-Flutter-Lin-Amd-cstm.yml
+    secrets: inherit
+
+  build-for-Linux-arm:
+    if: ${{ inputs.build-for-Linux-arm }}
+    uses: ./.github/workflows/act-Flutter-Lin-Arm-cstm.yml
+    secrets: inherit
+
+  build-for-macOS:
+    if: ${{ inputs.build-for-macOS }}
+    uses: ./.github/workflows/act-Flutter-Mac-cstm.yml
+    secrets: inherit
+
+  build-for-iOS:
+    if: ${{ inputs.build-for-iOS }}
+    uses: ./.github/workflows/act-Flutter-iOS-cstm.yml
+    secrets: inherit

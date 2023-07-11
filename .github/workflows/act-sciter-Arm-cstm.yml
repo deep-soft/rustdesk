@@ -1,0 +1,322 @@
+# 2023-07-10 16:50
+#
+#
+name: act - sciter - Arm - cstm
+
+env:
+  TAG_NAME: "Arm-sciter-cstm-act"
+  TAG_VERSION: "rdsk-v1.2.1"
+  TAG_BUILD: "-b"
+  TAG_REF: "0000000"
+  # To make a custom build with your own servers set the below secret values
+  RS_PUB_KEY:        '${{ secrets.RS_PUB_KEY }}'
+  RENDEZVOUS_SERVER: '${{ secrets.RENDEZVOUS_SERVER }}'
+  RDSK_PCH_SH_PRE:   '${{ secrets.RDSK_PCH_SH_PRE }}'
+  RDSK_PCH_SH:       '${{ secrets.RDSK_PCH_SH }}'
+  RDSK_PCH_HL:       '${{ secrets.RDSK_PCH_HL }}'
+  RDSK_PCH_SH2:      '${{ secrets.RDSK_PCH_SH2 }}'
+  RDSK_PCH_SH_CLN:   '${{ secrets.RDSK_PCH_SH_CLN }}'
+  DEBUG_LS: "yes"
+  RUST_VERSION:    "rust-1.70.0"
+  LLVM_VERSION:    "15.0.6"
+  # vcpkg version: 2023.04.15
+  # for multiarch gcc compatibility
+  # VCPKG_COMMIT_ID: "501db0f17ef6df184fcdbfbe0f87cde2313b6ab1"
+  VCPKG_COMMIT_ID: "662dbb50e63af15baa2909b7eac5b1b87e86a0aa"
+  VERSION:     "1.2.1"
+  GUI: "sciter"
+
+on:
+  workflow_call:
+  workflow_dispatch:
+#  schedule:
+#    # schedule build every night
+#    - cron: "0 0 * * *"
+
+
+jobs:
+  build-vcpkg-deps-linux:
+    uses: ./.github/workflows/act-build-vcpkg-deps-linux.yml
+    secrets: inherit
+
+  build-for-arm-sciter:
+    needs: [build-vcpkg-deps-linux]
+    name: build-rustdesk (sciter) ${{ matrix.job.target }} (${{ matrix.job.os }}) [${{ matrix.job.extra-build-features }}]
+    runs-on: ${{ matrix.job.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        # use a high level qemu-user-static
+        job:
+          - { arch: armv7 , target: armv7-unknown-linux-gnueabihf , os: ubuntu-latest , use-cross: true , extra-build-features: ""         , deb-arch: armhf }
+#         - { arch: armv7 , target: armv7-unknown-linux-gnueabihf , os: ubuntu-20.04  , use-cross: true , extra-build-features: "appimage"                   }
+#         - { arch: arm   , target: arm-unknown-linux-musleabihf  , os: ubuntu-20.04  , use-cross: true , extra-build-features: ""                           }
+    steps:
+      - name: Maximize build space
+        run: |
+          sudo rm -rf /opt/ghc
+          sudo rm -rf /usr/local/lib/android
+          sudo rm -rf /usr/share/dotnet
+          # sudo apt install ca-certificates -y
+          sudo apt update -y
+          sudo apt install qemu-user-static
+
+      - name: Checkout source code
+        uses: deep-soft/checkout@v3
+
+# - get ref set build begin
+      - name: Get ref, set build version
+        shell: bash
+        run: |
+          _ref_all_=$(git log -1 --format='%H')
+          # _ref_=$(echo ${_ref_all_::7})
+          _date_=$(date +%Y%m%d)
+          _ref_org_=${{ env.TAG_REF }}
+          _ref_len_="${#_ref_org_}"
+          _ref_=$(echo ${_ref_all_::$_ref_len_})
+          echo "TAG_REF=$_ref_" >> $GITHUB_ENV
+          _build_=${{ env.TAG_BUILD }}-$_date_-$_ref_
+          echo "TAG_BUILD=$_build_" >> $GITHUB_ENV
+          echo "WORK_DIR=$(pwd)" >> $GITHUB_ENV
+          echo "TAG_DATE=$_date_" >> $GITHUB_ENV
+
+      - name: Print ref, build version
+        shell: bash
+        run: |
+          echo "REF: ${{ env.TAG_REF }}
+          echo "BLD: ${{ env.TAG_BUILD }}
+          echo "${{ env.TAG_NAME }}-${{ env.TAG_BUILD }}" > _tag_name_.txt
+
+      - name: Create source archive
+        continue-on-error: true
+        shell: bash
+        run: |
+          staging="rdsk-src-${{ env.VERSION }}-${{ matrix.job.target }}-${{ matrix.job.extra-build-features }}-${{ env.GUI }}"
+          if [ "${{ matrix.os }}" = "windows-2022" ]; then
+            7z a "$staging.zip" "*" -x!target/* -x!vcpkg/* > nul
+            echo "ASSET_SRC=$staging.zip" >> $GITHUB_ENV
+            if [ "${{ env.DEBUG_LS }}" = "yes" ]; then
+              echo "source archive name:"
+              ls -l "$staging.zip"
+            fi
+          else
+            touch "$staging.tar.xz"
+            #tar -cfJ "$staging.tar.xz" --exclude "$staging.tar.xz" .
+            tar --exclude=*.tar* --exclude=target/*  --exclude=vcpkg/* -cv . | xz -9 > "$staging.tar.xz"
+            echo "ASSET_SRC=$staging.tar.xz" >> $GITHUB_ENV
+            if [ "${{ env.DEBUG_LS }}" = "yes" ]; then
+              echo "source archive name: "
+              ls -l "$staging.tar.xz"
+            fi
+          fi
+          #ls -l ${{ env.ASSET_SRC }} 
+
+      - name: Prepare for patch 1
+        continue-on-error: false
+        shell: bash
+        run: |
+          echo "$RDSK_PCH_SH_PRE" | base64 --decode > ./RDSK_PCH_SH_PRE.sh
+          echo "$RDSK_PCH_SH" | base64 --decode > ./RDSK_PCH_SH.sh
+          echo "$RDSK_PCH_HL" | base64 --decode > ./RDSK_PTCH_HL.txt
+          echo prepatch 1 run
+          bash ./RDSK_PCH_SH_PRE.sh
+          echo Done prepatch 1
+          if [ "${{ env.DEBUG_LS }}" = "yes" ]; then
+            ls -l
+            pwd
+          fi
+
+      - name: Apply patch 1
+        # continue-on-error: true
+        shell: bash
+        env: 
+          SED_EXE: ${{ env.SED_EXE }}
+        run: |
+          echo patch 1 run_1
+          bash ./RDSK_PCH_SH.sh
+          echo patch 1 run_2
+          bash ./RDSK_PCH_SH.sh
+          echo patch 1 run_3
+          bash ./RDSK_PCH_SH.sh
+          echo Done patch 1
+          #cat ./libs/hbb_common/src/config.rs
+
+      - name: Cleanup after patch
+        continue-on-error: true
+        shell: bash
+        run: |
+          echo "$RDSK_PCH_SH_CLN" | base64 --decode > ./RDSK_PCH_SH_CLN.sh
+          bash ./RDSK_PCH_SH_CLN.sh
+
+      - name: Create source archive 1
+        continue-on-error: true
+        shell: bash
+        run: |
+          staging="rdsk-src1-${{ env.VERSION }}-${{ matrix.job.target }}-${{ matrix.job.extra-build-features }}-${{ env.GUI }}"
+          if [ "${{ matrix.os }}" = "windows-2022" ]; then
+            7z a "$staging.zip" "*" -x!target/* -x!vcpkg/* > nul
+            echo "ASSET_SRC1=$staging.zip" >> $GITHUB_ENV
+            if [ "${{ env.DEBUG_LS }}" = "yes" ]; then
+              echo "source archive name:"
+              ls -l "$staging.zip"
+            fi
+          else
+            touch "$staging.tar.xz"
+            #tar -cfJ "$staging.tar.xz" --exclude "$staging.tar.xz" .
+            tar --exclude=*.tar* --exclude=target/*  --exclude=vcpkg/* -cv . | xz -9 > "$staging.tar.xz"
+            echo "ASSET_SRC1=$staging.tar.xz" >> $GITHUB_ENV
+            if [ "${{ env.DEBUG_LS }}" = "yes" ]; then
+              echo "source archive name: "
+              ls -l "$staging.tar.xz"
+            fi
+          fi
+          if [ "${{ env.DEBUG_LS }}" = "yes" ]; then
+            ls -l
+            ls -l ${{ env.ASSET_SRC }} 
+            ls -l ${{ env.ASSET_SRC1 }} 
+          fi
+
+      - name: Publish src archives
+        continue-on-error: true
+        uses: deep-soft/action-gh-release@v1
+        with:
+          draft: true
+          tag_name: ${{ env.TAG_NAME }}
+          files: |
+            ${{ env.ASSET_SRC }}
+            ${{ env.ASSET_SRC1 }}
+
+      - name: Set Swap Space
+        uses: deep-soft/set-swap-space@master
+        with:
+          swap-size-gb: 12
+
+      - name: Free Space
+        run: |
+          df
+
+      - name: Install Rust toolchain
+        uses: deep-soft/rust-toolchain-actions-rs@v2
+        with:
+          toolchain: stable
+          target: ${{ matrix.job.target }}
+#          override: true
+          profile: minimal # minimal component installation (ie, no documentation)
+
+      - uses: deep-soft/rust-cache@v2
+        with:
+          prefix-key: rustdesk-lib-cache
+          key: ${{ matrix.job.target }}-${{ matrix.job.extra-build-features }}
+          cache-directories: "/opt/rust-registry"
+
+      - name: Install local registry
+        run: |
+          mkdir -p /opt/rust-registry
+          cargo install cargo-local-registry
+
+      - name: Build local registry
+        uses: deep-soft/retry@v2
+        id: build-local-registry
+        continue-on-error: true
+        with:
+          max_attempts: 3
+          timeout_minutes: 15
+          retry_on: error
+          command: cargo local-registry --sync ./Cargo.lock /opt/rust-registry
+
+      - name: Restore vcpkg files
+        uses: deep-soft/download-artifact@main
+        with:
+          name: vcpkg-artifact-${{ matrix.job.arch }}
+          path: /opt/artifacts/vcpkg/installed
+
+      - uses: deep-soft/run-on-arch-action@amd64-support
+        name: Build rustdesk sciter binary for ${{ matrix.job.arch }}
+        id: vcpkg
+        with:
+          arch: ${{ matrix.job.arch }}
+          distro: ubuntu18.04-rustdesk
+          githubToken: ${{ github.token }}
+          setup: |
+            ls -l "${PWD}"
+            ls -l /opt/artifacts/vcpkg/installed
+          dockerRunArgs: |
+            --volume "${PWD}:/workspace"
+            --volume "/opt/artifacts:/opt/artifacts"
+            --volume "/opt/rust-registry:/opt/rust-registry"
+          shell: /bin/bash
+          install: |
+            # apt install ca-certificates -y
+            apt update -y
+            echo -e "installing deps"
+            apt-get -qq install -y git cmake g++ gcc build-essential nasm yasm curl unzip xz-utils python3 wget pkg-config ninja-build pkg-config libgtk-3-dev liblzma-dev clang libappindicator3-dev rpm libclang-dev
+            apt-get -qq install -y libdbus-1-dev pkg-config nasm yasm libglib2.0-dev libxcb-randr0-dev libxdo-dev libxfixes-dev libxcb-shape0-dev libxcb-xfixes0-dev libasound2-dev 
+            apt-get -qq install -y libpulse-dev libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev libvpx-dev libvdpau-dev libva-dev
+          run: |
+            # disable git safe.directory
+            git config --global --add safe.directory "*"
+            # rust
+            pushd /opt
+            # do not use rustup, because memory overflow in qemu
+            wget -O rust.tar.gz https://static.rust-lang.org/dist/${{ env.RUST_VERSION }}-${{ matrix.job.target }}.tar.gz
+            tar -zxvf rust.tar.gz > /dev/null && rm rust.tar.gz
+            cd ${{ env.RUST_VERSION }}-${{ matrix.job.target }} && ./install.sh
+            rm -rf ${{ env.RUST_VERSION }}-${{ matrix.job.target }}
+            # edit config
+            mkdir -p ~/.cargo/
+            echo """
+              [source.crates-io]
+              registry = 'https://github.com/rust-lang/crates.io-index'
+              replace-with = 'local-registry'
+
+              [source.local-registry]
+              local-registry = '/opt/rust-registry/'
+            """ > ~/.cargo/config
+            cat ~/.cargo/config
+
+            # start build
+            pushd /workspace
+            python3 ./res/inline-sciter.py
+            export VCPKG_ROOT=/opt/artifacts/vcpkg
+            export ARCH=armhf
+            cargo build --features inline --release --bins
+            # package
+            mkdir -p ./Release
+            mv ./target/release/rustdesk ./Release/rustdesk
+            wget -O ./Release/libsciter-gtk.so https://github.com/c-smile/sciter-sdk/raw/master/bin.lnx/arm32/libsciter-gtk.so
+            ./build.py --package ./Release
+
+      - name: Rename rustdesk
+        shell: bash
+        run: |
+          for name in rustdesk*??.deb; do
+              # use cp to duplicate deb files to fit other packages.
+              cp "$name" "${name%%.deb}-${{ matrix.job.target }}-${{ matrix.job.os }}-sciter.deb"
+          done
+
+      - name: Publish debian package
+        if: ${{ matrix.job.extra-build-features == '' }} && env.UPLOAD_ARTIFACT == 'true'
+        uses: deep-soft/action-gh-release@v1
+        with:
+          draft: true
+          tag_name: ${{ env.TAG_NAME }}
+          files: |
+            rustdesk-${{ env.VERSION }}-${{ matrix.job.target }}-${{ matrix.job.os }}-sciter.deb
+            ${{ env.ASSET_SRC }}
+            ${{ env.ASSET_SRC1 }}
+
+      - name: Publish version build - package
+        if: ${{ matrix.job.extra-build-features == '' }} && env.UPLOAD_ARTIFACT == 'true'
+        uses: deep-soft/action-gh-release@v1
+        with:
+          draft: true
+          tag_name: ${{ env.TAG_VERSION }}${{ env.TAG_BUILD }}
+          files: |
+            rustdesk-${{ env.VERSION }}-${{ matrix.job.target }}-${{ matrix.job.os }}-sciter.deb
+
+      - name: Upload Artifact
+        uses: deep-soft/upload-artifact@v3
+        if: ${{ contains(matrix.job.extra-build-features, 'flatpak') }}
+        with:
+          name: rustdesk-${{ env.VERSION }}-${{ matrix.job.target }}-${{ matrix.job.os }}-sciter.deb
+          path: rustdesk-${{ env.VERSION }}-${{ matrix.job.target }}-${{ matrix.job.os }}-sciter.deb

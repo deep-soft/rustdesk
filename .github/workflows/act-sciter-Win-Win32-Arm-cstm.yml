@@ -1,0 +1,69 @@
+# 2023-07-10 16:50
+#
+#
+name: 0-act - sciter - Win-Win32-Arm - cstm
+
+env:
+  TAG_NAME: "Win-Win32-Arm-cstm"
+  TAG_VERSION: "rdsk-v1.2.1"
+  TAG_BUILD: "-b"
+  TAG_REF: "0000000"
+  # To make a custom build with your own servers set the below secret values
+  RS_PUB_KEY:        '${{ secrets.RS_PUB_KEY }}'
+  RENDEZVOUS_SERVER: '${{ secrets.RENDEZVOUS_SERVER }}'
+  RDSK_PCH_SH_PRE:   '${{ secrets.RDSK_PCH_SH_PRE }}'
+  RDSK_PCH_SH:       '${{ secrets.RDSK_PCH_SH }}'
+  RDSK_PCH_HL:       '${{ secrets.RDSK_PCH_HL }}'
+  RDSK_PCH_SH2:      '${{ secrets.RDSK_PCH_SH2 }}'
+  RDSK_PCH_SH_CLN:   '${{ secrets.RDSK_PCH_SH_CLN }}'
+  DEBUG_LS: "yes"
+  RUST_VERSION:    "rust-1.70.0"
+  LLVM_VERSION:    "15.0.6"
+  # vcpkg version: 2023.04.15
+  # for multiarch gcc compatibility
+  # VCPKG_COMMIT_ID: "501db0f17ef6df184fcdbfbe0f87cde2313b6ab1"
+  VCPKG_COMMIT_ID: "662dbb50e63af15baa2909b7eac5b1b87e86a0aa"
+  VERSION:     "1.2.1"
+  GUI: "sciter"
+
+on:
+  workflow_call:
+  workflow_dispatch:
+#  schedule:
+#    # schedule build every night
+#    - cron: "0 0 * * *"
+    inputs:
+      # if: ${{ inputs.build-for-windows-sciter }}
+      build-for-windows-sciter:
+        description: Build for windows sciter
+        type: boolean
+        required: true
+        default: true
+      # if: ${{ inputs.build-for-windows-sciter-32bit }}
+      build-for-windows-sciter-32bit:
+        description: Build for windows sciter 32bit
+        type: boolean
+        required: true
+        default: false
+      # if: ${{ inputs.build-for-arm-sciter }}
+      build-for-arm-sciter:
+        description: Build for arm sciter
+        type: boolean
+        required: true
+        default: false
+
+jobs:
+  build-for-windows-sciter:
+    if: ${{ inputs.build-for-windows-sciter }}  
+    uses: ./.github/workflows/act-sciter-Win-cstm.yml
+    secrets: inherit
+
+  build-for-windows-sciter-32bit:
+    if: ${{ inputs.build-for-windows-sciter-32bit }}
+    uses: ./.github/workflows/act-sciter-Win-32bit-cstm.yml
+    secrets: inherit
+
+  build-for-arm-sciter:
+    if: ${{ inputs.build-for-arm-sciter }}
+    uses: ./.github/workflows/act-sciter-Arm-cstm.yml
+    secrets: inherit

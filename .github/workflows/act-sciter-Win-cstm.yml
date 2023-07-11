@@ -1,0 +1,342 @@
+# 2023-07-10 16:50
+#
+#
+name: act - sciter - Win - cstm
+
+env:
+  TAG_NAME: "Win-sciter-cstm-act"
+  TAG_VERSION: "rdsk-v1.2.1"
+  TAG_BUILD: "-b"
+  TAG_REF: "0000000"
+  # To make a custom build with your own servers set the below secret values
+  RS_PUB_KEY:        '${{ secrets.RS_PUB_KEY }}'
+  RENDEZVOUS_SERVER: '${{ secrets.RENDEZVOUS_SERVER }}'
+  RDSK_PCH_SH_PRE:   '${{ secrets.RDSK_PCH_SH_PRE }}'
+  RDSK_PCH_SH:       '${{ secrets.RDSK_PCH_SH }}'
+  RDSK_PCH_HL:       '${{ secrets.RDSK_PCH_HL }}'
+  RDSK_PCH_SH2:      '${{ secrets.RDSK_PCH_SH2 }}'
+  RDSK_PCH_SH_CLN:   '${{ secrets.RDSK_PCH_SH_CLN }}'
+  DEBUG_LS: "yes"
+  RUST_VERSION:    "rust-1.70.0"
+  LLVM_VERSION:    "15.0.6"
+  # vcpkg version: 2023.04.15
+  # for multiarch gcc compatibility
+  # VCPKG_COMMIT_ID: "501db0f17ef6df184fcdbfbe0f87cde2313b6ab1"
+  VCPKG_COMMIT_ID: "662dbb50e63af15baa2909b7eac5b1b87e86a0aa"
+  VERSION:     "1.2.1"
+  GUI: "sciter"
+
+on:
+  workflow_call:
+  workflow_dispatch:
+#  schedule:
+#    # schedule build every night
+#    - cron: "0 0 * * *"
+
+jobs:
+  build-for-windows-sciter:
+    name: ${{ matrix.job.target }} (${{ matrix.job.os }})
+    runs-on: ${{ matrix.job.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        job:
+          # - { target: i686-pc-windows-msvc        , os: windows-2022 }
+          # - { target: x86_64-pc-windows-gnu       , os: windows-2022 }
+            - { target: x86_64-pc-windows-msvc      , os: windows-2022 }
+          # - { target: aarch64-pc-windows-msvc     , os: windows-2022 }
+    steps:
+      - name: Checkout source code
+        uses: deep-soft/checkout@v3
+
+# - get ref set build begin
+      - name: Get ref, set build version
+        shell: bash
+        run: |
+          _ref_all_=$(git log -1 --format='%H')
+          # _ref_=$(echo ${_ref_all_::7})
+          _date_=$(date +%Y%m%d)
+          _ref_org_=${{ env.TAG_REF }}
+          _ref_len_="${#_ref_org_}"
+          _ref_=$(echo ${_ref_all_::$_ref_len_})
+          echo "TAG_REF=$_ref_" >> $GITHUB_ENV
+          _build_=${{ env.TAG_BUILD }}-$_date_-$_ref_
+          echo "TAG_BUILD=$_build_" >> $GITHUB_ENV
+          echo "WORK_DIR=$(pwd)" >> $GITHUB_ENV
+          echo "TAG_DATE=$_date_" >> $GITHUB_ENV
+
+      - name: Print ref, build version
+        shell: bash
+        run: |
+          echo "REF: ${{ env.TAG_REF }}
+          echo "BLD: ${{ env.TAG_BUILD }}
+          echo "${{ env.TAG_NAME }}-${{ env.TAG_BUILD }}" > _tag_name_.txt
+
+      - name: Create source archive
+        continue-on-error: true
+        shell: bash
+        run: |
+          staging="rdsk-src-${{ env.VERSION }}-${{ matrix.job.target }}-${{ matrix.job.extra-build-features }}-${{ env.GUI }}"
+          if [ "${{ matrix.os }}" = "windows-2022" ]; then
+            7z a "$staging.zip" "*" -x!target/* -x!vcpkg/* > nul
+            echo "ASSET_SRC=$staging.zip" >> $GITHUB_ENV
+            if [ "${{ env.DEBUG_LS }}" = "yes" ]; then
+              echo "source archive name:"
+              ls -l "$staging.zip"
+            fi
+          else
+            touch "$staging.tar.xz"
+            #tar -cfJ "$staging.tar.xz" --exclude "$staging.tar.xz" .
+            tar --exclude=*.tar* --exclude=target/*  --exclude=vcpkg/* -cv . | xz -9 > "$staging.tar.xz"
+            echo "ASSET_SRC=$staging.tar.xz" >> $GITHUB_ENV
+            if [ "${{ env.DEBUG_LS }}" = "yes" ]; then
+              echo "source archive name: "
+              ls -l "$staging.tar.xz"
+            fi
+          fi
+          #ls -l ${{ env.ASSET_SRC }} 
+
+      - name: Prepare for patch 1
+        continue-on-error: false
+        shell: bash
+        run: |
+          echo "$RDSK_PCH_SH_PRE" | base64 --decode > ./RDSK_PCH_SH_PRE.sh
+          echo "$RDSK_PCH_SH" | base64 --decode > ./RDSK_PCH_SH.sh
+          echo "$RDSK_PCH_HL" | base64 --decode > ./RDSK_PTCH_HL.txt
+          echo prepatch 1 run
+          bash ./RDSK_PCH_SH_PRE.sh
+          echo Done prepatch 1
+          if [ "${{ env.DEBUG_LS }}" = "yes" ]; then
+            ls -l
+            pwd
+          fi
+
+      - name: Apply patch 1
+        # continue-on-error: true
+        shell: bash
+        env: 
+          SED_EXE: ${{ env.SED_EXE }}
+        run: |
+          echo patch 1 run_1
+          bash ./RDSK_PCH_SH.sh
+          echo patch 1 run_2
+          bash ./RDSK_PCH_SH.sh
+          echo patch 1 run_3
+          bash ./RDSK_PCH_SH.sh
+          echo Done patch 1
+          #cat ./libs/hbb_common/src/config.rs
+
+      - name: Prepare for patch 2
+        continue-on-error: true
+        shell: bash
+        run: |
+          echo "$RDSK_PCH_SH2" | base64 --decode > ./RDSK_PCH_SH2.sh
+          if [ "${{ env.DEBUG_LS }}" = "yes" ]; then
+            ls -l
+            pwd
+          fi
+
+      - name: Apply patch 2
+        # continue-on-error: true
+        shell: bash
+        run: |
+          echo patch 2
+          bash ./RDSK_PCH_SH2.sh
+          echo Done patch 2
+          if [ "${{ env.DEBUG_LS }}" = "yes" ]; then
+            ls -l
+            pwd
+          fi
+
+      - name: Apply patch 3
+        # continue-on-error: true
+        shell: bash
+        run: |
+          echo patch 3
+          ./packfolder-windows.exe src/ui/ src/archived.rc -binary
+          echo Done patch 3
+          if [ "${{ env.DEBUG_LS }}" = "yes" ]; then
+            ls -l src
+            pwd
+          fi
+
+      - name: Cleanup after patch
+        continue-on-error: true
+        shell: bash
+        run: |
+          echo "$RDSK_PCH_SH_CLN" | base64 --decode > ./RDSK_PCH_SH_CLN.sh
+          bash ./RDSK_PCH_SH_CLN.sh
+
+      - name: Create source archive 1
+        continue-on-error: true
+        shell: bash
+        run: |
+          staging="rdsk-src1-${{ env.VERSION }}-${{ matrix.job.target }}-${{ matrix.job.extra-build-features }}-${{ env.GUI }}"
+          if [ "${{ matrix.os }}" = "windows-2022" ]; then
+            7z a "$staging.zip" "*" -x!target/* -x!vcpkg/* > nul
+            echo "ASSET_SRC1=$staging.zip" >> $GITHUB_ENV
+            if [ "${{ env.DEBUG_LS }}" = "yes" ]; then
+              echo "source archive name:"
+              ls -l "$staging.zip"
+            fi
+          else
+            touch "$staging.tar.xz"
+            #tar -cfJ "$staging.tar.xz" --exclude "$staging.tar.xz" .
+            tar --exclude=*.tar* --exclude=target/*  --exclude=vcpkg/* -cv . | xz -9 > "$staging.tar.xz"
+            echo "ASSET_SRC1=$staging.tar.xz" >> $GITHUB_ENV
+            if [ "${{ env.DEBUG_LS }}" = "yes" ]; then
+              echo "source archive name: "
+              ls -l "$staging.tar.xz"
+            fi
+          fi
+          if [ "${{ env.DEBUG_LS }}" = "yes" ]; then
+            ls -l
+            ls -l ${{ env.ASSET_SRC }} 
+            ls -l ${{ env.ASSET_SRC1 }} 
+          fi
+
+      - name: Publish src archives
+        continue-on-error: true
+        uses: deep-soft/action-gh-release@v1
+        with:
+          draft: true
+          tag_name: ${{ env.TAG_NAME }}
+          files: |
+            ${{ env.ASSET_SRC }}
+            ${{ env.ASSET_SRC1 }}
+
+      - name: Install LLVM and Clang
+        uses: deep-soft/install-llvm-action@v1
+        with:
+          version: ${{ env.LLVM_VERSION }}
+
+      - name: Install Rust toolchain
+        uses: deep-soft/rust-toolchain-actions-rs@v2
+        with:
+          toolchain: stable
+          target: ${{ matrix.job.target }}
+#          override: true
+          components: rustfmt
+          profile: minimal # minimal component installation (ie, no documentation)
+
+      - name: Set Rust toolchain to the target
+        run: |
+          rustup default stable-${{ matrix.job.target }}
+
+      - uses: deep-soft/rust-cache@v2
+        with:
+          prefix-key: ${{ matrix.job.os }}-${{ env.GUI }}
+
+      - name: Restore from cache and install vcpkg
+        uses: deep-soft/run-vcpkg@v10
+        with:
+#          setupOnly: true
+          vcpkgGitCommitId: ${{ env.VCPKG_COMMIT_ID }}
+
+      - name: Install vcpkg dependencies
+        shell: bash
+        run: |
+          $VCPKG_ROOT/vcpkg install libvpx:x64-windows-static libyuv:x64-windows-static opus:x64-windows-static aom:x64-windows-static
+
+      - name: Create vcpkg-installed archive
+        continue-on-error: true
+        shell: bash
+        run: |
+          staging="vcpkg-installed-${{ env.VERSION }}-${{ matrix.job.target }}-${{ env.GUI }}"
+          touch "$staging.tar.xz"
+          #tar -cfJ "$staging.tar.xz" --exclude "$staging.tar.xz" .
+          tar --exclude=*.tar* --exclude=target/*  -cv vcpkg/installed | xz -9 > "$staging.tar.xz"
+          echo "ASSET_VCPKG=$staging.tar.xz" >> $GITHUB_ENV
+          if [ "${{ env.DEBUG_LS }}" = "yes" ]; then
+            echo "ASSET_VCPKG archive name: "
+            ls -l "$staging.tar.xz"
+          fi
+          if [ "${{ env.DEBUG_LS }}" = "yes" ]; then
+            ls -l
+          fi
+
+      - name: Publish vcpkg-installed archive
+        continue-on-error: true
+        uses: deep-soft/action-gh-release@v1
+        with:
+          draft: true
+          tag_name: vcpkg-installed-${{ env.VERSION }}-${{ matrix.job.target }}-${{ env.GUI }}
+          files: |
+            ${{ env.ASSET_VCPKG }}
+
+      - name: Build rustdesk
+        id: build
+        shell: bash
+        run: |
+          rm res/icon.ico && cp flutter/windows/runner/resources/app_icon.ico res/icon.ico
+          cargo build --target x86_64-pc-windows-msvc --release
+          # python3 .\build.py --portable --hwcodec
+          ls -l ./target/x86_64-pc-windows-msvc/release/
+
+      - name: Prepare for sign 1
+        shell: bash
+        continue-on-error: true
+        run: |
+          mkdir -p ./SignOutput
+          cp ./target/x86_64-pc-windows-msvc/release/rustdesk.exe ./SignOutput/rustdesk-${{ env.VERSION }}-${{ matrix.job.target }}-${{ env.GUI }}.exe
+          # cp ./rustdesk-1.2.1-win7-install.exe  ./SignOutput/rustdesk-${{ env.VERSION }}-${{ matrix.job.target }}-${{ env.GUI }}.exe
+          if [ "${{ env.DEBUG_LS }}" = "yes" ]; then
+            cd ./SignOutput/
+            ls -l
+            cd ..
+            ls -l
+          fi
+
+      - name: Prepare for sign 2 (upx down)
+        continue-on-error: true      
+        uses: deep-soft/configurator@v0.0.9
+        with:
+          name: "upx.exe"
+          # url: https://github.com/upx/upx/releases/download/v4.0.2/upx-4.0.2-amd64_linux.tar.xz
+          # url: https://github.com/deep-soft/rustdesk-sciter-helpers/releases/download/sciter-helpers/upx-4.0.2-amd64_linux.tar.xz
+          # pathInArchive: upx-4.0.2-amd64_linux/upx
+
+          # url: https://github.com/upx/upx/releases/download/v4.0.2/upx-4.0.2-win64.zip
+          url: https://github.com/deep-soft/rustdesk-sciter-helpers/releases/download/sciter-helpers/upx-4.0.2-win64.zip
+          pathInArchive: upx-4.0.2-win64/upx.exe
+
+      - name: Prepare for sign 3 (upx compress)
+        shell: bash
+        continue-on-error: true
+        run: |
+          if [ "${{ env.DEBUG_LS }}" = "yes" ]; then
+            ls -l
+          fi
+          upx --lzma -9 ./SignOutput/rustdesk-${{ env.VERSION }}-${{ matrix.job.target }}-${{ env.GUI }}.exe
+          if [ "${{ env.DEBUG_LS }}" = "yes" ]; then
+            ls -l ./SignOutput/
+          fi
+
+      - name: Sign rustdesk executable file
+        uses: deep-soft/code-sign-action@master
+        with:
+          certificate: '${{ secrets.WINDOWS_PFX_BASE64 }}'
+          password: '${{ secrets.WINDOWS_PFX_PASSWORD }}'
+          certificatesha1: '${{ secrets.WINDOWS_PFX_SHA1_THUMBPRINT }}'
+          # certificatename: '${{ secrets.WINDOWS_PFX_NAME }}'
+          folder: './SignOutput'
+          recursive: false
+
+      - name: Publish Release
+        uses: deep-soft/action-gh-release@v1
+        with:
+          draft: true
+          tag_name: ${{ env.TAG_NAME }}
+          files: |
+            ./SignOutput/rustdesk-*.exe
+            ${{ env.ASSET_SRC }}
+            ${{ env.ASSET_SRC1 }}
+#            ${{ github.event.repository.name }}.zip
+
+      - name: Publish version build - Release
+        uses: deep-soft/action-gh-release@v1
+        with:
+          draft: true
+          tag_name: ${{ env.TAG_VERSION }}${{ env.TAG_BUILD }}
+          files: |
+            ./SignOutput/rustdesk-*.exe
