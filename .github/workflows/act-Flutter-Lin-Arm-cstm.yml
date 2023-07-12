@@ -1,4 +1,4 @@
-# 2023-07-10 16:50
+# 2023-07-12 19:00
 #
 #
 name: act - Flutter - Lin-Arm - cstm
@@ -257,7 +257,7 @@ jobs:
         id: vcpkg
         with:
           arch: ${{ matrix.job.arch }}
-          distro: ubuntu18.04-rustdesk
+          distro: ubuntu20.04-rustdesk
           githubToken: ${{ github.token }}
           setup: |
             ls -l "${PWD}"
@@ -483,7 +483,7 @@ jobs:
         id: vcpkg
         with:
           arch: ${{ matrix.job.arch }}
-          distro: ubuntu18.04-rustdesk
+          distro: ubuntu20.04-rustdesk
           githubToken: ${{ github.token }}
           setup: |
             ls -l "${PWD}"
