@@ -1,4 +1,4 @@
-# 2023-07-13 13:30
+# 2023-07-12 19:00
 #
 #
 name: act - sciter - Arm - cstm
@@ -235,7 +235,7 @@ jobs:
         id: vcpkg
         with:
           arch: ${{ matrix.job.arch }}
-          distro: ubuntu20.04
+          distro: ubuntu20.04-rustdesk
           githubToken: ${{ github.token }}
           setup: |
             ls -l "${PWD}"
@@ -248,7 +248,6 @@ jobs:
           install: |
             # apt install ca-certificates -y
             apt update -y
-            apt install ca-certificates apt-utils -y
             echo -e "installing deps"
             apt-get -qq install -y git cmake g++ gcc build-essential nasm yasm curl unzip xz-utils python3 wget pkg-config ninja-build pkg-config libgtk-3-dev liblzma-dev clang libappindicator3-dev rpm libclang-dev
             apt-get -qq install -y libdbus-1-dev pkg-config nasm yasm libglib2.0-dev libxcb-randr0-dev libxdo-dev libxfixes-dev libxcb-shape0-dev libxcb-xfixes0-dev libasound2-dev 
@@ -259,7 +258,7 @@ jobs:
             # rust
             pushd /opt
             # do not use rustup, because memory overflow in qemu
-            wget --no-check-certificate -O rust.tar.gz https://static.rust-lang.org/dist/${{ env.RUST_VERSION }}-${{ matrix.job.target }}.tar.gz
+            wget -O rust.tar.gz https://static.rust-lang.org/dist/${{ env.RUST_VERSION }}-${{ matrix.job.target }}.tar.gz
             tar -zxvf rust.tar.gz > /dev/null && rm rust.tar.gz
             cd ${{ env.RUST_VERSION }}-${{ matrix.job.target }} && ./install.sh
             rm -rf ${{ env.RUST_VERSION }}-${{ matrix.job.target }}
