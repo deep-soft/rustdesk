@@ -1,4 +1,4 @@
-# 2023-07-12 19:00
+# 2023-07-13 09:10
 #
 #
 name: act - sciter - Arm - cstm
@@ -235,7 +235,7 @@ jobs:
         id: vcpkg
         with:
           arch: ${{ matrix.job.arch }}
-          distro: ubuntu20.04-rustdesk
+          distro: ubuntu20.04
           githubToken: ${{ github.token }}
           setup: |
             ls -l "${PWD}"
