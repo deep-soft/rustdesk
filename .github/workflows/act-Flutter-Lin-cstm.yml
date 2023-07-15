@@ -1,4 +1,4 @@
-# 2023-07-12 19:00
+# 2023-07-15 09:20
 #
 #
 name: act - Flutter - Lin - cstm
@@ -805,7 +805,7 @@ jobs:
             pushd ~/rpmbuild/RPMS/${{ matrix.job.arch }}
             mkdir -p /opt/artifacts/rpm
             for name in rustdesk*??.rpm; do
-                mv "$name" "/opt/artifacts/rpm/${name%%.rpm}-fedora28-centos8.rpm" 
+                mv "$name" "/opt/artifacts/rpm/${name%%.rpm}.rpm"
             done
             # rpm suse package
             echo -e "start packaging suse package"
@@ -954,7 +954,7 @@ jobs:
       #       ${{ env.ASSET_SRC }}
       #       ${{ env.ASSET_SRC1 }}
 
-      - name: Publish fedora28/centos8 package
+      - name: Publish fedora package
         if: ${{ matrix.job.extra-build-features == '' }}
         uses: deep-soft/action-gh-release@v1
         with:
@@ -965,7 +965,7 @@ jobs:
             ${{ env.ASSET_SRC }}
             ${{ env.ASSET_SRC1 }}
 
-      - name: Publish version build - fedora28/centos8 package
+      - name: Publish version build - fedora package
         if: ${{ matrix.job.extra-build-features == '' }}
         uses: deep-soft/action-gh-release@v1
         with:
@@ -1173,7 +1173,7 @@ jobs:
             pushd ~/rpmbuild/RPMS/${{ matrix.job.arch }}
             mkdir -p /opt/artifacts/rpm
             for name in rustdesk*??.rpm; do
-                mv "$name" "/opt/artifacts/rpm/${name%%.rpm}-fedora28-centos8.rpm" 
+                mv "$name" "/opt/artifacts/rpm/${name%%.rpm}.rpm"
             done
             # rpm suse package
             pushd /workspace
@@ -1321,7 +1321,7 @@ jobs:
           files: |
             ./appimage/rustdesk-${{ env.VERSION }}-*.AppImage
 
-      - name: Publish fedora28/centos8 package
+      - name: Publish fedora package
         if: ${{ matrix.job.extra-build-features == '' }}
         uses: deep-soft/action-gh-release@v1
         with:
@@ -1332,7 +1332,7 @@ jobs:
             ${{ env.ASSET_SRC }}
             ${{ env.ASSET_SRC1 }}
 
-      - name: Publish version build - fedora28/centos8 package
+      - name: Publish version build - fedora package
         if: ${{ matrix.job.extra-build-features == '' }}
         uses: deep-soft/action-gh-release@v1
         with:
