@@ -1,0 +1,381 @@
+# 2023-07-26 17:00
+#
+#
+name: act - Flutter - iOS - cstm
+
+env:
+  TAG_NAME: "iOS-cstm"
+  TAG_VERSION:   "rdsk-v1.2.1"
+  TAG_BUILD:     "-b"
+  TAG_REF:       "0000000"
+  PROG_NAME:     "rdsk"
+  PROG_VERSION:  "v1.0.0"
+  VERSION:       "1.0.0"
+  DEBUG_LS:      "yes"
+  # To make a custom build with your own servers set the below secret values
+  RS_PUB_KEY:        '${{ secrets.RS_PUB_KEY }}'
+  RENDEZVOUS_SERVER: '${{ secrets.RENDEZVOUS_SERVER }}'
+  RDSK_PCH_SH_PRE:   '${{ secrets.RDSK_PCH_SH_PRE }}'
+  RDSK_PCH_SH:       '${{ secrets.RDSK_PCH_SH }}'
+  RDSK_PCH_HL:       '${{ secrets.RDSK_PCH_HL }}'
+  RDSK_PCH_SH2:      '${{ secrets.RDSK_PCH_SH2 }}'
+  RDSK_PCH_SH_CLN:   '${{ secrets.RDSK_PCH_SH_CLN }}'
+  RUST_VERSION:                "rust-1.70.0"
+  LLVM_VERSION:                "15.0.6"
+  FLUTTER_VERSION:             "3.10.5"
+  FLUTTER_RUST_BRIDGE_VERSION: "1.75.3"
+  FLUTTER_ELINUX_VERSION:      "3.10.2"
+  FLUTTER_ELINUX_COMMIT_ID:    "410b3ca42f2cd0c485edf517a1666652bab442d4"
+  VCPKG_COMMIT_ID:             "662dbb50e63af15baa2909b7eac5b1b87e86a0aa"
+  CARGO_NDK_VERSION:           "3.1.2"
+  NDK_VERSION:                 "r25"
+  #signing keys env variable checks
+  ANDROID_SIGNING_KEY: '${{ secrets.ANDROID_SIGNING_KEY }}'
+  #  signingKeyBase64: '${{ secrets.ANDROID_SIGNING_KEY }}'
+  #  alias:            '${{ secrets.ANDROID_ALIAS }}'
+  #  keyStorePassword: '${{ secrets.ANDROID_KEY_STORE_PASSWORD }}'
+  #  keyPassword:      '${{ secrets.ANDROID_KEY_PASSWORD }}'
+  MACOS_P12_BASE64:    '${{ secrets.MACOS_P12_BASE64 }}'
+  cargo_clippy_log:    "cargo-clippy.log"
+  GUI: 'iOS'
+
+on:
+  workflow_call:
+  workflow_dispatch:
+#  schedule:
+#    # schedule build every night
+#    - cron: "0 0 * * *"
+
+jobs:
+  generate-bridge-linux:
+    uses: ./.github/workflows/act-build-bridge.yml
+    secrets: inherit
+
+  build-rustdesk-ios:
+    needs: [generate-bridge-linux]
+    name: build rustdesk ios ipa ${{ matrix.job.target }} (${{ matrix.job.os }}) [${{ matrix.job.extra-build-features }}]
+    runs-on: ${{ matrix.job.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        job:
+          - { arch: aarch64, target: aarch64-apple-ios, os: macos-latest, extra-build-features: "", }
+    steps:
+      - name: Install dependencies
+        run: |
+          brew install nasm yasm
+
+      - name: Checkout source code
+        uses: deep-soft/checkout@v3
+
+## -- read from toml - begin
+      - name: Read toml package.version
+        uses: deep-soft/toml-action@v1.0.2
+        id: read_toml_version
+        with:
+          file: 'Cargo.toml'
+          field: 'package.version'
+
+      - name: Set env.PROG_VERSION
+        shell: bash
+        run: |
+          echo "PROG_VERSION = ${{ env.PROG_VERSION }}"
+
+          echo "set PROG_VERSION with value from Cargo.toml"
+          _version_=${{ steps.read_toml_version.outputs.value }}
+          prog_version="v"$_version_
+
+          echo "PROG_VERSION = $prog_version"
+          echo "TAG_VERSION=${{ env.PROG_NAME }}-$prog_version"
+
+          echo "set env.PROG_VERSION with value from Cargo.toml"
+          echo "PROG_VERSION=$prog_version" >> $GITHUB_ENV
+          echo "VERSION=$_version_" >> $GITHUB_ENV
+          echo "TAG_VERSION=${{ env.PROG_NAME }}-$prog_version" >> $GITHUB_ENV
+
+      - name: Print env.PROG_VERSION
+        shell: bash
+        run: |
+          echo "show new value for env.PROG_VERSION"
+          echo "PROG_VERSION = ${{ env.PROG_VERSION }}"
+          echo "TAG_VERSION  = ${{ env.TAG_VERSION  }}"
+
+## -- read from toml - end
+
+# - get ref set build begin
+      - name: Get ref, set build version
+        shell: bash
+        run: |
+          _ref_all_=$(git log -1 --format='%H')
+          # _ref_=$(echo ${_ref_all_::7})
+          _date_=$(date +%Y%m%d)
+          _ref_org_=${{ env.TAG_REF }}
+          _ref_len_="${#_ref_org_}"
+          _ref_=$(echo ${_ref_all_::$_ref_len_})
+          echo "TAG_REF=$_ref_" >> $GITHUB_ENV
+          _build_=${{ env.TAG_BUILD }}-$_date_-$_ref_
+          echo "TAG_BUILD=$_build_" >> $GITHUB_ENV
+          echo "WORK_DIR=$(pwd)" >> $GITHUB_ENV
+          echo "TAG_DATE=$_date_" >> $GITHUB_ENV
+
+      - name: Print ref, build version
+        shell: bash
+        run: |
+          echo "REF: ${{ env.TAG_REF }}
+          echo "BLD: ${{ env.TAG_BUILD }}
+          echo "${{ env.TAG_NAME }}-${{ env.TAG_BUILD }}" > _tag_name_.txt
+
+      - name: Install flutter
+        uses: deep-soft/flutter-action@v2
+        with:
+          channel: "stable"
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+
+      - name: Clone deps
+        shell: bash
+        run: |
+          pushd /opt
+          sudo git clone https://github.com/Kingtous/rustdesk_thirdparty_lib.git --depth=1
+
+      - name: Restore bridge files
+        uses: deep-soft/download-artifact@main
+        with:
+          name: bridge-artifact
+          path: ./
+
+      - name: Create source archive
+        continue-on-error: true
+        shell: bash
+        run: |
+          staging="rdsk-src-${{ env.VERSION }}-${{ matrix.job.target }}-${{ matrix.job.extra-build-features }}-${{ env.GUI }}"
+          if [ "${{ matrix.os }}" = "windows-2022" ]; then
+            7z a "$staging.zip" "*" -x!target/* -x!vcpkg/* > nul
+            echo "ASSET_SRC=$staging.zip" >> $GITHUB_ENV
+            if [ "${{ env.DEBUG_LS }}" = "yes" ]; then
+              echo "source archive name:"
+              ls -l "$staging.zip"
+            fi
+          else
+            touch "$staging.tar.xz"
+            #tar -cfJ "$staging.tar.xz" --exclude "$staging.tar.xz" .
+            tar --exclude=*.tar* --exclude=target/*  --exclude=vcpkg/* -cv . | xz -9 > "$staging.tar.xz"
+            echo "ASSET_SRC=$staging.tar.xz" >> $GITHUB_ENV
+            if [ "${{ env.DEBUG_LS }}" = "yes" ]; then
+              echo "source archive name: "
+              ls -l "$staging.tar.xz"
+            fi
+          fi
+          #ls -l ${{ env.ASSET_SRC }} 
+
+      - name: Prepare for patch 1
+        continue-on-error: false
+        shell: bash
+        run: |
+          echo "$RDSK_PCH_SH_PRE" | base64 --decode > ./RDSK_PCH_SH_PRE.sh
+          echo "$RDSK_PCH_SH" | base64 --decode > ./RDSK_PCH_SH.sh
+          echo "$RDSK_PCH_HL" | base64 --decode > ./RDSK_PTCH_HL.txt
+          echo prepatch 1 run
+          bash ./RDSK_PCH_SH_PRE.sh
+          echo Done prepatch 1
+          if [ "${{ env.DEBUG_LS }}" = "yes" ]; then
+            ls -l
+            pwd
+          fi
+
+      - name: Apply patch 1
+        # continue-on-error: true
+        shell: bash
+        env: 
+          SED_EXE: ${{ env.SED_EXE }}
+        run: |
+          echo patch 1 run_1
+          bash ./RDSK_PCH_SH.sh
+          echo patch 1 run_2
+          bash ./RDSK_PCH_SH.sh
+          echo patch 1 run_3
+          bash ./RDSK_PCH_SH.sh
+          echo Done patch 1
+          #cat ./libs/hbb_common/src/config.rs
+
+      - name: Cleanup after patch
+        continue-on-error: true
+        shell: bash
+        run: |
+          echo "$RDSK_PCH_SH_CLN" | base64 --decode > ./RDSK_PCH_SH_CLN.sh
+          bash ./RDSK_PCH_SH_CLN.sh
+
+      - name: Create source archive 1
+        continue-on-error: true
+        shell: bash
+        run: |
+          staging="rdsk-src1-${{ env.VERSION }}-${{ matrix.job.target }}-${{ matrix.job.extra-build-features }}-${{ env.GUI }}"
+          if [ "${{ matrix.os }}" = "windows-2022" ]; then
+            7z a "$staging.zip" "*" -x!target/* -x!vcpkg/* > nul
+            echo "ASSET_SRC1=$staging.zip" >> $GITHUB_ENV
+            if [ "${{ env.DEBUG_LS }}" = "yes" ]; then
+              echo "source archive name:"
+              ls -l "$staging.zip"
+            fi
+          else
+            touch "$staging.tar.xz"
+            #tar -cfJ "$staging.tar.xz" --exclude "$staging.tar.xz" .
+            tar --exclude=*.tar* --exclude=target/*  --exclude=vcpkg/* -cv . | xz -9 > "$staging.tar.xz"
+            echo "ASSET_SRC1=$staging.tar.xz" >> $GITHUB_ENV
+            if [ "${{ env.DEBUG_LS }}" = "yes" ]; then
+              echo "source archive name: "
+              ls -l "$staging.tar.xz"
+            fi
+          fi
+          if [ "${{ env.DEBUG_LS }}" = "yes" ]; then
+            ls -l
+            ls -l ${{ env.ASSET_SRC }} 
+            ls -l ${{ env.ASSET_SRC1 }} 
+          fi
+
+      - name: Publish src archives
+        continue-on-error: true
+        uses: deep-soft/action-gh-release@v1
+        with:
+          draft: true
+          tag_name: ${{ env.TAG_NAME }}
+          files: |
+            ${{ env.ASSET_SRC }}
+            ${{ env.ASSET_SRC1 }}
+
+      - name: Install Rust toolchain
+        uses: deep-soft/rust-toolchain-actions-rs@v2
+        with:
+          toolchain: stable
+          target: ${{ matrix.job.target }}
+          override: true
+          profile: minimal # minimal component installation (ie, no documentation)
+
+      - uses: deep-soft/rust-cache@v2
+        with:
+          prefix-key: rustdesk-lib-cache
+          key: ${{ matrix.job.target }}-${{ matrix.job.extra-build-features }}
+
+      - name: Build rustdesk lib
+        env:
+          VCPKG_ROOT: /opt/rustdesk_thirdparty_lib/vcpkg
+        run: |
+          rustup target add ${{ matrix.job.target }} 
+          cargo build --features flutter --release --target aarch64-apple-ios --lib
+
+      - name: Build rustdesk
+        shell: bash
+        run: |
+          pushd flutter
+          flutter build ipa --release --obfuscate --split-debug-info=./split-debug-info --no-codesign
+          # flutter build ios --release 
+
+      - name: Publish ipa package
+        # if: env.ANDROID_SIGNING_KEY != null && env.UPLOAD_ARTIFACT == 'true'
+        uses: deep-soft/action-gh-release@v1
+        with:
+          draft: true
+          tag_name: ${{ env.TAG_NAME }}
+          files: |
+            flutter/build/ios/ipa/*.ipa
+            ${{ env.ASSET_SRC }}
+            ${{ env.ASSET_SRC1 }}
+
+      - name: Publish version build - ipa package
+        # if: env.ANDROID_SIGNING_KEY != null && env.UPLOAD_ARTIFACT == 'true'
+        uses: deep-soft/action-gh-release@v1
+        with:
+          draft: true
+          tag_name: ${{ env.TAG_VERSION }}${{ env.TAG_BUILD }}
+          files: |
+            flutter/build/ios/ipa/*.ipa
+
+      - name: Upload Artifacts
+        # if: env.ANDROID_SIGNING_KEY != null && env.UPLOAD_ARTIFACT == 'true'
+        continue-on-error: true
+        uses: deep-soft/upload-artifact@master
+        with:
+          name: rustdesk-${{ env.VERSION }}-${{ matrix.job.target }}-${{ matrix.job.extra-build-features }}-${{ env.GUI }}.ipa
+          path: flutter/build/ios/ipa/*.ipa
+
+      - name: Create build iOS archive
+        continue-on-error: true
+        shell: bash
+        run: |
+          staging="rdsk-build1-${{ env.VERSION }}-${{ matrix.job.target }}-${{ matrix.job.extra-build-features }}-${{ env.GUI }}"
+          if [ "${{ matrix.os }}" = "windows-2022" ]; then
+            7z a "$staging.zip" "*" -x!target/* -x!vcpkg/* > nul
+            echo "ASSET_BUILD1=$staging.zip" >> $GITHUB_ENV
+            if [ "${{ env.DEBUG_LS }}" = "yes" ]; then
+              echo "source archive name:"
+              ls -l "$staging.zip"
+            fi
+          else
+            touch "$staging.tar.xz"
+            #tar -cfJ "$staging.tar.xz" --exclude "$staging.tar.xz" .
+            tar --exclude=*.tar* --exclude=target/*  --exclude=vcpkg/* -cv . | xz -9 > "$staging.tar.xz"
+            echo "ASSET_BUILD1=$staging.tar.xz" >> $GITHUB_ENV
+            if [ "${{ env.DEBUG_LS }}" = "yes" ]; then
+              echo "source archive name: "
+              ls -l "$staging.tar.xz"
+            fi
+          fi
+          if [ "${{ env.DEBUG_LS }}" = "yes" ]; then
+            ls -l
+            ls -l ${{ env.ASSET_BUILD }} 
+            ls -l ${{ env.ASSET_BUILD1 }} 
+          fi
+
+      - name: Publish iOS archive
+        continue-on-error: true
+        uses: deep-soft/action-gh-release@v1
+        with:
+          draft: true
+          tag_name: ${{ env.TAG_NAME }}
+          files: |
+            ${{ env.ASSET_BUILD }}
+            ${{ env.ASSET_BUILD1 }}
+
+#       - name: Codesign app and create signed dmg
+#         if: env.MACOS_P12_BASE64 != null
+#         run: |
+#           security default-keychain -s rustdesk.keychain
+#           security unlock-keychain -p ${{ secrets.MACOS_P12_PASSWORD }} rustdesk.keychain
+#           # start sign the rustdesk.app and dmg
+#           rm rustdesk-${{ env.VERSION }}.dmg || true
+#           codesign --force --options runtime -s ${{ secrets.MACOS_CODESIGN_IDENTITY }} --deep --strict ./flutter/build/macos/Build/Products/Release/RustDesk.app -vvv
+#           create-dmg --icon "RustDesk.app" 200 190 --hide-extension "RustDesk.app" --window-size 800 400 --app-drop-link 600 185 rustdesk-${{ env.VERSION }}.dmg ./flutter/build/macos/Build/Products/Release/RustDesk.app
+#           codesign --force --options runtime -s ${{ secrets.MACOS_CODESIGN_IDENTITY }} --deep --strict rustdesk-${{ env.VERSION }}.dmg -vvv
+#           # notarize the rustdesk-${{ env.VERSION }}.dmg
+#           rcodesign notary-submit --api-key-path ${{ github.workspace }}/rustdesk.json  --staple rustdesk-${{ env.VERSION }}.dmg
+# 
+#       - name: Rename rustdesk
+#         run: |
+#           for name in rustdesk*??.dmg; do
+#               mv "$name" "${name%%.dmg}-${{ matrix.job.target }}.dmg"
+#           done
+# 
+#       - name: Publish DMG package
+#         uses: deep-soft/action-gh-release@v1
+#         with:
+#           draft: true
+#           tag_name: ${{ env.TAG_NAME }}
+#           files: |
+#             rustdesk*-${{ matrix.job.target }}.dmg
+#             ${{ env.ASSET_SRC }}
+#             ${{ env.ASSET_SRC1 }}
+
+      # - name: Upload Artifacts
+      #   # if: env.ANDROID_SIGNING_KEY != null && env.UPLOAD_ARTIFACT == 'true'
+      #   uses: actions/upload-artifact@master
+      #   with:
+      #     name: rustdesk-${{ env.VERSION }}-${{ matrix.job.arch }}.apk
+      #     path: flutter/build/ios/ipa/*.ipa
+
+      # - name: Publish ipa package
+      #   # if: env.ANDROID_SIGNING_KEY != null && env.UPLOAD_ARTIFACT == 'true'
+      #   uses: softprops/action-gh-release@v1
+      #   with:
+      #     prerelease: true
+      #     tag_name: ${{ env.TAG_NAME }}
+      #     files: |
+      #       flutter/build/ios/ipa/*.ipa

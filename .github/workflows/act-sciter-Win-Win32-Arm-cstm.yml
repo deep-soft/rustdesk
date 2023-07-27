@@ -1,0 +1,83 @@
+# 2023-07-26 17:00
+#
+#
+name: 0-act - sciter - Win-Win32-Arm - cstm
+
+env:
+  TAG_NAME: "Win-Win32-Arm-cstm"
+  TAG_VERSION:   "rdsk-v1.2.1"
+  TAG_BUILD:     "-b"
+  TAG_REF:       "0000000"
+  PROG_NAME:     "rdsk"
+  PROG_VERSION:  "v1.0.0"
+  VERSION:       "1.0.0"
+  DEBUG_LS:      "yes"
+  # To make a custom build with your own servers set the below secret values
+  RS_PUB_KEY:        '${{ secrets.RS_PUB_KEY }}'
+  RENDEZVOUS_SERVER: '${{ secrets.RENDEZVOUS_SERVER }}'
+  RDSK_PCH_SH_PRE:   '${{ secrets.RDSK_PCH_SH_PRE }}'
+  RDSK_PCH_SH:       '${{ secrets.RDSK_PCH_SH }}'
+  RDSK_PCH_HL:       '${{ secrets.RDSK_PCH_HL }}'
+  RDSK_PCH_SH2:      '${{ secrets.RDSK_PCH_SH2 }}'
+  RDSK_PCH_SH_CLN:   '${{ secrets.RDSK_PCH_SH_CLN }}'
+  RUST_VERSION:                "rust-1.70.0"
+  LLVM_VERSION:                "15.0.6"
+  FLUTTER_VERSION:             "3.10.5"
+  FLUTTER_RUST_BRIDGE_VERSION: "1.75.3"
+  FLUTTER_ELINUX_VERSION:      "3.10.2"
+  FLUTTER_ELINUX_COMMIT_ID:    "410b3ca42f2cd0c485edf517a1666652bab442d4"
+  VCPKG_COMMIT_ID:             "662dbb50e63af15baa2909b7eac5b1b87e86a0aa"
+  CARGO_NDK_VERSION:           "3.1.2"
+  NDK_VERSION:                 "r25"
+  #signing keys env variable checks
+  ANDROID_SIGNING_KEY: '${{ secrets.ANDROID_SIGNING_KEY }}'
+  #  signingKeyBase64: '${{ secrets.ANDROID_SIGNING_KEY }}'
+  #  alias:            '${{ secrets.ANDROID_ALIAS }}'
+  #  keyStorePassword: '${{ secrets.ANDROID_KEY_STORE_PASSWORD }}'
+  #  keyPassword:      '${{ secrets.ANDROID_KEY_PASSWORD }}'
+  MACOS_P12_BASE64:    '${{ secrets.MACOS_P12_BASE64 }}'
+  cargo_clippy_log:    "cargo-clippy.log"
+  VCPKG_MAX_CONCURRENCY: "1"
+  GUI: "sciter"
+
+on:
+  workflow_call:
+  workflow_dispatch:
+#  schedule:
+#    # schedule build every night
+#    - cron: "0 0 * * *"
+    inputs:
+      # if: ${{ inputs.build-for-windows-sciter }}
+      build-for-windows-sciter:
+        description: Build for windows sciter
+        type: boolean
+        required: true
+        default: true
+      # if: ${{ inputs.build-for-windows-sciter-32bit }}
+      build-for-windows-sciter-32bit:
+        description: Build for windows sciter 32bit
+        type: boolean
+        required: true
+        default: false
+      # if: ${{ inputs.build-for-arm-sciter }}
+      build-for-arm-sciter:
+        description: Build for arm sciter
+        type: boolean
+        required: true
+        default: false
+
+jobs:
+  build-for-windows-sciter:
+    if: ${{ inputs.build-for-windows-sciter }}  
+    uses: ./.github/workflows/act-sciter-Win-cstm.yml
+    secrets: inherit
+
+  build-for-windows-sciter-32bit:
+    if: ${{ inputs.build-for-windows-sciter-32bit }}
+    uses: ./.github/workflows/act-sciter-Win-32bit-cstm.yml
+    secrets: inherit
+
+  build-for-arm-sciter:
+    if: ${{ inputs.build-for-arm-sciter }}
+    uses: ./.github/workflows/act-sciter-Arm-cstm.yml
+    secrets: inherit

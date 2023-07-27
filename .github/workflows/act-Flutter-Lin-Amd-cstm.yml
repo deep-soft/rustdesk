@@ -1,0 +1,977 @@
+# 2023-07-26 17:00
+#
+#
+name: act - Flutter - Lin-Amd - cstm
+
+env:
+  TAG_NAME: "Lin-cstm"
+  TAG_VERSION:   "rdsk-v1.2.1"
+  TAG_BUILD:     "-b"
+  TAG_REF:       "0000000"
+  PROG_NAME:     "rdsk"
+  PROG_VERSION:  "v1.0.0"
+  VERSION:       "1.0.0"
+  DEBUG_LS:      "yes"
+  # To make a custom build with your own servers set the below secret values
+  RS_PUB_KEY:        '${{ secrets.RS_PUB_KEY }}'
+  RENDEZVOUS_SERVER: '${{ secrets.RENDEZVOUS_SERVER }}'
+  RDSK_PCH_SH_PRE:   '${{ secrets.RDSK_PCH_SH_PRE }}'
+  RDSK_PCH_SH:       '${{ secrets.RDSK_PCH_SH }}'
+  RDSK_PCH_HL:       '${{ secrets.RDSK_PCH_HL }}'
+  RDSK_PCH_SH2:      '${{ secrets.RDSK_PCH_SH2 }}'
+  RDSK_PCH_SH_CLN:   '${{ secrets.RDSK_PCH_SH_CLN }}'
+  RUST_VERSION:                "rust-1.70.0"
+  LLVM_VERSION:                "15.0.6"
+  FLUTTER_VERSION:             "3.10.5"
+  FLUTTER_RUST_BRIDGE_VERSION: "1.75.3"
+  FLUTTER_ELINUX_VERSION:      "3.10.2"
+  FLUTTER_ELINUX_COMMIT_ID:    "410b3ca42f2cd0c485edf517a1666652bab442d4"
+  VCPKG_COMMIT_ID:             "662dbb50e63af15baa2909b7eac5b1b87e86a0aa"
+  CARGO_NDK_VERSION:           "3.1.2"
+  NDK_VERSION:                 "r25"
+  #signing keys env variable checks
+  ANDROID_SIGNING_KEY: '${{ secrets.ANDROID_SIGNING_KEY }}'
+  #  signingKeyBase64: '${{ secrets.ANDROID_SIGNING_KEY }}'
+  #  alias:            '${{ secrets.ANDROID_ALIAS }}'
+  #  keyStorePassword: '${{ secrets.ANDROID_KEY_STORE_PASSWORD }}'
+  #  keyPassword:      '${{ secrets.ANDROID_KEY_PASSWORD }}'
+  MACOS_P12_BASE64:    '${{ secrets.MACOS_P12_BASE64 }}'
+  cargo_clippy_log:    "cargo-clippy.log"
+  GUI: 'Linux'
+
+on:
+  workflow_call:
+  workflow_dispatch:
+#  schedule:
+#    # schedule build every night
+#    - cron: "0 0 * * *"
+
+jobs:
+  build-vcpkg-deps-linux:
+    uses: ./.github/workflows/act-build-vcpkg-deps-linux.yml
+    secrets: inherit
+
+  generate-bridge-linux:
+    uses: ./.github/workflows/act-build-bridge.yml
+    secrets: inherit
+
+  build-rustdesk-lib-linux-amd64:
+    needs: [generate-bridge-linux, build-vcpkg-deps-linux]
+    name: build-rust-lib ${{ matrix.job.target }} (${{ matrix.job.os }}) [${{ matrix.job.extra-build-features }}]
+    runs-on: ${{ matrix.job.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        # use a high level qemu-user-static
+        job:
+#         - { arch: x86_64, target: i686-unknown-linux-gnu    , os: ubuntu-20.04, extra-build-features: ""        , use-cross: true }
+#         - { arch: x86_64, target: i686-unknown-linux-musl   , os: ubuntu-20.04, extra-build-features: ""        , use-cross: true }
+          - { arch: x86_64, target: x86_64-unknown-linux-gnu  , os: ubuntu-20.04, extra-build-features: ""        ,                 }
+          - { arch: x86_64, target: x86_64-unknown-linux-gnu  , os: ubuntu-20.04, extra-build-features: "flatpak" ,                 }
+          - { arch: x86_64, target: x86_64-unknown-linux-gnu  , os: ubuntu-20.04, extra-build-features: "appimage",                 }
+#         - { arch: x86_64, target: x86_64-unknown-linux-musl , os: ubuntu-20.04, extra-build-features: ""        , use-cross: true }
+    steps:
+      - name: Maximize build space
+        run: |
+          sudo rm -rf /opt/ghc
+          sudo rm -rf /usr/local/lib/android
+          sudo rm -rf /usr/share/dotnet
+          #sudo apt install ca-certificates -y
+          sudo apt update -y
+          sudo apt install qemu-user-static
+
+      - name: Checkout source code
+        uses: deep-soft/checkout@v3
+
+## -- read from toml - begin
+      - name: Read toml package.version
+        uses: deep-soft/toml-action@v1.0.2
+        id: read_toml_version
+        with:
+          file: 'Cargo.toml'
+          field: 'package.version'
+
+      - name: Set env.PROG_VERSION
+        shell: bash
+        run: |
+          echo "PROG_VERSION = ${{ env.PROG_VERSION }}"
+
+          echo "set PROG_VERSION with value from Cargo.toml"
+          _version_=${{ steps.read_toml_version.outputs.value }}
+          prog_version="v"$_version_
+
+          echo "PROG_VERSION = $prog_version"
+          echo "TAG_VERSION=${{ env.PROG_NAME }}-$prog_version"
+
+          echo "set env.PROG_VERSION with value from Cargo.toml"
+          echo "PROG_VERSION=$prog_version" >> $GITHUB_ENV
+          echo "VERSION=$_version_" >> $GITHUB_ENV
+          echo "TAG_VERSION=${{ env.PROG_NAME }}-$prog_version" >> $GITHUB_ENV
+
+      - name: Print env.PROG_VERSION
+        shell: bash
+        run: |
+          echo "show new value for env.PROG_VERSION"
+          echo "PROG_VERSION = ${{ env.PROG_VERSION }}"
+          echo "TAG_VERSION  = ${{ env.TAG_VERSION  }}"
+
+## -- read from toml - end
+
+# - get ref set build begin
+      - name: Get ref, set build version
+        shell: bash
+        run: |
+          _ref_all_=$(git log -1 --format='%H')
+          # _ref_=$(echo ${_ref_all_::7})
+          _date_=$(date +%Y%m%d)
+          _ref_org_=${{ env.TAG_REF }}
+          _ref_len_="${#_ref_org_}"
+          _ref_=$(echo ${_ref_all_::$_ref_len_})
+          echo "TAG_REF=$_ref_" >> $GITHUB_ENV
+          _build_=${{ env.TAG_BUILD }}-$_date_-$_ref_
+          echo "TAG_BUILD=$_build_" >> $GITHUB_ENV
+          echo "WORK_DIR=$(pwd)" >> $GITHUB_ENV
+          echo "TAG_DATE=$_date_" >> $GITHUB_ENV
+
+      - name: Print ref, build version
+        shell: bash
+        run: |
+          echo "REF: ${{ env.TAG_REF }}
+          echo "BLD: ${{ env.TAG_BUILD }}
+          echo "${{ env.TAG_NAME }}-${{ env.TAG_BUILD }}" > _tag_name_.txt
+
+      - name: Create source archive
+        continue-on-error: true
+        shell: bash
+        run: |
+          staging="rdsk-src-${{ env.VERSION }}-${{ matrix.job.target }}-${{ matrix.job.extra-build-features }}-${{ env.GUI }}"
+          if [ "${{ matrix.os }}" = "windows-2022" ]; then
+            7z a "$staging.zip" "*" -x!target/* -x!vcpkg/* > nul
+            echo "ASSET_SRC=$staging.zip" >> $GITHUB_ENV
+            if [ "${{ env.DEBUG_LS }}" = "yes" ]; then
+              echo "source archive name:"
+              ls -l "$staging.zip"
+            fi
+          else
+            touch "$staging.tar.xz"
+            #tar -cfJ "$staging.tar.xz" --exclude "$staging.tar.xz" .
+            tar --exclude=*.tar* --exclude=target/*  --exclude=vcpkg/* -cv . | xz -9 > "$staging.tar.xz"
+            echo "ASSET_SRC=$staging.tar.xz" >> $GITHUB_ENV
+            if [ "${{ env.DEBUG_LS }}" = "yes" ]; then
+              echo "source archive name: "
+              ls -l "$staging.tar.xz"
+            fi
+          fi
+          #ls -l ${{ env.ASSET_SRC }} 
+
+      - name: Prepare for patch 1
+        continue-on-error: false
+        shell: bash
+        run: |
+          echo "$RDSK_PCH_SH_PRE" | base64 --decode > ./RDSK_PCH_SH_PRE.sh
+          echo "$RDSK_PCH_SH" | base64 --decode > ./RDSK_PCH_SH.sh
+          echo "$RDSK_PCH_HL" | base64 --decode > ./RDSK_PTCH_HL.txt
+          echo prepatch 1 run
+          bash ./RDSK_PCH_SH_PRE.sh
+          echo Done prepatch 1
+          if [ "${{ env.DEBUG_LS }}" = "yes" ]; then
+            ls -l
+            pwd
+          fi
+
+      - name: Apply patch 1
+        # continue-on-error: true
+        shell: bash
+        env: 
+          SED_EXE: ${{ env.SED_EXE }}
+        run: |
+          echo patch 1 run_1
+          bash ./RDSK_PCH_SH.sh
+          echo patch 1 run_2
+          bash ./RDSK_PCH_SH.sh
+          echo patch 1 run_3
+          bash ./RDSK_PCH_SH.sh
+          echo Done patch 1
+          #cat ./libs/hbb_common/src/config.rs
+
+      - name: Cleanup after patch
+        continue-on-error: true
+        shell: bash
+        run: |
+          echo "$RDSK_PCH_SH_CLN" | base64 --decode > ./RDSK_PCH_SH_CLN.sh
+          bash ./RDSK_PCH_SH_CLN.sh
+
+      - name: Create source archive 1
+        continue-on-error: true
+        shell: bash
+        run: |
+          staging="rdsk-src1-${{ env.VERSION }}-${{ matrix.job.target }}-${{ matrix.job.extra-build-features }}-${{ env.GUI }}"
+          if [ "${{ matrix.os }}" = "windows-2022" ]; then
+            7z a "$staging.zip" "*" -x!target/* -x!vcpkg/* > nul
+            echo "ASSET_SRC1=$staging.zip" >> $GITHUB_ENV
+            if [ "${{ env.DEBUG_LS }}" = "yes" ]; then
+              echo "source archive name:"
+              ls -l "$staging.zip"
+            fi
+          else
+            touch "$staging.tar.xz"
+            #tar -cfJ "$staging.tar.xz" --exclude "$staging.tar.xz" .
+            tar --exclude=*.tar* --exclude=target/*  --exclude=vcpkg/* -cv . | xz -9 > "$staging.tar.xz"
+            echo "ASSET_SRC1=$staging.tar.xz" >> $GITHUB_ENV
+            if [ "${{ env.DEBUG_LS }}" = "yes" ]; then
+              echo "source archive name: "
+              ls -l "$staging.tar.xz"
+            fi
+          fi
+          if [ "${{ env.DEBUG_LS }}" = "yes" ]; then
+            ls -l
+            ls -l ${{ env.ASSET_SRC }} 
+            ls -l ${{ env.ASSET_SRC1 }} 
+          fi
+
+      - name: Set Swap Space
+        uses: deep-soft/set-swap-space@master
+        with:
+          swap-size-gb: 12
+
+      - name: Free Space
+        run: |
+          df
+
+      - name: Install Rust toolchain
+        uses: deep-soft/rust-toolchain-actions-rs@v2
+        with:
+          toolchain: stable
+          target: ${{ matrix.job.target }}
+#          override: true
+          profile: minimal # minimal component installation (ie, no documentation)
+
+      - uses: deep-soft/rust-cache@v2
+        with:
+          prefix-key: rustdesk-lib-cache
+          key: ${{ matrix.job.target }}-${{ matrix.job.extra-build-features }}
+          cache-directories: "/opt/rust-registry"
+
+      - name: Install local registry
+        run: |
+          mkdir -p /opt/rust-registry
+          cargo install cargo-local-registry
+
+      - name: Build local registry
+        uses: deep-soft/retry@v2
+        id: build-local-registry
+        continue-on-error: true
+        with:
+          max_attempts: 3
+          timeout_minutes: 15
+          retry_on: error
+          command: cargo local-registry --sync ./Cargo.lock /opt/rust-registry
+
+      - name: Disable rust bridge build
+        run: |
+          # sed -i "s/gen_flutter_rust_bridge();/\/\//g" build.rs
+          # only build cdylib
+          sed -i  "s/\[\"cdylib\", \"staticlib\", \"rlib\"\]/\[\"cdylib\"\]/g" Cargo.toml
+
+      - name: Restore bridge files
+        uses: deep-soft/download-artifact@main
+        with:
+          name: bridge-artifact
+          path: ./
+
+      - name: Restore vcpkg files
+        uses: deep-soft/download-artifact@main
+        with:
+          name: vcpkg-artifact-${{ matrix.job.arch }}
+          path: /opt/artifacts/vcpkg/installed
+
+      - uses: deep-soft/run-on-arch-action@amd64-support
+        name: Build rustdesk library for ${{ matrix.job.arch }}
+        id: vcpkg
+        with:
+          arch: ${{ matrix.job.arch }}
+          distro: ubuntu20.04
+          # not ready yet
+          # distro: ubuntu20.04-rustdesk
+          githubToken: ${{ github.token }}
+          setup: |
+            ls -l "${PWD}"
+            ls -l /opt/artifacts/vcpkg/installed
+          dockerRunArgs: |
+            --volume "${PWD}:/workspace"
+            --volume "/opt/artifacts:/opt/artifacts"
+            --volume "/opt/rust-registry:/opt/rust-registry"
+          shell: /bin/bash
+          install: |
+            #apt install ca-certificates -y
+            apt update -y
+            echo -e "installing deps"
+            apt-get -qq install -y  git curl wget nasm yasm libgtk-3-dev clang libxcb-randr0-dev libxdo-dev libxfixes-dev libxcb-shape0-dev libxcb-xfixes0-dev libasound2-dev libpulse-dev cmake libclang-dev ninja-build libappindicator3-dev libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev libvdpau-dev libva-dev libclang-dev llvm-dev libclang-10-dev llvm-10-dev pkg-config tree g++ gcc libvpx-dev tree > /dev/null
+            # we have libopus compiled by us.
+            apt remove -y libopus-dev || true
+            # output devs
+            ls -l ./
+            tree -L 3 /opt/artifacts/vcpkg/installed
+          run: |
+            # disable git safe.directory
+            git config --global --add safe.directory "*"
+            # rust
+            pushd /opt
+            # do not use rustup, because memory overflow in qemu
+            wget -O rust.tar.gz https://static.rust-lang.org/dist/${{ env.RUST_VERSION }}-${{ matrix.job.target }}.tar.gz
+            tar -zxvf rust.tar.gz > /dev/null && rm rust.tar.gz
+            cd ${{ env.RUST_VERSION }}-${{ matrix.job.target }} && ./install.sh
+            rm -rf ${{ env.RUST_VERSION }}-${{ matrix.job.target }}
+            # edit config
+            mkdir -p ~/.cargo/
+            echo """
+              [source.crates-io]
+              registry = 'https://github.com/rust-lang/crates.io-index'
+              replace-with = 'local-registry'
+
+              [source.local-registry]
+              local-registry = '/opt/rust-registry/'
+            """ > ~/.cargo/config
+            cat ~/.cargo/config
+            # start build
+            pushd /workspace
+            # mock 
+            case "${{ matrix.job.arch }}" in
+              x86_64)
+                # no need mock on x86_64
+                export VCPKG_ROOT=/opt/artifacts/vcpkg
+                cargo build --lib --features hwcodec,flutter,${{ matrix.job.extra-build-features }} --release
+                ;;
+            esac
+
+      - name: Upload Artifacts
+        uses: deep-soft/upload-artifact@v3
+        with:
+          name: librustdesk-${{ matrix.job.arch }}-${{ matrix.job.extra-build-features }}.so
+          path: target/release/liblibrustdesk.so
+
+  build-rustdesk-linux-amd64:
+    needs: [build-rustdesk-lib-linux-amd64]
+    name: build-rustdesk ${{ matrix.job.target }} (${{ matrix.job.os }}) [${{ matrix.job.extra-build-features }}]
+    runs-on: ubuntu-20.04
+    strategy:
+      fail-fast: false
+      matrix:
+        job:
+#         - { arch: x86_64, target: i686-unknown-linux-gnu      , os: ubuntu-20.04, use-cross: true                                    }
+#         - { arch: x86_64, target: i686-unknown-linux-musl     , os: ubuntu-20.04, use-cross: true                                    }
+          - { arch: x86_64, target: x86_64-unknown-linux-gnu    , os: ubuntu-20.04, extra-build-features: ""                           }
+          - { arch: x86_64, target: x86_64-unknown-linux-gnu    , os: ubuntu-20.04, extra-build-features: "flatpak"                    }
+          - { arch: x86_64, target: x86_64-unknown-linux-gnu    , os: ubuntu-20.04, extra-build-features: "appimage"                   }
+#         - { arch: x86_64, target: x86_64-unknown-linux-musl   , os: ubuntu-20.04, extra-build-features: ""         , use-cross: true }
+    steps:
+      - name: Checkout source code
+        uses: deep-soft/checkout@v3
+
+
+## -- read from toml - begin
+      - name: Read toml package.version
+        uses: deep-soft/toml-action@v1.0.2
+        id: read_toml_version
+        with:
+          file: 'Cargo.toml'
+          field: 'package.version'
+
+      - name: Set env.PROG_VERSION
+        shell: bash
+        run: |
+          echo "PROG_VERSION = ${{ env.PROG_VERSION }}"
+
+          echo "set PROG_VERSION with value from Cargo.toml"
+          _version_=${{ steps.read_toml_version.outputs.value }}
+          prog_version="v"$_version_
+
+          echo "PROG_VERSION = $prog_version"
+          echo "TAG_VERSION=${{ env.PROG_NAME }}-$prog_version"
+
+          echo "set env.PROG_VERSION with value from Cargo.toml"
+          echo "PROG_VERSION=$prog_version" >> $GITHUB_ENV
+          echo "VERSION=$_version_" >> $GITHUB_ENV
+          echo "TAG_VERSION=${{ env.PROG_NAME }}-$prog_version" >> $GITHUB_ENV
+
+      - name: Print env.PROG_VERSION
+        shell: bash
+        run: |
+          echo "show new value for env.PROG_VERSION"
+          echo "PROG_VERSION = ${{ env.PROG_VERSION }}"
+          echo "TAG_VERSION  = ${{ env.TAG_VERSION  }}"
+
+## -- read from toml - end
+
+# - get ref set build begin
+      - name: Get ref, set build version
+        shell: bash
+        run: |
+          _ref_all_=$(git log -1 --format='%H')
+          # _ref_=$(echo ${_ref_all_::7})
+          _date_=$(date +%Y%m%d)
+          _ref_org_=${{ env.TAG_REF }}
+          _ref_len_="${#_ref_org_}"
+          _ref_=$(echo ${_ref_all_::$_ref_len_})
+          echo "TAG_REF=$_ref_" >> $GITHUB_ENV
+          _build_=${{ env.TAG_BUILD }}-$_date_-$_ref_
+          echo "TAG_BUILD=$_build_" >> $GITHUB_ENV
+          echo "WORK_DIR=$(pwd)" >> $GITHUB_ENV
+          echo "TAG_DATE=$_date_" >> $GITHUB_ENV
+
+      - name: Print ref, build version
+        shell: bash
+        run: |
+          echo "REF: ${{ env.TAG_REF }}
+          echo "BLD: ${{ env.TAG_BUILD }}
+          echo "${{ env.TAG_NAME }}-${{ env.TAG_BUILD }}" > _tag_name_.txt
+
+      - name: Create source archive
+        continue-on-error: true
+        shell: bash
+        run: |
+          staging="rdsk-src-${{ env.VERSION }}-${{ matrix.job.target }}-${{ matrix.job.extra-build-features }}-${{ env.GUI }}"
+          if [ "${{ matrix.os }}" = "windows-2022" ]; then
+            7z a "$staging.zip" "*" -x!target/* -x!vcpkg/* > nul
+            echo "ASSET_SRC=$staging.zip" >> $GITHUB_ENV
+            if [ "${{ env.DEBUG_LS }}" = "yes" ]; then
+              echo "source archive name:"
+              ls -l "$staging.zip"
+            fi
+          else
+            touch "$staging.tar.xz"
+            #tar -cfJ "$staging.tar.xz" --exclude "$staging.tar.xz" .
+            tar --exclude=*.tar* --exclude=target/*  --exclude=vcpkg/* -cv . | xz -9 > "$staging.tar.xz"
+            echo "ASSET_SRC=$staging.tar.xz" >> $GITHUB_ENV
+            if [ "${{ env.DEBUG_LS }}" = "yes" ]; then
+              echo "source archive name: "
+              ls -l "$staging.tar.xz"
+            fi
+          fi
+          #ls -l ${{ env.ASSET_SRC }} 
+
+      - name: Prepare for patch 1
+        continue-on-error: true
+        shell: bash
+        run: |
+          echo "$RDSK_PCH_SH_PRE" | base64 --decode > ./RDSK_PCH_SH_PRE.sh
+          echo "$RDSK_PCH_SH" | base64 --decode > ./RDSK_PCH_SH.sh
+          echo "$RDSK_PCH_HL" | base64 --decode > ./RDSK_PTCH_HL.txt
+          echo prepatch 1 run
+          bash ./RDSK_PCH_SH_PRE.sh
+          echo Done prepatch 1
+          if [ "${{ env.DEBUG_LS }}" = "yes" ]; then
+            ls -l
+            pwd
+          fi
+
+      - name: Apply patch 1
+        # continue-on-error: true
+        shell: bash
+        env: 
+          SED_EXE: ${{ env.SED_EXE }}
+        run: |
+          echo patch 1 run_1
+          bash ./RDSK_PCH_SH.sh
+          echo patch 1 run_2
+          bash ./RDSK_PCH_SH.sh
+          echo patch 1 run_3
+          bash ./RDSK_PCH_SH.sh
+          echo Done patch 1
+          #cat ./libs/hbb_common/src/config.rs
+
+      - name: Cleanup after patch
+        continue-on-error: true
+        shell: bash
+        run: |
+          echo "$RDSK_PCH_SH_CLN" | base64 --decode > ./RDSK_PCH_SH_CLN.sh
+          bash ./RDSK_PCH_SH_CLN.sh
+
+      - name: Create source archive 1
+        continue-on-error: true
+        shell: bash
+        run: |
+          staging="rdsk-src1-${{ env.VERSION }}-${{ matrix.job.target }}-${{ matrix.job.extra-build-features }}-${{ env.GUI }}"
+          if [ "${{ matrix.os }}" = "windows-2022" ]; then
+            7z a "$staging.zip" "*" -x!target/* -x!vcpkg/* > nul
+            echo "ASSET_SRC1=$staging.zip" >> $GITHUB_ENV
+            if [ "${{ env.DEBUG_LS }}" = "yes" ]; then
+              echo "source archive name:"
+              ls -l "$staging.zip"
+            fi
+          else
+            touch "$staging.tar.xz"
+            #tar -cfJ "$staging.tar.xz" --exclude "$staging.tar.xz" .
+            tar --exclude=*.tar* --exclude=target/*  --exclude=vcpkg/* -cv . | xz -9 > "$staging.tar.xz"
+            echo "ASSET_SRC1=$staging.tar.xz" >> $GITHUB_ENV
+            if [ "${{ env.DEBUG_LS }}" = "yes" ]; then
+              echo "source archive name: "
+              ls -l "$staging.tar.xz"
+            fi
+          fi
+          if [ "${{ env.DEBUG_LS }}" = "yes" ]; then
+            ls -l
+            ls -l ${{ env.ASSET_SRC }} 
+            ls -l ${{ env.ASSET_SRC1 }} 
+          fi
+
+      - name: Publish src archives
+        continue-on-error: true
+        uses: deep-soft/action-gh-release@v1
+        with:
+          draft: true
+          tag_name: ${{ env.TAG_NAME }}
+          files: |
+            ${{ env.ASSET_SRC }}
+            ${{ env.ASSET_SRC1 }}
+
+      - name: Restore bridge files
+        uses: deep-soft/download-artifact@main
+        with:
+          name: bridge-artifact
+          path: ./
+
+      - name: Prepare env
+        run: |
+          sudo apt install ca-certificates -y
+          sudo apt update -y
+          sudo apt-get -qq install -y git curl wget nasm yasm libgtk-3-dev libarchive-tools
+          mkdir -p ./target/release/
+
+      - name: Restore the rustdesk lib file
+        uses: deep-soft/download-artifact@main
+        with:
+          name: librustdesk-${{ matrix.job.arch }}-${{ matrix.job.extra-build-features }}.so
+          path: ./target/release/
+
+      - uses: deep-soft/run-on-arch-action@amd64-support
+        name: Build rustdesk binary for ${{ matrix.job.arch }}
+        id: vcpkg
+        with:
+          arch: ${{ matrix.job.arch }}
+          distro: ubuntu20.04
+          githubToken: ${{ github.token }}
+          setup: |
+            ls -l "${PWD}"
+          dockerRunArgs: |
+            --volume "${PWD}:/workspace"
+            --volume "/opt/artifacts:/opt/artifacts"
+          shell: /bin/bash
+          install: |
+            #apt install ca-certificates -y
+            apt update -y
+            apt-get -qq install -y git cmake g++ gcc build-essential nasm yasm curl unzip xz-utils python3 wget pkg-config ninja-build pkg-config libgtk-3-dev liblzma-dev clang libappindicator3-dev rpm
+          run: |
+            # disable git safe.directory
+            git config --global --add safe.directory "*"
+            # Setup Flutter
+            pushd /opt
+            wget https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_${{ env.FLUTTER_VERSION }}-stable.tar.xz
+            tar xf flutter_linux_${{ env.FLUTTER_VERSION }}-stable.tar.xz
+            ls -l .
+            export PATH=/opt/flutter/bin:$PATH
+            flutter doctor -v
+            pushd /workspace
+            python3 ./build.py --flutter --hwcodec --skip-cargo
+            # rpm package
+            pushd /workspace
+            case ${{ matrix.job.arch }} in
+              armv7)
+                sed -i "s/64bit/32bit/g" ./res/rpm-flutter.spec
+                ;;
+            esac
+            HBB=`pwd` rpmbuild ./res/rpm-flutter.spec -bb
+            pushd ~/rpmbuild/RPMS/${{ matrix.job.arch }}
+            mkdir -p /opt/artifacts/rpm
+            for name in rustdesk*??.rpm; do
+                mv "$name" "/opt/artifacts/rpm/${name%%.rpm}-fedora28-centos8.rpm" 
+            done
+            # rpm suse package
+            pushd /workspace
+            case ${{ matrix.job.arch }} in
+              armv7)
+                sed -i "s/64bit/32bit/g" ./res/rpm-flutter-suse.spec
+                ;;
+            esac
+            HBB=`pwd` rpmbuild ./res/rpm-flutter-suse.spec -bb
+            pushd ~/rpmbuild/RPMS/${{ matrix.job.arch }}
+            mkdir -p /opt/artifacts/rpm
+            for name in rustdesk*??.rpm; do
+                mv "$name" "/opt/artifacts/rpm/${name%%.rpm}-suse.rpm" 
+            done
+
+      - name: Rename rustdesk
+        shell: bash
+        run: |
+          for name in rustdesk*??.deb; do
+              # use cp to duplicate deb files to fit other packages.
+              cp "$name" "${name%%.deb}-${{ matrix.job.target }}-${{ matrix.job.os }}.deb"
+          done
+
+      - name: Publish debian package
+        if: ${{ matrix.job.extra-build-features == '' }}
+        uses: deep-soft/action-gh-release@v1
+        with:
+          draft: true
+          tag_name: ${{ env.TAG_NAME }}
+          files: |
+            rustdesk-${{ env.VERSION }}-${{ matrix.job.target }}-${{ matrix.job.os }}.deb
+            ${{ env.ASSET_SRC }}
+            ${{ env.ASSET_SRC1 }}
+
+      - name: Publish version build - debian package
+        if: ${{ matrix.job.extra-build-features == '' }}
+        uses: deep-soft/action-gh-release@v1
+        with:
+          draft: true
+          tag_name: ${{ env.TAG_VERSION }}${{ env.TAG_BUILD }}
+          files: |
+            rustdesk-${{ env.VERSION }}-${{ matrix.job.target }}-${{ matrix.job.os }}.deb
+
+      - name: Upload Artifact
+        uses: deep-soft/upload-artifact@v3
+        if: ${{ contains(matrix.job.extra-build-features, 'flatpak') }}
+        with:
+          name: rustdesk-${{ env.VERSION }}-${{ matrix.job.target }}-${{ matrix.job.os }}.deb
+          path: rustdesk-${{ env.VERSION }}-${{ matrix.job.target }}-${{ matrix.job.os }}.deb
+
+      - name: Patch archlinux PKGBUILD
+        if: ${{ matrix.job.extra-build-features == '' }}
+        run: |
+          sed -i "s/arch=('x86_64')/arch=('${{ matrix.job.arch }}')/g" res/PKGBUILD
+
+      - name: Build archlinux package
+        if: ${{ matrix.job.extra-build-features == '' }}
+        uses: deep-soft/arch-makepkg-action@master
+        with:
+          packages: >
+            llvm
+            clang
+            libva
+            libvdpau
+            rust
+            gstreamer
+            unzip
+            git
+            cmake
+            gcc
+            curl
+            wget
+            yasm
+            nasm
+            zip
+            make
+            pkg-config
+            clang
+            gtk3
+            xdotool
+            libxcb
+            libxfixes
+            alsa-lib
+            pipewire
+            python
+            ttf-arphic-uming
+            libappindicator-gtk3
+            pam
+            gst-plugins-base
+            gst-plugin-pipewire
+          scripts: |
+            cd res && HBB=`pwd`/.. FLUTTER=1 makepkg -f
+
+      - name: Publish archlinux package
+        if: ${{ matrix.job.extra-build-features == '' }}
+        uses: deep-soft/action-gh-release@v1
+        with:
+          draft: true
+          tag_name: ${{ env.TAG_NAME }}
+          files: |
+            res/rustdesk*.zst
+            ${{ env.ASSET_SRC }}
+            ${{ env.ASSET_SRC1 }}
+
+      - name: Publish version build - archlinux package
+        if: ${{ matrix.job.extra-build-features == '' }}
+        uses: deep-soft/action-gh-release@v1
+        with:
+          draft: true
+          tag_name: ${{ env.TAG_VERSION }}${{ env.TAG_BUILD }}
+          files: |
+            res/rustdesk*.zst
+
+      - name: Build appimage package
+        if: ${{ matrix.job.extra-build-features == 'appimage' }}
+        shell: bash
+        run: |
+          # set-up appimage-builder
+          pushd /tmp
+          wget -O appimage-builder-x86_64.AppImage https://github.com/AppImageCrafters/appimage-builder/releases/download/v1.1.0/appimage-builder-1.1.0-x86_64.AppImage
+          chmod +x appimage-builder-x86_64.AppImage
+          sudo mv appimage-builder-x86_64.AppImage /usr/local/bin/appimage-builder
+          popd
+          # run appimage-builder
+          pushd appimage
+          sudo appimage-builder --skip-tests --recipe ./AppImageBuilder-x86_64.yml
+
+      - name: Publish appimage package
+        if: ${{ matrix.job.extra-build-features == 'appimage' }}
+        uses: deep-soft/action-gh-release@v1
+        with:
+          draft: true
+          tag_name: ${{ env.TAG_NAME }}
+          files: |
+            ./appimage/rustdesk-${{ env.VERSION }}-*.AppImage
+            ${{ env.ASSET_SRC }}
+            ${{ env.ASSET_SRC1 }}
+
+      - name: Publish version build - appimage package
+        if: ${{ matrix.job.extra-build-features == 'appimage' }}
+        uses: deep-soft/action-gh-release@v1
+        with:
+          draft: true
+          tag_name: ${{ env.TAG_VERSION }}${{ env.TAG_BUILD }}
+          files: |
+            ./appimage/rustdesk-${{ env.VERSION }}-*.AppImage
+
+      - name: Publish fedora28/centos8 package
+        if: ${{ matrix.job.extra-build-features == '' }}
+        uses: deep-soft/action-gh-release@v1
+        with:
+          draft: true
+          tag_name: ${{ env.TAG_NAME }}
+          files: |
+            /opt/artifacts/rpm/*.rpm
+            ${{ env.ASSET_SRC }}
+            ${{ env.ASSET_SRC1 }}
+
+      - name: Publish version build - fedora28/centos8 package
+        if: ${{ matrix.job.extra-build-features == '' }}
+        uses: deep-soft/action-gh-release@v1
+        with:
+          draft: true
+          tag_name: ${{ env.TAG_VERSION }}${{ env.TAG_BUILD }}
+          files: |
+            /opt/artifacts/rpm/*.rpm
+
+
+  build-flatpak-amd64:
+    name: Build Flatpak
+    needs: [build-rustdesk-linux-amd64]
+    runs-on: ubuntu-20.04
+    strategy:
+      fail-fast: false
+      matrix:
+        job:
+          - { arch: x86_64, target: x86_64-unknown-linux-gnu, os: ubuntu-20.04 }
+    steps:
+      - name: Checkout source code
+        uses: deep-soft/checkout@v3
+
+
+## -- read from toml - begin
+      - name: Read toml package.version
+        uses: deep-soft/toml-action@v1.0.2
+        id: read_toml_version
+        with:
+          file: 'Cargo.toml'
+          field: 'package.version'
+
+      - name: Set env.PROG_VERSION
+        shell: bash
+        run: |
+          echo "PROG_VERSION = ${{ env.PROG_VERSION }}"
+
+          echo "set PROG_VERSION with value from Cargo.toml"
+          _version_=${{ steps.read_toml_version.outputs.value }}
+          prog_version="v"$_version_
+
+          echo "PROG_VERSION = $prog_version"
+          echo "TAG_VERSION=${{ env.PROG_NAME }}-$prog_version"
+
+          echo "set env.PROG_VERSION with value from Cargo.toml"
+          echo "PROG_VERSION=$prog_version" >> $GITHUB_ENV
+          echo "VERSION=$_version_" >> $GITHUB_ENV
+          echo "TAG_VERSION=${{ env.PROG_NAME }}-$prog_version" >> $GITHUB_ENV
+
+      - name: Print env.PROG_VERSION
+        shell: bash
+        run: |
+          echo "show new value for env.PROG_VERSION"
+          echo "PROG_VERSION = ${{ env.PROG_VERSION }}"
+          echo "TAG_VERSION  = ${{ env.TAG_VERSION  }}"
+
+## -- read from toml - end
+
+# - get ref set build begin
+      - name: Get ref, set build version
+        shell: bash
+        run: |
+          _ref_all_=$(git log -1 --format='%H')
+          # _ref_=$(echo ${_ref_all_::7})
+          _date_=$(date +%Y%m%d)
+          _ref_org_=${{ env.TAG_REF }}
+          _ref_len_="${#_ref_org_}"
+          _ref_=$(echo ${_ref_all_::$_ref_len_})
+          echo "TAG_REF=$_ref_" >> $GITHUB_ENV
+          _build_=${{ env.TAG_BUILD }}-$_date_-$_ref_
+          echo "TAG_BUILD=$_build_" >> $GITHUB_ENV
+          echo "WORK_DIR=$(pwd)" >> $GITHUB_ENV
+          echo "TAG_DATE=$_date_" >> $GITHUB_ENV
+
+      - name: Print ref, build version
+        shell: bash
+        run: |
+          echo "REF: ${{ env.TAG_REF }}
+          echo "BLD: ${{ env.TAG_BUILD }}
+          echo "${{ env.TAG_NAME }}-${{ env.TAG_BUILD }}" > _tag_name_.txt
+
+      - name: Create source archive
+        continue-on-error: true
+        shell: bash
+        run: |
+          staging="rdsk-src-${{ env.VERSION }}-${{ matrix.job.target }}-${{ matrix.job.extra-build-features }}-${{ env.GUI }}"
+          if [ "${{ matrix.os }}" = "windows-2022" ]; then
+            7z a "$staging.zip" "*" -x!target/* -x!vcpkg/* > nul
+            echo "ASSET_SRC=$staging.zip" >> $GITHUB_ENV
+            if [ "${{ env.DEBUG_LS }}" = "yes" ]; then
+              echo "source archive name:"
+              ls -l "$staging.zip"
+            fi
+          else
+            touch "$staging.tar.xz"
+            #tar -cfJ "$staging.tar.xz" --exclude "$staging.tar.xz" .
+            tar --exclude=*.tar* --exclude=target/*  --exclude=vcpkg/* -cv . | xz -9 > "$staging.tar.xz"
+            echo "ASSET_SRC=$staging.tar.xz" >> $GITHUB_ENV
+            if [ "${{ env.DEBUG_LS }}" = "yes" ]; then
+              echo "source archive name: "
+              ls -l "$staging.tar.xz"
+            fi
+          fi
+          #ls -l ${{ env.ASSET_SRC }} 
+
+      - name: Prepare for patch 1
+        continue-on-error: true
+        shell: bash
+        run: |
+          echo "$RDSK_PCH_SH_PRE" | base64 --decode > ./RDSK_PCH_SH_PRE.sh
+          echo "$RDSK_PCH_SH" | base64 --decode > ./RDSK_PCH_SH.sh
+          echo "$RDSK_PCH_HL" | base64 --decode > ./RDSK_PTCH_HL.txt
+          echo prepatch 1 run
+          bash ./RDSK_PCH_SH_PRE.sh
+          echo Done prepatch 1
+          if [ "${{ env.DEBUG_LS }}" = "yes" ]; then
+            ls -l
+            pwd
+          fi
+
+      - name: Apply patch 1
+        # continue-on-error: true
+        shell: bash
+        env: 
+          SED_EXE: ${{ env.SED_EXE }}
+        run: |
+          echo patch 1 run_1
+          bash ./RDSK_PCH_SH.sh
+          echo patch 1 run_2
+          bash ./RDSK_PCH_SH.sh
+          echo patch 1 run_3
+          bash ./RDSK_PCH_SH.sh
+          echo Done patch 1
+          #cat ./libs/hbb_common/src/config.rs
+
+      - name: Cleanup after patch
+        continue-on-error: true
+        shell: bash
+        run: |
+          echo "$RDSK_PCH_SH_CLN" | base64 --decode > ./RDSK_PCH_SH_CLN.sh
+          bash ./RDSK_PCH_SH_CLN.sh
+
+      - name: Create source archive 1
+        continue-on-error: true
+        shell: bash
+        run: |
+          staging="rdsk-src1-${{ env.VERSION }}-${{ matrix.job.target }}-${{ matrix.job.extra-build-features }}-${{ env.GUI }}"
+          if [ "${{ matrix.os }}" = "windows-2022" ]; then
+            7z a "$staging.zip" "*" -x!target/* -x!vcpkg/* > nul
+            echo "ASSET_SRC1=$staging.zip" >> $GITHUB_ENV
+            if [ "${{ env.DEBUG_LS }}" = "yes" ]; then
+              echo "source archive name:"
+              ls -l "$staging.zip"
+            fi
+          else
+            touch "$staging.tar.xz"
+            #tar -cfJ "$staging.tar.xz" --exclude "$staging.tar.xz" .
+            tar --exclude=*.tar* --exclude=target/*  --exclude=vcpkg/* -cv . | xz -9 > "$staging.tar.xz"
+            echo "ASSET_SRC1=$staging.tar.xz" >> $GITHUB_ENV
+            if [ "${{ env.DEBUG_LS }}" = "yes" ]; then
+              echo "source archive name: "
+              ls -l "$staging.tar.xz"
+            fi
+          fi
+          if [ "${{ env.DEBUG_LS }}" = "yes" ]; then
+            ls -l
+            ls -l ${{ env.ASSET_SRC }} 
+            ls -l ${{ env.ASSET_SRC1 }} 
+          fi
+
+      - name: Download Binary
+        uses: deep-soft/download-artifact@main
+        with:
+          name: rustdesk-${{ env.VERSION }}-${{ matrix.job.target }}-${{ matrix.job.os }}.deb
+          path: .
+
+      - name: Rename Binary
+        run: |
+          mv rustdesk-${{ env.VERSION }}-${{ matrix.job.target }}-${{ matrix.job.os }}.deb rustdesk-${{ env.VERSION }}.deb
+
+      - uses: deep-soft/run-on-arch-action@amd64-support
+        name: Build rustdesk flatpak package for ${{ matrix.job.arch }}
+        continue-on-error: true
+        id: rpm
+        with:
+          arch: ${{ matrix.job.arch }}
+          distro: ubuntu20.04
+          githubToken: ${{ github.token }}
+          setup: |
+            ls -l "${PWD}"
+          dockerRunArgs: |
+            --volume "${PWD}:/workspace"
+          shell: /bin/bash
+          install: |
+            #apt install ca-certificates -y
+            apt update -y
+            apt install -y rpm git wget curl
+          run: |
+            # disable git safe.directory
+            git config --global --add safe.directory "*"
+            pushd /workspace
+            # install 
+            #apt install ca-certificates -y
+            apt update -y
+            apt install -y flatpak flatpak-builder cmake g++ gcc git curl wget nasm yasm libgtk-3-dev git
+            # flatpak deps
+            flatpak --user remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+            flatpak --user install -y flathub org.freedesktop.Platform/${{ matrix.job.arch }}/21.08
+            flatpak --user install -y flathub org.freedesktop.Sdk/${{ matrix.job.arch }}/21.08
+            # package
+            pushd flatpak
+            git clone https://github.com/flathub/shared-modules.git --depth=1
+            flatpak-builder --user --force-clean --repo=repo ./build ./rustdesk.json
+            flatpak build-bundle ./repo rustdesk-${{ env.VERSION }}-${{ matrix.job.target }}.flatpak com.rustdesk.RustDesk
+
+      - name: Publish flatpak package
+        uses: deep-soft/action-gh-release@v1
+        with:
+          draft: true
+          tag_name: ${{ env.TAG_NAME }}
+          files: |
+            flatpak/rustdesk-${{ env.VERSION }}-${{ matrix.job.target }}.flatpak
+            ${{ env.ASSET_SRC }}
+            ${{ env.ASSET_SRC1 }}
+
+      - name: Publish version build - flatpak package
+        uses: deep-soft/action-gh-release@v1
+        with:
+          draft: true
+          tag_name: ${{ env.TAG_VERSION }}${{ env.TAG_BUILD }}
+          files: |
+            flatpak/rustdesk-${{ env.VERSION }}-${{ matrix.job.target }}.flatpak
