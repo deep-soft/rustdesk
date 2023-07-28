@@ -20,6 +20,8 @@ use hbb_common::{
     ResultType,
 };
 
+const OUTPUT_SHARED_HANDLE: bool = false;
+
 pub struct GvcEncoder {
     encoder: Encoder,
     pub format: gvc_common::DataFormat,
@@ -297,7 +299,7 @@ pub fn check_available_gpu_video_codec() {
         gop: MAX_GOP as _,
     };
     let encoders = encode::available(d);
-    let decoders = decode::available();
+    let decoders = decode::available(OUTPUT_SHARED_HANDLE);
     let available = Available {
         e: encoders,
         d: decoders,
