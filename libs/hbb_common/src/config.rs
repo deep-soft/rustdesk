@@ -1398,11 +1398,11 @@ pub struct GpuVideoCodecConfig {
 
 impl GpuVideoCodecConfig {
     pub fn load() -> GpuVideoCodecConfig {
-        Config::load_::<GpuVideoCodecConfig>("_texcodec")
+        Config::load_::<GpuVideoCodecConfig>("_gvc")
     }
 
     pub fn store(&self) {
-        Config::store_(self, "_texcodec");
+        Config::store_(self, "_gvc");
     }
 
     pub fn clear() {
