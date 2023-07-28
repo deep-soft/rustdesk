@@ -809,14 +809,14 @@ fn get_encoder_config(c: &CapturerInfo, quality: Quality, _portable_service: boo
                             feature,
                         })
                     } else {
-                        handle_hw_encoder(name, c.width, c.height, quality as _)
+                        handle_hw_encoder(negotiated_codec.clone(), c.width, c.height, quality as _)
                     }
                 } else {
-                    handle_hw_encoder(name, c.width, c.height, quality as _)
+                    handle_hw_encoder(negotiated_codec.clone(), c.width, c.height, quality as _)
                 }
             }
             #[cfg(not(feature = "gpu_video_codec"))]
-            handle_hw_encoder(name, c.width, c.height, quality as _)
+            handle_hw_encoder(negotiated_codec.clone(), c.width, c.height, quality as _)
         }
         name @ (scrap::CodecName::VP8 | scrap::CodecName::VP9) => {
             EncoderCfg::VPX(VpxEncoderConfig {
@@ -839,26 +839,71 @@ fn get_encoder_config(c: &CapturerInfo, quality: Quality, _portable_service: boo
     }
 }
 
-fn handle_hw_encoder(_name: String, width: usize, height: usize, quality: Quality) -> EncoderCfg {
-    #[cfg(feature = "hwcodec")]
-    {
-        EncoderCfg::HW(scrap::codec::HwEncoderConfig {
-            name: _name,
-            width,
-            height,
-            quality,
-        })
-    }
-    #[cfg(not(feature = "hwcodec"))]
-    {
-        Encoder::fallback(CodecName::VP9);
-        EncoderCfg::VPX(VpxEncoderConfig {
-            width: width as _,
-            height: height as _,
-            quality,
-            timebase: [1, 1000], // Output timestamp precision
-            codec: VpxVideoCodecId::VP9,
-        })
+fn handle_hw_encoder(
+    _name: CodecName,
+    width: usize,
+    height: usize,
+    quality: Quality,
+) -> EncoderCfg {
+    let f = || {
+        #[cfg(feature = "hwcodec")]
+        {
+            let (is_h265, name) = match _name {
+                CodecName::H264(name) => (false, name),
+                CodecName::H265(name) => (true, name),
+                _ => {
+                    return Err(());
+                }
+            };
+            if name.is_empty() {
+                let best = scrap::hwcodec::HwEncoder::best();
+                if let Some(h264) = best.h264 {
+                    if !is_h265 {
+                        Encoder::fallback(CodecName::H264(h264.name.clone()));
+                        return Ok(EncoderCfg::HW(scrap::codec::HwEncoderConfig {
+                            name: h264.name,
+                            width,
+                            height,
+                            quality,
+                        }));
+                    }
+                }
+                if let Some(h265) = best.h265 {
+                    if is_h265 {
+                        Encoder::fallback(CodecName::H265(h265.name.clone()));
+                        return Ok(EncoderCfg::HW(scrap::codec::HwEncoderConfig {
+                            name: h265.name,
+                            width,
+                            height,
+                            quality,
+                        }));
+                    }
+                }
+            } else {
+                return Ok(EncoderCfg::HW(scrap::codec::HwEncoderConfig {
+                    name,
+                    width,
+                    height,
+                    quality,
+                }));
+            }
+        }
+
+        Err(())
+    };
+
+    match f() {
+        Ok(cfg) => cfg,
+        _ => {
+            Encoder::fallback(CodecName::VP9);
+            EncoderCfg::VPX(VpxEncoderConfig {
+                width: width as _,
+                height: height as _,
+                quality,
+                timebase: [1, 1000], // Output timestamp precision
+                codec: VpxVideoCodecId::VP9,
+            })
+        }
     }
 }
 

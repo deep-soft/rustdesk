@@ -295,6 +295,7 @@ impl Encoder {
     }
 
     pub fn fallback(name: CodecName) {
+        log::info!("fallback:{:?}", name);
         *ENCODE_CODEC_NAME.lock().unwrap() = name;
     }
 }
