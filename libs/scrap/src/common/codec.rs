@@ -603,7 +603,7 @@ fn enable_hwcodec_option() -> bool {
 }
 #[cfg(feature = "gpu_video_codec")]
 fn enable_gpu_video_codec_option() -> bool {
-    if let Some(v) = Config2::get().options.get("enable-gpu_video_codec") {
+    if let Some(v) = Config2::get().options.get("enable-gpu-video-codec") {
         return v != "N";
     }
     return true; // default is true
