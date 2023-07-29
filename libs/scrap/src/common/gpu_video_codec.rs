@@ -315,7 +315,6 @@ pub fn check_available_gpu_video_codec() {
 }
 
 pub fn gpu_video_codec_new_check_process() {
-    use hbb_common::sysinfo::{ProcessExt, System, SystemExt};
     use std::sync::Once;
 
     static ONCE: Once = Once::new();
@@ -325,15 +324,7 @@ pub fn gpu_video_codec_new_check_process() {
             // But when the program is just started, the configuration file has not been updated, and the new connection will read an empty configuration
             hbb_common::config::GpuVideoCodecConfig::clear();
             if let Ok(exe) = std::env::current_exe() {
-                if let Some(file_name) = exe.file_name().to_owned() {
-                    let s = System::new_all();
-                    let arg = "--check-gpu_video_codec-config";
-                    for process in s.processes_by_name(&file_name.to_string_lossy().to_string()) {
-                        if process.cmd().iter().any(|cmd| cmd.contains(arg)) {
-                            log::warn!("already have process {}", arg);
-                            return;
-                        }
-                    }
+                    let arg = "--check-gpu-video-codec-config";
                     if let Ok(mut child) = std::process::Command::new(exe).arg(arg).spawn() {
                         // wait up to 10 seconds
                         for _ in 0..10 {
@@ -362,7 +353,6 @@ pub fn gpu_video_codec_new_check_process() {
                             }
                         }
                     }
-                }
             };
         });
     });

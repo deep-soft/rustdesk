@@ -376,7 +376,7 @@ pub fn core_main() -> Option<Vec<String>> {
             #[cfg(feature = "hwcodec")]
             scrap::hwcodec::check_available_hwcodec();
             return None;
-        } else if args[0] == "--check-gpu_video_codec-config" {
+        } else if args[0] == "--check-gpu-video-codec-config" {
             #[cfg(feature = "gpu_video_codec")]
             scrap::gpu_video_codec::check_available_gpu_video_codec();
             return None;
