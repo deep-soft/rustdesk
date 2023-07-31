@@ -181,24 +181,46 @@ pub fn server_clip_file(
         ClipboardFile::MonitorReady => {
             log::debug!("server_monitor_ready called");
             ret = server_monitor_ready(context, conn_id);
-            log::debug!("server_monitor_ready called, conn_id {}, return {}", conn_id, ret);
+            log::debug!(
+                "server_monitor_ready called, conn_id {}, return {}",
+                conn_id,
+                ret
+            );
         }
         ClipboardFile::FormatList { format_list } => {
-            log::debug!("server_format_list called, conn_id {}, format_list: {:?}", conn_id, &format_list);
+            log::debug!(
+                "server_format_list called, conn_id {}, format_list: {:?}",
+                conn_id,
+                &format_list
+            );
             ret = server_format_list(context, conn_id, format_list);
-            log::debug!("server_format_list called, conn_id {}, return {}", conn_id, ret);
+            log::debug!(
+                "server_format_list called, conn_id {}, return {}",
+                conn_id,
+                ret
+            );
         }
         ClipboardFile::FormatListResponse { msg_flags } => {
             log::debug!("server_format_list_response called");
             ret = server_format_list_response(context, conn_id, msg_flags);
-            log::debug!("server_format_list_response called, conn_id {}, msg_flags {}, return {}", conn_id, msg_flags, ret);
+            log::debug!(
+                "server_format_list_response called, conn_id {}, msg_flags {}, return {}",
+                conn_id,
+                msg_flags,
+                ret
+            );
         }
         ClipboardFile::FormatDataRequest {
             requested_format_id,
         } => {
             log::debug!("server_format_data_request called");
             ret = server_format_data_request(context, conn_id, requested_format_id);
-            log::debug!("server_format_data_request called, conn_id {}, requested_format_id {}, return {}", conn_id, requested_format_id, ret);
+            log::debug!(
+                "server_format_data_request called, conn_id {}, requested_format_id {}, return {}",
+                conn_id,
+                requested_format_id,
+                ret
+            );
         }
         ClipboardFile::FormatDataResponse {
             msg_flags,
@@ -559,7 +581,11 @@ extern "C" fn client_format_list(
         }
         conn_id = (*clip_format_list).connID as i32;
     }
-    log::debug!("client_format_list called, client id: {}, format_list: {:?}", conn_id, &format_list);
+    log::debug!(
+        "client_format_list called, client id: {}, format_list: {:?}",
+        conn_id,
+        &format_list
+    );
     let data = ClipboardFile::FormatList { format_list };
     // no need to handle result here
     if conn_id == 0 {
@@ -585,7 +611,11 @@ extern "C" fn client_format_list_response(
         conn_id = (*format_list_response).connID as i32;
         msg_flags = (*format_list_response).msgFlags as i32;
     }
-    log::debug!("client_format_list_response called, client id: {}, msg_flags: {}", conn_id, msg_flags);
+    log::debug!(
+        "client_format_list_response called, client id: {}, msg_flags: {}",
+        conn_id,
+        msg_flags
+    );
     let data = ClipboardFile::FormatListResponse { msg_flags };
     send_data(conn_id, data);
 
@@ -605,7 +635,11 @@ extern "C" fn client_format_data_request(
     let data = ClipboardFile::FormatDataRequest {
         requested_format_id,
     };
-    log::debug!("client_format_data_request called, conn_id: {}, requested_format_id: {}", conn_id, requested_format_id);
+    log::debug!(
+        "client_format_data_request called, conn_id: {}, requested_format_id: {}",
+        conn_id,
+        requested_format_id
+    );
     // no need to handle result here
     send_data(conn_id, data);
 
@@ -632,7 +666,11 @@ extern "C" fn client_format_data_response(
             .to_vec();
         }
     }
-    log::debug!("client_format_data_response called, client id: {}, msg_flags: {}", conn_id, msg_flags);
+    log::debug!(
+        "client_format_data_response called, client id: {}, msg_flags: {}",
+        conn_id,
+        msg_flags
+    );
     let data = ClipboardFile::FormatDataResponse {
         msg_flags,
         format_data,
@@ -719,7 +757,12 @@ extern "C" fn client_file_contents_response(
         stream_id,
         requested_data,
     };
-    log::debug!("client_file_contents_response called, conn_id: {}, msg_flags: {}, stream_id: {}", conn_id, msg_flags, stream_id);
+    log::debug!(
+        "client_file_contents_response called, conn_id: {}, msg_flags: {}, stream_id: {}",
+        conn_id,
+        msg_flags,
+        stream_id
+    );
     send_data(conn_id, data);
 
     0
