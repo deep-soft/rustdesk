@@ -293,10 +293,11 @@ jobs:
           ~/.cargo/bin/flutter_rust_bridge_codegen --rust-input ./src/flutter_ffi.rs --dart-output ./flutter/lib/generated_bridge.dart
 
       - name: Restore from cache and install vcpkg
-        uses: deep-soft/run-vcpkg@v10
+        uses: deep-soft/run-vcpkg@v11
         with:
 #          setupOnly: true
           vcpkgGitCommitId: ${{ env.VCPKG_COMMIT_ID }}
+          doNotCache: false
 
       - name: Install vcpkg dependencies
         shell: bash
