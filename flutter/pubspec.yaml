@@ -99,7 +99,7 @@ dependencies:
     # path: D:/flutter/flutter_gpu_texture_renderer
     git:
       url: https://github.com/21pages/flutter_gpu_texture_renderer
-      ref: 44e4c1503b6629529db7c2cebed0a0d72c48c524
+      ref: 108732c045f6299dff20cfca024ee0c5a8a9c53f
   uuid: ^3.0.7
   auto_size_text_field: ^2.2.1
 
