@@ -524,5 +524,8 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("exceed_max_devices", "管理的设备数已达到最大值"),
         ("Sync with recent sessions", "同步最近会话"),
         ("Sort tags", "对标签进行排序"),
+        ("Separate remote window", "使用独立远程窗口"),
+        ("separate window", "独立窗口"),
+        ("Move tab to new window", "将标签页移至新窗口"),
     ].iter().cloned().collect();
 }

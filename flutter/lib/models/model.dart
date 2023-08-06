@@ -260,7 +260,7 @@ class FfiModel with ChangeNotifier {
         });
         break;
       default:
-        window_on_top(null);
+        windowOnTop(null);
         break;
     }
   }
@@ -480,9 +480,11 @@ class FfiModel with ChangeNotifier {
       if (displays.isNotEmpty) {
         parent.target?.dialogManager.showLoading(
             translate('Connected, waiting for image...'),
-            onCancel: closeConnection);
+            onCancel: closeConnection,
+            tag: '$peerId-waiting-for-image');
         _waitForImage[sessionId] = true;
         _reconnects = 1;
+        bind.sessionOnWaitingForImageDialogShow(sessionId: sessionId);
       }
       Map<String, dynamic> features = json.decode(evt['features']);
       _pi.features.privacyMode = features['privacy_mode'] == 1;
@@ -636,6 +638,8 @@ class ImageModel with ChangeNotifier {
     if (waitforImage == true) {
       _waitForImage[sessionId] = false;
       parent.target?.dialogManager.dismissAll();
+      clearWaitingForImage(parent.target?.dialogManager, id);
+
       if (isDesktop) {
         for (final cb in callbacksOnFirstImage) {
           cb(id);
@@ -1579,6 +1583,7 @@ class FFI {
   /// dialogManager use late to ensure init after main page binding [globalKey]
   late final dialogManager = OverlayDialogManager();
 
+  late final bool isSessionAdded;
   late final SessionID sessionId;
   late final ImageModel imageModel; // session
   late final FfiModel ffiModel; // session
@@ -1596,8 +1601,9 @@ class FFI {
   late final InputModel inputModel; // session
   late final ElevationModel elevationModel; // session
 
-  FFI() {
-    sessionId = isDesktop ? Uuid().v4obj() : _constSessionId;
+  FFI(SessionID? sId) {
+    isSessionAdded = sId != null;
+    sessionId = sId ?? (isDesktop ? Uuid().v4obj() : _constSessionId);
     imageModel = ImageModel(WeakReference(this));
     ffiModel = FfiModel(WeakReference(this));
     cursorModel = CursorModel(WeakReference(this));
@@ -1637,23 +1643,31 @@ class FFI {
       imageModel.id = id;
       cursorModel.id = id;
     }
-    // ignore: unused_local_variable
-    final addRes = bind.sessionAddSync(
-      sessionId: sessionId,
-      id: id,
-      isFileTransfer: isFileTransfer,
-      isPortForward: isPortForward,
-      isRdp: isRdp,
-      switchUuid: switchUuid ?? "",
-      forceRelay: forceRelay ?? false,
-      password: password ?? "",
-    );
+    if (!isSessionAdded) {
+      // ignore: unused_local_variable
+      final addRes = bind.sessionAddSync(
+        sessionId: sessionId,
+        id: id,
+        isFileTransfer: isFileTransfer,
+        isPortForward: isPortForward,
+        isRdp: isRdp,
+        switchUuid: switchUuid ?? '',
+        forceRelay: forceRelay ?? false,
+        password: password ?? '',
+      );
+    }
     final stream = bind.sessionStart(sessionId: sessionId, id: id);
     final cb = ffiModel.startEventListener(sessionId, id);
     final useTextureRender = bind.mainUseTextureRender();
+
+    final SimpleWrapper<bool> isToNewWindowNotified = SimpleWrapper(false);
     // Preserved for the rgba data.
     stream.listen((message) {
       if (closed) return;
+      if (isSessionAdded && !isToNewWindowNotified.value) {
+        bind.sessionReadyToNewWindow(sessionId: sessionId);
+        isToNewWindowNotified.value = true;
+      }
       () async {
         if (message is EventToUI_Event) {
           if (message.field0 == "close") {
@@ -1681,6 +1695,7 @@ class FFI {
               }
               await canvasModel.updateViewStyle();
               await canvasModel.updateScrollStyle();
+              clearWaitingForImage(dialogManager, id);
             }
           } else {
             // Fetch the image buffer from rust codes.
@@ -1712,7 +1727,7 @@ class FFI {
   }
 
   /// Close the remote session.
-  Future<void> close() async {
+  Future<void> close({bool closeSession = true}) async {
     closed = true;
     chatModel.close();
     if (imageModel.image != null && !isWebDesktop) {
@@ -1730,7 +1745,9 @@ class FFI {
     ffiModel.clear();
     canvasModel.clear();
     inputModel.resetModifiers();
-    await bind.sessionClose(sessionId: sessionId);
+    if (closeSession) {
+      await bind.sessionClose(sessionId: sessionId);
+    }
     debugPrint('model $id closed');
     id = '';
   }
@@ -1872,4 +1889,13 @@ Future<void> initializeCursorAndCanvas(FFI ffi) async {
   ffi.cursorModel.updateDisplayOriginWithCursor(
       ffi.ffiModel.display.x, ffi.ffiModel.display.y, xCursor, yCursor);
   ffi.canvasModel.update(xCanvas, yCanvas, scale);
+}
+
+clearWaitingForImage(OverlayDialogManager? dialogManager, String id) {
+  final durations = [100, 500, 1000, 2000];
+  for (var duration in durations) {
+    Future.delayed(Duration(milliseconds: duration), () {
+      dialogManager?.dismissByTag('$id-waiting-for-image');
+    });
+  }
 }

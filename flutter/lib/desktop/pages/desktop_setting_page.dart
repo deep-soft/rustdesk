@@ -248,7 +248,7 @@ class _General extends StatefulWidget {
 
 class _GeneralState extends State<_General> {
   final RxBool serviceStop = Get.find<RxBool>(tag: 'stop-service');
-  RxBool serviceBtnEabled = true.obs;
+  RxBool serviceBtnEnabled = true.obs;
 
   @override
   Widget build(BuildContext context) {
@@ -300,14 +300,14 @@ class _GeneralState extends State<_General> {
     return _Card(title: 'Service', children: [
       Obx(() => _Button(serviceStop.value ? 'Start' : 'Stop', () {
             () async {
-              serviceBtnEabled.value = false;
+              serviceBtnEnabled.value = false;
               await start_service(serviceStop.value);
               // enable the button after 1 second
               Future.delayed(const Duration(seconds: 1), () {
-                serviceBtnEabled.value = true;
+                serviceBtnEnabled.value = true;
               });
             }();
-          }, enabled: serviceBtnEabled.value))
+          }, enabled: serviceBtnEnabled.value))
     ]);
   }
 
@@ -316,7 +316,13 @@ class _GeneralState extends State<_General> {
       _OptionCheckBox(context, 'Confirm before closing multiple tabs',
           'enable-confirm-closing-tabs',
           isServer: false),
-      _OptionCheckBox(context, 'Adaptive Bitrate', 'enable-abr')
+      _OptionCheckBox(context, 'Adaptive Bitrate', 'enable-abr'),
+      _OptionCheckBox(
+        context,
+        'Separate remote window',
+        kOptionSeparateRemoteWindow,
+        isServer: false,
+      ),
     ];
     // though this is related to GUI, but opengl problem affects all users, so put in config rather than local
     children.add(Tooltip(
@@ -1671,12 +1677,13 @@ Widget _OptionCheckBox(BuildContext context, String label, String key,
   var ref = value.obs;
   onChanged(option) async {
     if (option != null) {
-      ref.value = option;
       if (reverse) option = !option;
       isServer
           ? await mainSetBoolOption(key, option)
           : await mainSetLocalBoolOption(key, option);
-      ;
+      ref.value = isServer
+          ? mainGetBoolOptionSync(key)
+          : mainGetLocalBoolOptionSync(key);
       update?.call();
     }
   }
