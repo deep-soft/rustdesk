@@ -228,13 +228,19 @@ class _RemotePageState extends State<RemotePage>
     debugPrint("REMOTE PAGE dispose ${widget.id}");
     if (hasPixelbufferTextureRender) {
       platformFFI.registerPixelbufferTexture(sessionId, 0);
-      // sleep for a while to avoid the texture is used after it's unregistered.
-      await Future.delayed(Duration(milliseconds: 100));
-      rgbaTextureRenderer.closeTexture(_textureKey);
     }
     if (hasGpuTextureRender) {
       platformFFI.registerGpuTexture(sessionId, 0);
-      gpuTextureRenderer.unregisterTexture(_ffi.imageModel.gpuTextureId);
+    }
+    if (hasPixelbufferTextureRender || hasGpuTextureRender) {
+      // sleep for a while to avoid the texture is used after it's unregistered.
+      await Future.delayed(Duration(milliseconds: 100));
+      if (hasPixelbufferTextureRender) {
+        rgbaTextureRenderer.closeTexture(_textureKey);
+      }
+      if (hasGpuTextureRender) {
+        gpuTextureRenderer.unregisterTexture(_ffi.imageModel.gpuTextureId);
+      }
     }
     // ensure we leave this session, this is a double check
     bind.sessionEnterOrLeave(sessionId: sessionId, enter: false);
