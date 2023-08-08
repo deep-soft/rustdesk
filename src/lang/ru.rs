@@ -299,7 +299,7 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("Help", "Помощь"),
         ("Failed", "Не выполнено"),
         ("Succeeded", "Выполнено"),
-        ("Someone turns on privacy mode, exit", "Кто-то включает режим конфиденциальности, выход"),
+        ("Someone turns on privacy mode, exit", "Кто-то включил режим конфиденциальности, выход"),
         ("Unsupported", "Не поддерживается"),
         ("Peer denied", "Отклонено удалённым узлом"),
         ("Please install plugins", "Установите плагины"),
@@ -524,8 +524,7 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("exceed_max_devices", "Достигнуто максимальне количество управляемых устройств."),
         ("Sync with recent sessions", "Синхронизация последних сессий"),
         ("Sort tags", "Сортировка меток"),
-        ("Separate remote windows", "Отдельные удалённые окна"),
-        ("separate window", "отдельное окно"),
+        ("Open connection in new tab", "Открыть подключение в новой вкладке"),
         ("Move tab to new window", "Переместить вкладку в отдельное окно"),
     ].iter().cloned().collect();
 }
