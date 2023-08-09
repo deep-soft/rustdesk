@@ -347,26 +347,12 @@ jobs:
             echo "file: run-on-arch.sh : end"
             # start build
             pushd /workspace
-            # mock 
-            case "${{ matrix.job.arch }}" in
-              x86_64)
-                # no need mock on x86_64
-                export VCPKG_ROOT=/opt/artifacts/vcpkg
-                export DEFAULT_FEAT=""
-                if ${{ matrix.job.enable-headless }}; then
-                  export DEFAULT_FEAT=linux_headless
-                fi
-                
-                echo "file: run-on-arch-commands.sh : begin"
-                cat /home/runner/work/_actions/deep-soft/run-on-arch-action/amd64-support/src/run-on-arch-commands.sh
-                echo "file: run-on-arch-commands.sh : end"
-                echo "file: run-on-arch.sh : begin"
-                cat /home/runner/work/_actions/deep-soft/run-on-arch-action/amd64-support/src/run-on-arch.sh
-                echo "file: run-on-arch.sh : end"
-            
-                cargo build --lib --features hwcodec,flutter,flutter_texture_render,${{ matrix.job.extra-build-features }},$DEFAULT_FEAT --release
-                ;;
-            esac
+            export VCPKG_ROOT=/opt/artifacts/vcpkg
+            export DEFAULT_FEAT=""
+            if ${{ matrix.job.enable-headless }}; then
+              export DEFAULT_FEAT=linux_headless
+            fi
+            cargo build --lib --features hwcodec,flutter,flutter_texture_render,${{ matrix.job.extra-build-features }},$DEFAULT_FEAT --release
 
       - name: Upload Artifacts
         uses: deep-soft/upload-artifact@v3
