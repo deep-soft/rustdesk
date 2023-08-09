@@ -921,7 +921,7 @@ mod desktop {
         fn get_display(&mut self) {
             let display_envs = vec![GNOME_SESSION_BINARY, XFCE4_PANEL, SDDM_GREETER, PLASMA_X11];
             for diplay_env in display_envs {
-                self.display = get_env_tries("DISPLAY", &self.uid, diplay_env, 20);
+                self.display = get_env_tries("DISPLAY", &self.uid, diplay_env, 10);
                 if !self.display.is_empty() {
                     break;
                 }
@@ -984,7 +984,7 @@ mod desktop {
             // try by direct access to window manager process by name
             let display_envs = vec![GNOME_SESSION_BINARY, XFCE4_PANEL, SDDM_GREETER, PLASMA_X11];
             for diplay_env in display_envs {
-                self.xauth = get_env_tries("XAUTHORITY", &self.uid, diplay_env, 20);
+                self.xauth = get_env_tries("XAUTHORITY", &self.uid, diplay_env, 10);
                 if !self.xauth.is_empty() {
                     break;
                 }
@@ -1073,11 +1073,13 @@ mod desktop {
         }
 
         pub fn refresh(&mut self) {
+            let seat0_values = get_values_of_seat0(&[0, 1, 2]);
             if !self.sid.is_empty() && is_active(&self.sid) {
-                return;
+                if self.sid == seat0_values[0] {
+                     return;
+                 }
             }
 
-            let seat0_values = get_values_of_seat0(&[0, 1, 2]);
             if seat0_values[0].is_empty() {
                 *self = Self::default();
                 self.is_rustdesk_subprocess = false;
