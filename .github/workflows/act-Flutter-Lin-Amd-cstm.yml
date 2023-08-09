@@ -243,7 +243,7 @@ jobs:
         with:
           toolchain: stable
           target: ${{ matrix.job.target }}
-#          override: true
+          override: true
           profile: minimal # minimal component installation (ie, no documentation)
 
       - name: Save Rust toolchain version
@@ -251,12 +251,12 @@ jobs:
           RUST_TOOLCHAIN_VERSION=$(cargo --version | awk '{print $2}')
           echo "RUST_TOOLCHAIN_VERSION=$RUST_TOOLCHAIN_VERSION" >> $GITHUB_ENV
 
-      - uses: deep-soft/rust-cache@v2
-        with:
-          prefix-key: rustdesk-lib-cache
-          key: ${{ matrix.job.target }}-${{ matrix.job.extra-build-features }}
-          cache-directories: "/opt/rust-registry"
-
+#      - uses: deep-soft/rust-cache@v2
+#        with:
+#          prefix-key: rustdesk-lib-cache
+#          key: ${{ matrix.job.target }}-${{ matrix.job.extra-build-features }}
+#          cache-directories: "/opt/rust-registry"
+#
 #      - name: Install local registry
 #        run: |
 #          mkdir -p /opt/rust-registry
@@ -336,7 +336,15 @@ jobs:
               [source.crates-io]
               registry = 'https://github.com/rust-lang/crates.io-index'
             """ > ~/.cargo/config
+            echo "file: ~/.cargo/config :begin"
             cat ~/.cargo/config
+            echo "file: ~/.cargo/config :end"
+            echo "file: run-on-arch-commands.sh : begin"
+            cat /home/runner/work/_actions/deep-soft/run-on-arch-action/amd64-support/src/run-on-arch-commands.sh
+            echo "file: run-on-arch-commands.sh : end"
+            echo "file: run-on-arch.sh : begin"
+            cat /home/runner/work/_actions/deep-soft/run-on-arch-action/amd64-support/src/run-on-arch.sh
+            echo "file: run-on-arch.sh : end"
             # start build
             pushd /workspace
             # mock 
@@ -348,6 +356,14 @@ jobs:
                 if ${{ matrix.job.enable-headless }}; then
                   export DEFAULT_FEAT=linux_headless
                 fi
+                
+                echo "file: run-on-arch-commands.sh : begin"
+                cat /home/runner/work/_actions/deep-soft/run-on-arch-action/amd64-support/src/run-on-arch-commands.sh
+                echo "file: run-on-arch-commands.sh : end"
+                echo "file: run-on-arch.sh : begin"
+                cat /home/runner/work/_actions/deep-soft/run-on-arch-action/amd64-support/src/run-on-arch.sh
+                echo "file: run-on-arch.sh : end"
+            
                 cargo build --lib --features hwcodec,flutter,flutter_texture_render,${{ matrix.job.extra-build-features }},$DEFAULT_FEAT --release
                 ;;
             esac
