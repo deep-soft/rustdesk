@@ -246,27 +246,32 @@ jobs:
 #          override: true
           profile: minimal # minimal component installation (ie, no documentation)
 
+      - name: Save Rust toolchain version
+        run: |
+          RUST_TOOLCHAIN_VERSION=$(cargo --version | awk '{print $2}')
+          echo "RUST_TOOLCHAIN_VERSION=$RUST_TOOLCHAIN_VERSION" >> $GITHUB_ENV
+
       - uses: deep-soft/rust-cache@v2
         with:
           prefix-key: rustdesk-lib-cache
           key: ${{ matrix.job.target }}-${{ matrix.job.extra-build-features }}
           cache-directories: "/opt/rust-registry"
 
-      - name: Install local registry
-        run: |
-          mkdir -p /opt/rust-registry
-          cargo install cargo-local-registry
-
-      - name: Build local registry
-        uses: deep-soft/retry@v2
-        id: build-local-registry
-        continue-on-error: true
-        with:
-          max_attempts: 3
-          timeout_minutes: 15
-          retry_on: error
-          command: cargo local-registry --sync ./Cargo.lock /opt/rust-registry
-
+#      - name: Install local registry
+#        run: |
+#          mkdir -p /opt/rust-registry
+#          cargo install cargo-local-registry
+#
+#      - name: Build local registry
+#        uses: deep-soft/retry@v2
+#        id: build-local-registry
+#        continue-on-error: true
+#        with:
+#          max_attempts: 3
+#          timeout_minutes: 15
+#          retry_on: error
+#          command: cargo local-registry --sync ./Cargo.lock /opt/rust-registry
+#
       - name: Disable rust bridge build
         run: |
           # sed -i "s/gen_flutter_rust_bridge();/\/\//g" build.rs
@@ -300,7 +305,8 @@ jobs:
           dockerRunArgs: |
             --volume "${PWD}:/workspace"
             --volume "/opt/artifacts:/opt/artifacts"
-            --volume "/opt/rust-registry:/opt/rust-registry"
+#          dockerRunArgs: |            
+#            --volume "/opt/rust-registry:/opt/rust-registry"
           shell: /bin/bash
           install: |
             #apt install ca-certificates -y
@@ -327,12 +333,13 @@ jobs:
             echo """
               [source.crates-io]
               registry = 'https://github.com/rust-lang/crates.io-index'
-              replace-with = 'local-registry'
-
-              [source.local-registry]
-              local-registry = '/opt/rust-registry/'
             """ > ~/.cargo/config
             cat ~/.cargo/config
+            # moved from edit config            
+            #              replace-with = 'local-registry'
+            #
+            #              [source.local-registry]
+            #              local-registry = '/opt/rust-registry/'
             # start build
             pushd /workspace
             # mock 
@@ -340,7 +347,11 @@ jobs:
               x86_64)
                 # no need mock on x86_64
                 export VCPKG_ROOT=/opt/artifacts/vcpkg
-                cargo build --lib --features hwcodec,flutter,${{ matrix.job.extra-build-features }} --release
+                export DEFAULT_FEAT=""
+                if ${{ matrix.job.enable-headless }}; then
+                  export DEFAULT_FEAT=linux_headless
+                fi
+                cargo build --lib --features hwcodec,flutter,flutter_texture_render,${{ matrix.job.extra-build-features }},$DEFAULT_FEAT --release
                 ;;
             esac
 
@@ -367,7 +378,6 @@ jobs:
     steps:
       - name: Checkout source code
         uses: deep-soft/checkout@v3
-
 
 ## -- read from toml - begin
       - name: Read toml package.version
