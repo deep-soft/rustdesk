@@ -1151,10 +1151,6 @@ impl LoginConfigHandler {
     ///
     /// * `config` - [`PeerConfig`] to save.
     pub fn save_config(&mut self, config: PeerConfig) {
-        if self.version == 0 {
-            log::info!("skip saving peer config {}", self.id);
-            return;
-        }
         config.store(&self.id);
         self.config = config;
     }
@@ -1214,7 +1210,11 @@ impl LoginConfigHandler {
     /// * `v` - value of option
     pub fn save_ui_flutter(&mut self, k: String, v: String) {
         let mut config = self.load_config();
-        config.ui_flutter.insert(k, v);
+        if v.is_empty() {
+            config.ui_flutter.remove(&k);
+        } else {
+            config.ui_flutter.insert(k, v);
+        }
         self.save_config(config);
     }
 

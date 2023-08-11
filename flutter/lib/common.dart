@@ -219,6 +219,13 @@ class MyTheme {
     ),
   );
 
+  //tooltip
+  static TooltipThemeData tooltipTheme() {
+    return TooltipThemeData(
+      waitDuration: Duration(seconds: 1, milliseconds: 500), 
+    );
+  }
+
   // Dialogs
   static const double dialogPadding = 24;
 
@@ -288,6 +295,7 @@ class MyTheme {
     tabBarTheme: const TabBarTheme(
       labelColor: Colors.black87,
     ),
+    tooltipTheme: tooltipTheme(),
     splashColor: isDesktop ? Colors.transparent : null,
     highlightColor: isDesktop ? Colors.transparent : null,
     splashFactory: isDesktop ? NoSplash.splashFactory : null,
@@ -377,6 +385,7 @@ class MyTheme {
     scrollbarTheme: ScrollbarThemeData(
       thumbColor: MaterialStateProperty.all(Colors.grey[500]),
     ),
+    tooltipTheme: tooltipTheme(),
     splashColor: isDesktop ? Colors.transparent : null,
     highlightColor: isDesktop ? Colors.transparent : null,
     splashFactory: isDesktop ? NoSplash.splashFactory : null,
@@ -1422,7 +1431,7 @@ Future<void> saveWindowPosition(WindowType type, {int? windowId}) async {
   debugPrint(
       "Saving frame: $windowId: ${pos.width}/${pos.height}, offset:${pos.offsetWidth}/${pos.offsetHeight}");
 
-  await bind.setLocalFlutterConfig(
+  await bind.setLocalFlutterOption(
       k: kWindowPrefix + type.name, v: pos.toString());
 
   if (type == WindowType.RemoteDesktop && windowId != null) {
@@ -1436,7 +1445,7 @@ Future _saveSessionWindowPosition(
       windowId, kWindowEventGetRemoteList, null);
   if (remoteList != null) {
     for (final peerId in remoteList.split(',')) {
-      bind.sessionSetFlutterConfigByPeerId(
+      bind.mainSetPeerFlutterOptionSync(
           id: peerId, k: kWindowPrefix + windowType.name, v: pos.toString());
     }
   }
@@ -1551,15 +1560,15 @@ Future<bool> restoreWindowPosition(WindowType type,
     // then we may need to get the position by reading the peer config.
     // Because the session may not be read at this time.
     if (desktopType == DesktopType.main) {
-      pos = bind.mainGetPeerFlutterConfigSync(
+      pos = bind.mainGetPeerFlutterOptionSync(
           id: peerId, k: kWindowPrefix + type.name);
     } else {
-      pos = await bind.sessionGetFlutterConfigByPeerId(
+      pos = await bind.sessionGetFlutterOptionByPeerId(
           id: peerId, k: kWindowPrefix + type.name);
     }
     isRemotePeerPos = pos != null;
   }
-  pos ??= bind.getLocalFlutterConfig(k: kWindowPrefix + type.name);
+  pos ??= bind.getLocalFlutterOption(k: kWindowPrefix + type.name);
 
   var lpos = LastWindowPosition.loadFromString(pos);
   if (lpos == null) {
