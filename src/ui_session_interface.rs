@@ -927,34 +927,49 @@ impl<T: InvokeUiSession> Session<T> {
         }
     }
 
-    pub fn handle_peer_switch_display(&self, display: &SwitchDisplay) {
-        self.ui_handler.switch_display(display);
-
-        if self.last_change_display.lock().unwrap().is_the_same_record(
-            display.display,
-            display.width,
-            display.height,
-        ) {
-            let custom_resolution = if display.width != display.original_resolution.width
-                || display.height != display.original_resolution.height
-            {
-                Some((display.width, display.height))
-            } else {
-                None
-            };
+    fn set_custom_resolution(&self, display: &SwitchDisplay) {
+        if display.width == display.original_resolution.width
+            && display.height == display.original_resolution.height
+        {
             self.lc
                 .write()
                 .unwrap()
-                .set_custom_resolution(display.display, custom_resolution);
+                .set_custom_resolution(display.display, None);
+        } else {
+            let last_change_display = self.last_change_display.lock().unwrap();
+            if last_change_display.display == display.display {
+                let wh = if last_change_display.is_the_same_record(
+                    display.display,
+                    display.width,
+                    display.height,
+                ) {
+                    Some((display.width, display.height))
+                } else {
+                    // display origin is changed, or some other events.
+                    None
+                };
+                self.lc
+                    .write()
+                    .unwrap()
+                    .set_custom_resolution(display.display, wh);
+            }
         }
     }
 
+    #[inline]
+    pub fn handle_peer_switch_display(&self, display: &SwitchDisplay) {
+        self.ui_handler.switch_display(display);
+        self.set_custom_resolution(display);
+    }
+
+    #[inline]
     pub fn change_resolution(&self, display: i32, width: i32, height: i32) {
         *self.last_change_display.lock().unwrap() =
             ChangeDisplayRecord::new(display, width, height);
         self.do_change_resolution(width, height);
     }
 
+    #[inline]
     fn try_change_init_resolution(&self, display: i32) {
         if let Some((w, h)) = self.lc.read().unwrap().get_custom_resolution(display) {
             self.do_change_resolution(w, h);
@@ -973,10 +988,12 @@ impl<T: InvokeUiSession> Session<T> {
         self.send(Data::Message(msg));
     }
 
+    #[inline]
     pub fn request_voice_call(&self) {
         self.send(Data::NewVoiceCall);
     }
 
+    #[inline]
     pub fn close_voice_call(&self) {
         self.send(Data::CloseVoiceCall);
     }
@@ -1078,7 +1095,7 @@ impl<T: InvokeUiSession> Interface for Session<T> {
         handle_login_error(self.lc.clone(), err, self)
     }
 
-    fn handle_peer_info(&mut self, mut pi: PeerInfo) {
+    fn handle_peer_info(&mut self, mut pi: PeerInfo, is_cached_pi: bool) {
         log::debug!("handle_peer_info :{:?}", pi);
         pi.username = self.lc.read().unwrap().get_username(&pi);
         if pi.current_display as usize >= pi.displays.len() {
@@ -1099,10 +1116,12 @@ impl<T: InvokeUiSession> Interface for Session<T> {
                 self.msgbox("error", "Remote Error", "No Display", "");
                 return;
             }
-            self.try_change_init_resolution(pi.current_display);
-            let p = self.lc.read().unwrap().should_auto_login();
-            if !p.is_empty() {
-                input_os_password(p, true, self.clone());
+            if !is_cached_pi {
+                self.try_change_init_resolution(pi.current_display);
+                let p = self.lc.read().unwrap().should_auto_login();
+                if !p.is_empty() {
+                    input_os_password(p, true, self.clone());
+                }
             }
             let current = &pi.displays[pi.current_display as usize];
             self.set_display(
@@ -1211,7 +1230,7 @@ impl<T: InvokeUiSession> Session<T> {
             self.set_connection_type(is_secured, direct);
         }
         let pi = self.cache_flutter.read().unwrap().pi.clone();
-        self.handle_peer_info(pi);
+        self.handle_peer_info(pi, true);
         if let Some(sp) = self.cache_flutter.read().unwrap().sp.as_ref() {
             self.handle_peer_switch_display(sp);
         }
