@@ -212,6 +212,14 @@ class AbModel {
     it.first.alias = alias;
   }
 
+  void unrememberPassword(String id) {
+    final it = peers.where((element) => element.id == id);
+    if (it.isEmpty) {
+      return;
+    }
+    it.first.hash = '';
+  }
+
   Future<bool> pushAb(
       {bool toastIfFail = true,
       bool toastIfSucc = true,
@@ -380,12 +388,12 @@ class AbModel {
   }
 
   Future<void> _syncFromRecentWithoutLock({bool push = true}) async {
-    bool shouldSync(Peer r, Peer p) {
-      return r.hash != p.hash ||
-          r.username != p.username ||
-          r.platform != p.platform ||
-          r.hostname != p.hostname ||
-          (p.alias.isEmpty && r.alias.isNotEmpty);
+    bool peerSyncEqual(Peer a, Peer b) {
+      return a.hash == b.hash &&
+          a.username == b.username &&
+          a.platform == b.platform &&
+          a.hostname == b.hostname &&
+          a.alias == b.alias;
     }
 
     Future<List<Peer>> getRecentPeers() async {
@@ -425,29 +433,30 @@ class AbModel {
       if (!shouldSyncAb()) return;
       final recents = await getRecentPeers();
       if (recents.isEmpty) return;
-      bool syncChanged = false;
       bool uiChanged = false;
+      bool needSync = false;
       for (var i = 0; i < recents.length; i++) {
         var r = recents[i];
         var index = peers.indexWhere((e) => e.id == r.id);
         if (index < 0) {
           if (!isFull(false)) {
             peers.add(r);
-            syncChanged = true;
             uiChanged = true;
+            needSync = true;
           }
         } else {
           if (!r.equal(peers[index])) {
             uiChanged = true;
           }
-          if (shouldSync(r, peers[index])) {
-            syncChanged = true;
-          }
+          Peer old = Peer.copy(peers[index]);
           peers[index] = merge(r, peers[index]);
+          if (!peerSyncEqual(peers[index], old)) {
+            needSync = true;
+          }
         }
       }
       // Be careful with loop calls
-      if (syncChanged && push) {
+      if (needSync && push) {
         pushAb(toastIfSucc: false, toastIfFail: false);
       } else if (uiChanged) {
         peers.refresh();
@@ -506,5 +515,18 @@ class AbModel {
       }
       throw err;
     }
+  }
+
+  reSyncToast(Future<bool> future) {
+    if (!shouldSyncAb()) return;
+    Future.delayed(Duration.zero, () async {
+      final succ = await future;
+      if (succ) {
+        await Future.delayed(Duration(seconds: 2)); // success msg
+        BotToast.showText(
+            contentColor: Colors.lightBlue,
+            text: translate('synced_peer_readded_tip'));
+      }
+    });
   }
 }
