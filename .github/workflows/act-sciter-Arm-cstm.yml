@@ -319,7 +319,7 @@ jobs:
 
               [source.local-registry]
               local-registry = '/opt/rust-registry/'
-            """ > ~/.cargo/config
+            """ > ~/.cargo/config;
             cat ~/.cargo/config;
             # start build
             pushd /workspace;
@@ -328,7 +328,7 @@ jobs:
             export ARCH=armhf;
             export DEFAULT_FEAT="";
             export CARGO_INCREMENTAL=0;
-            if ${{ matrix.job.enable-headless }}; then
+            if [ ${{ matrix.job.enable-headless }} ]; then
               export DEFAULT_FEAT=linux_headless;
             fi;
             cargo build --jobs 1 --features inline,${{ matrix.job.extra-build-features }},$DEFAULT_FEAT --release --bins;

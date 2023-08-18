@@ -312,16 +312,16 @@ jobs:
             tree -L 3 /opt/artifacts/vcpkg/installed
           run: |
             # disable git safe.directory
-            git config --global --add safe.directory "*"
+            git config --global --add safe.directory "*";
             # rust
-            pushd /opt
+            pushd /opt;
             # do not use rustup, because memory overflow in qemu
-            wget -O rust.tar.gz https://static.rust-lang.org/dist/${{ env.RUST_VERSION }}-${{ matrix.job.target }}.tar.gz
-            tar -zxvf rust.tar.gz > /dev/null && rm rust.tar.gz
-            cd ${{ env.RUST_VERSION }}-${{ matrix.job.target }} && ./install.sh
-            rm -rf ${{ env.RUST_VERSION }}-${{ matrix.job.target }}
+            wget -O rust.tar.gz https://static.rust-lang.org/dist/${{ env.RUST_VERSION }}-${{ matrix.job.target }}.tar.gz;
+            tar -zxvf rust.tar.gz > /dev/null && rm rust.tar.gz;
+            cd ${{ env.RUST_VERSION }}-${{ matrix.job.target }} && ./install.sh;
+            rm -rf ${{ env.RUST_VERSION }}-${{ matrix.job.target }};
             # edit config
-            mkdir -p ~/.cargo/
+            mkdir -p ~/.cargo/;
             echo """
               [source.crates-io]
               registry = 'https://github.com/rust-lang/crates.io-index'
@@ -330,18 +330,18 @@ jobs:
               [source.local-registry]
               local-registry = '/opt/rust-registry/'
             """ > ~/.cargo/config
-            cat ~/.cargo/config
+            cat ~/.cargo/config;
             # start build
-            pushd /workspace
-            export VCPKG_ROOT=/opt/artifacts/vcpkg
-            export DEFAULT_FEAT=""
-            if ${{ matrix.job.enable-headless }}; then
-              export DEFAULT_FEAT=linux_headless
-            fi
-            export CARGO_INCREMENTAL=0
-            cargo build --jobs 1 --lib --features flutter,flutter_texture_render,${{ matrix.job.extra-build-features }},$DEFAULT_FEAT --release
-#             cargo build --lib --features flutter,${{ matrix.job.extra-build-features }} --release
-#             cargo build --lib --features hwcodec,flutter,${{ matrix.job.extra-build-features }} --release
+            pushd /workspace;
+            export VCPKG_ROOT=/opt/artifacts/vcpkg;
+            export DEFAULT_FEAT="";
+            if [ ${{ matrix.job.enable-headless }} ]; then
+              export DEFAULT_FEAT=linux_headless;
+            fi;
+            export CARGO_INCREMENTAL=0;
+            cargo build --jobs 1 --lib --features flutter,flutter_texture_render,${{ matrix.job.extra-build-features }},$DEFAULT_FEAT --release;
+#             cargo build --lib --features flutter,${{ matrix.job.extra-build-features }} --release;
+#             cargo build --lib --features hwcodec,flutter,${{ matrix.job.extra-build-features }} --release;
 
       - name: Upload Artifacts
         uses: deep-soft/upload-artifact@v3
