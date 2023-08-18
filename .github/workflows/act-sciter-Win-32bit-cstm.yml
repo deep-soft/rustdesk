@@ -1,4 +1,4 @@
-# 2023-08-18 07:40
+# 2023-08-18 15:20
 #
 #
 name: act - sciter - Win - 32bit - cstm
@@ -22,7 +22,7 @@ env:
   RDSK_PCH_SH_CLN:   '${{ secrets.RDSK_PCH_SH_CLN }}'
   RUST_VERSION:                "rust-1.70.0"
   LLVM_VERSION:                "15.0.6"
-  FLUTTER_VERSION:             "3.13.0"
+  FLUTTER_VERSION:             "3.10.6"
   FLUTTER_RUST_BRIDGE_VERSION: "1.75.3"
   FLUTTER_ELINUX_VERSION:      "3.10.2"
   FLUTTER_ELINUX_COMMIT_ID:    "410b3ca42f2cd0c485edf517a1666652bab442d4"

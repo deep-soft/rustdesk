@@ -1,4 +1,4 @@
-# 2023-08-18 07:40
+# 2023-08-18 15:20
 #
 #
 name: act - sciter - Arm - cstm
@@ -22,7 +22,7 @@ env:
   RDSK_PCH_SH_CLN:   '${{ secrets.RDSK_PCH_SH_CLN }}'
   RUST_VERSION:                "rust-1.70.0"
   LLVM_VERSION:                "15.0.6"
-  FLUTTER_VERSION:             "3.13.0"
+  FLUTTER_VERSION:             "3.10.6"
   FLUTTER_RUST_BRIDGE_VERSION: "1.75.3"
   FLUTTER_ELINUX_VERSION:      "3.10.2"
   FLUTTER_ELINUX_COMMIT_ID:    "410b3ca42f2cd0c485edf517a1666652bab442d4"
@@ -295,23 +295,23 @@ jobs:
           shell: /bin/bash
           install: |
             # apt install ca-certificates -y
-            apt update -y
-            echo -e "installing deps"
-            apt-get -qq install -y git cmake g++ gcc build-essential nasm yasm curl unzip xz-utils python3 wget pkg-config ninja-build pkg-config libgtk-3-dev liblzma-dev clang libappindicator3-dev rpm libclang-dev
-            apt-get -qq install -y libdbus-1-dev pkg-config nasm yasm libglib2.0-dev libxcb-randr0-dev libxdo-dev libxfixes-dev libxcb-shape0-dev libxcb-xfixes0-dev libasound2-dev 
-            apt-get -qq install -y libpulse-dev libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev libvpx-dev libvdpau-dev libva-dev
+            apt update -y;
+            echo -e "installing deps";
+            apt-get -qq install -y git cmake g++ gcc build-essential nasm yasm curl unzip xz-utils python3 wget pkg-config ninja-build pkg-config libgtk-3-dev liblzma-dev clang libappindicator3-dev rpm libclang-dev;
+            apt-get -qq install -y libdbus-1-dev pkg-config nasm yasm libglib2.0-dev libxcb-randr0-dev libxdo-dev libxfixes-dev libxcb-shape0-dev libxcb-xfixes0-dev libasound2-dev;
+            apt-get -qq install -y libpulse-dev libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev libvpx-dev libvdpau-dev libva-dev;
           run: |
             # disable git safe.directory
-            git config --global --add safe.directory "*"
+            git config --global --add safe.directory "*";
             # rust
-            pushd /opt
+            pushd /opt;
             # do not use rustup, because memory overflow in qemu
-            wget -O rust.tar.gz https://static.rust-lang.org/dist/${{ env.RUST_VERSION }}-${{ matrix.job.target }}.tar.gz
-            tar -zxvf rust.tar.gz > /dev/null && rm rust.tar.gz
-            cd ${{ env.RUST_VERSION }}-${{ matrix.job.target }} && ./install.sh
-            rm -rf ${{ env.RUST_VERSION }}-${{ matrix.job.target }}
+            wget -O rust.tar.gz https://static.rust-lang.org/dist/${{ env.RUST_VERSION }}-${{ matrix.job.target }}.tar.gz;
+            tar -zxvf rust.tar.gz > /dev/null && rm rust.tar.gz;
+            cd ${{ env.RUST_VERSION }}-${{ matrix.job.target }} && ./install.sh;
+            rm -rf ${{ env.RUST_VERSION }}-${{ matrix.job.target }};
             # edit config
-            mkdir -p ~/.cargo/
+            mkdir -p ~/.cargo/;
             echo """
               [source.crates-io]
               registry = 'https://github.com/rust-lang/crates.io-index'
@@ -320,31 +320,30 @@ jobs:
               [source.local-registry]
               local-registry = '/opt/rust-registry/'
             """ > ~/.cargo/config
-            cat ~/.cargo/config
-
+            cat ~/.cargo/config;
             # start build
-            pushd /workspace
-            python3 ./res/inline-sciter.py
-            export VCPKG_ROOT=/opt/artifacts/vcpkg
-            export ARCH=armhf
-            export DEFAULT_FEAT=""
-            export CARGO_INCREMENTAL=0
+            pushd /workspace;
+            python3 ./res/inline-sciter.py;
+            export VCPKG_ROOT=/opt/artifacts/vcpkg;
+            export ARCH=armhf;
+            export DEFAULT_FEAT="";
+            export CARGO_INCREMENTAL=0;
             if ${{ matrix.job.enable-headless }}; then
-              export DEFAULT_FEAT=linux_headless
-            fi
-            cargo build --jobs 1 --features inline,${{ matrix.job.extra-build-features }},$DEFAULT_FEAT --release --bins
+              export DEFAULT_FEAT=linux_headless;
+            fi;
+            cargo build --jobs 1 --features inline,${{ matrix.job.extra-build-features }},$DEFAULT_FEAT --release --bins;
             # package
-            mkdir -p ./Release
-            mv ./target/release/rustdesk ./Release/rustdesk
-            wget -O ./Release/libsciter-gtk.so https://github.com/c-smile/sciter-sdk/raw/master/bin.lnx/arm32/libsciter-gtk.so
-            ./build.py --package ./Release
+            mkdir -p ./Release;
+            mv ./target/release/rustdesk ./Release/rustdesk;
+            wget -O ./Release/libsciter-gtk.so https://github.com/c-smile/sciter-sdk/raw/master/bin.lnx/arm32/libsciter-gtk.so;
+            ./build.py --package ./Release;
 
       - name: Rename rustdesk
         shell: bash
         run: |
           for name in rustdesk*??.deb; do
               # use cp to duplicate deb files to fit other packages.
-              cp "$name" "${name%%.deb}-${{ matrix.job.target }}-${{ matrix.job.os }}-sciter.deb"
+              cp "$name" "${name%%.deb}-${{ matrix.job.target }}-${{ matrix.job.os }}-sciter.deb";
           done
 
       - name: Publish debian package
