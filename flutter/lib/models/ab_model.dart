@@ -59,11 +59,10 @@ class AbModel {
     if (!gFFI.userModel.isLogin) return;
     if (abLoading.value) return;
     if (!force && initialized) return;
-    DateTime startTime = DateTime.now();
     if (pushError.isNotEmpty) {
       try {
         // push to retry
-        pushAb(toastIfFail: false, toastIfSucc: false);
+        await pushAb(toastIfFail: false, toastIfSucc: false);
       } catch (_) {}
     }
     if (!quiet) {
@@ -120,14 +119,7 @@ class AbModel {
         }
       }
     } finally {
-      var ms =
-          (Duration(milliseconds: 300) - DateTime.now().difference(startTime))
-              .inMilliseconds;
-      ms = ms > 0 ? ms : 0;
-      Future.delayed(Duration(milliseconds: ms), () {
-        abLoading.value = false;
-      });
-
+      abLoading.value = false;
       initialized = true;
       _syncAllFromRecent = true;
       _timerCounter = 0;
