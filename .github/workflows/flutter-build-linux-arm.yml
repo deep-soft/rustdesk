@@ -31,7 +31,6 @@ jobs:
 #    if: ${{ inputs.upload-artifact }}
     needs: [generate-bridge-linux, build-vcpkg-deps-linux]
     name: build-rust-lib ${{ matrix.job.target }} (${{ matrix.job.os }}) [${{ matrix.job.extra-build-features }}]
-    runns-on:
     runs-on: ${{ matrix.job.os }}
     strategy:
       fail-fast: false
