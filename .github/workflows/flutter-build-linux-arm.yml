@@ -3,22 +3,29 @@ name: Build - flutter - linux - arm
 
 on:
   workflow_dispatch:
+    inputs:
+      upload-artifact:
+        type: boolean
+        default: true
+      upload-tag:
+        type: string
+        default: "nightly"
 
 env:
-  LLVM_VERSION: "15.0.6"
-  FLUTTER_VERSION: "3.10.6"
+  TAG_NAME:                    "${{ inputs.upload-tag }}"
+  VERSION:                     "1.2.2"
+  LLVM_VERSION:                "15.0.6"
+  FLUTTER_VERSION:             "3.10.6"
   FLUTTER_RUST_BRIDGE_VERSION: "1.75.3"
   # for arm64 linux
-  FLUTTER_ELINUX_VERSION: "3.10.6"
-  FLUTTER_ELINUX_COMMIT_ID: "410b3ca42f2cd0c485edf517a1666652bab442d4"
-  TAG_NAME: "${{ inputs.upload-tag }}"
+  FLUTTER_ELINUX_VERSION:      "3.10.6"
+  FLUTTER_ELINUX_COMMIT_ID:    "410b3ca42f2cd0c485edf517a1666652bab442d4"
   # vcpkg version: 2023.04.15
   # for multiarch gcc compatibility
-  VCPKG_COMMIT_ID: "501db0f17ef6df184fcdbfbe0f87cde2313b6ab1"
-  VERSION: "1.2.2"
+  VCPKG_COMMIT_ID:             "501db0f17ef6df184fcdbfbe0f87cde2313b6ab1"
 # enable RS_PUB_KEY and RENDEZVOUS_SERVER for custom server
-#  RS_PUB_KEY: '${{ secrets.RS_PUB_KEY }}'
-#  RENDEZVOUS_SERVER: '${{ secrets.RENDEZVOUS_SERVER }}'
+#  RS_PUB_KEY:                 '${{ secrets.RS_PUB_KEY }}'
+#  RENDEZVOUS_SERVER:          '${{ secrets.RENDEZVOUS_SERVER }}'
 
 jobs:
   build-vcpkg-deps-linux:
@@ -28,7 +35,7 @@ jobs:
     uses: ./.github/workflows/bridge.yml
 
   build-rustdesk-lib-linux-arm:
-#    if: ${{ inputs.upload-artifact }}
+    if: ${{ inputs.upload-artifact }}
     needs: [generate-bridge-linux, build-vcpkg-deps-linux]
     name: build-rust-lib ${{ matrix.job.target }} (${{ matrix.job.os }}) [${{ matrix.job.extra-build-features }}]
     runs-on: ${{ matrix.job.os }}
@@ -37,22 +44,7 @@ jobs:
       matrix:
         # use a high level qemu-user-static
         job:
-          - {
-              arch: aarch64,
-              target: aarch64-unknown-linux-gnu,
-              os: ubuntu-20.04, # just for naming package, not running host
-              use-cross: true,
-              extra-build-features: "",
-              enable-headless: true
-            }
-          - {
-              arch: aarch64,
-              target: aarch64-unknown-linux-gnu,
-              os: ubuntu-20.04, # just for naming package, not running host
-              use-cross: true,
-              extra-build-features: "appimage",
-              enable-headless: false
-            }
+          - { arch: aarch64, target: aarch64-unknown-linux-gnu, os: ubuntu-20.04, use-cross: true, extra-build-features: "appimage", enable-headless: true }
     steps:
       - name: Maximize build space
         run: |
@@ -184,7 +176,7 @@ jobs:
           path: target/release/liblibrustdesk.so
 
   build-rustdesk-linux-arm:
-#    if: ${{ inputs.upload-artifact }}
+    if: ${{ inputs.upload-artifact }}
     needs: [build-rustdesk-lib-linux-arm]
     name: build-rustdesk ${{ matrix.job.target }} (${{ matrix.job.os }}) [${{ matrix.job.extra-build-features }}]
     runs-on: ubuntu-20.04 # 20.04 has more performance on arm build
@@ -192,20 +184,7 @@ jobs:
       fail-fast: false
       matrix:
         job:
-          - {
-              arch: aarch64,
-              target: aarch64-unknown-linux-gnu,
-              os: ubuntu-20.04, # just for naming package, not running host
-              use-cross: true,
-              extra-build-features: "",
-            }
-          - {
-              arch: aarch64,
-              target: aarch64-unknown-linux-gnu,
-              os: ubuntu-20.04, # just for naming package, not running host
-              use-cross: true,
-              extra-build-features: "appimage",
-            }
+          - { arch: aarch64, target: aarch64-unknown-linux-gnu, os: ubuntu-20.04, use-cross: true, extra-build-features: "appimage", enable-headless: true }
     steps:
       - name: Checkout source code
         uses: actions/checkout@v3
@@ -334,7 +313,8 @@ jobs:
           done
 
       - name: Publish debian package
-        if: matrix.job.extra-build-features == '' && env.UPLOAD_ARTIFACT == 'true'
+        #if: matrix.job.extra-build-features == '' && env.UPLOAD_ARTIFACT == 'true'
+        if: ${{ inputs.upload-artifact }}
         uses: softprops/action-gh-release@v1
         with:
           prerelease: true
@@ -343,7 +323,8 @@ jobs:
             rustdesk-${{ env.VERSION }}-${{ matrix.job.arch }}.deb
       
       - name: Build appimage package
-        if: ${{ matrix.job.extra-build-features == 'appimage' }}
+        #if: ${{ matrix.job.extra-build-features == 'appimage' }}
+        if: ${{ matrix.job.extra-build-features == 'appimage' && inputs.upload-artifact }}
         shell: bash
         run: |
           # set-up appimage-builder
@@ -357,7 +338,7 @@ jobs:
           sudo appimage-builder --skip-tests --recipe ./AppImageBuilder-${{ matrix.job.arch }}.yml
 
       - name: Publish appimage package
-        if: matrix.job.extra-build-features == 'appimage' && env.UPLOAD_ARTIFACT == 'true'
+        if: ${{ matrix.job.extra-build-features == 'appimage' && inputs.upload-artifact }}
         uses: softprops/action-gh-release@v1
         with:
           prerelease: true
@@ -373,7 +354,7 @@ jobs:
           path: rustdesk-${{ env.VERSION }}-${{ matrix.job.arch }}.deb
 
       - name: Patch archlinux PKGBUILD
-        if: ${{ matrix.job.extra-build-features == '' }}
+        # if: ${{ matrix.job.extra-build-features == '' }}
         run: |
           sed -i "s/arch=('x86_64')/arch=('${{ matrix.job.arch }}')/g" res/PKGBUILD
           case ${{ matrix.job.arch }} in
@@ -386,19 +367,10 @@ jobs:
           esac
 
       - name: Publish fedora package
-        if: ${{ matrix.job.extra-build-features == '' }}
+        # if: ${{ matrix.job.extra-build-features == '' }}
         uses: softprops/action-gh-release@v1
         with:
-          draft: true
+          prerelease: true
           tag_name: ${{ env.TAG_NAME }}
-          files: |
-            /opt/artifacts/rpm/*.rpm
-
-      - name: Publish version build - fedora package
-        if: ${{ matrix.job.extra-build-features == '' }}
-        uses: softprops/action-gh-release@v1
-        with:
-          draft: true
-          tag_name: ${{ env.TAG_VERSION }}${{ env.TAG_BUILD }}
           files: |
             /opt/artifacts/rpm/*.rpm
