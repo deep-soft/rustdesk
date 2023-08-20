@@ -120,7 +120,7 @@ jobs:
           name: vcpkg-artifact-${{ matrix.job.arch }}
           path: /opt/artifacts/vcpkg/installed
 
-      - uses: rustdesk-org/run-on-arch-action@amd64-support
+      - uses: deep-soft/run-on-arch-action@amd64-support
         name: Build rustdesk library for ${{ matrix.job.arch }}
         id: vcpkg
         with:
@@ -241,7 +241,7 @@ jobs:
           git reset --hard ${{ env.FLUTTER_ELINUX_COMMIT_ID }} 
           popd
 
-      - uses: rustdesk-org/run-on-arch-action@amd64-support
+      - uses: deep-soft/run-on-arch-action@amd64-support
         name: Build rustdesk binary for ${{ matrix.job.arch }}
         id: vcpkg
         with:
