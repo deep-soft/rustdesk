@@ -384,3 +384,21 @@ jobs:
                 sed -i "s/linux\/x64/linux\/arm64/g" ./res/PKGBUILD
                 ;;
           esac
+
+      - name: Publish fedora package
+        if: ${{ matrix.job.extra-build-features == '' }}
+        uses: softprops/action-gh-release@v1
+        with:
+          draft: true
+          tag_name: ${{ env.TAG_NAME }}
+          files: |
+            /opt/artifacts/rpm/*.rpm
+
+      - name: Publish version build - fedora package
+        if: ${{ matrix.job.extra-build-features == '' }}
+        uses: softprops/action-gh-release@v1
+        with:
+          draft: true
+          tag_name: ${{ env.TAG_VERSION }}${{ env.TAG_BUILD }}
+          files: |
+            /opt/artifacts/rpm/*.rpm
