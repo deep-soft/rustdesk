@@ -213,6 +213,13 @@ jobs:
           echo "$RDSK_PCH_SH_CLN" | base64 --decode > ./RDSK_PCH_SH_CLN.sh
           bash ./RDSK_PCH_SH_CLN.sh
 
+      - name: Add version information for self-extract
+        continue-on-error: true
+        shell: bash
+        run: |
+          sed -i 's/}/    embed_resource::compile("..\..\flutter\windows\runner\Runner.rc", embed_resource::NONE);\n}/' .\libs\portable\build.rs
+          cat .\libs\portable\build.rs
+
       - name: Create source archive 1
         continue-on-error: true
         shell: bash
