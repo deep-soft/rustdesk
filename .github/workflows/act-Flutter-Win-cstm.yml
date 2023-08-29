@@ -213,22 +213,6 @@ jobs:
           echo "$RDSK_PCH_SH_CLN" | base64 --decode > ./RDSK_PCH_SH_CLN.sh
           bash ./RDSK_PCH_SH_CLN.sh
 
-      - name: Add version information for self-extract
-        continue-on-error: true
-        shell: bash
-        run: |
-          # sed -i 's|}|    embed_resource::compile("../../flutter/windows/runner/Runner.rc", embed_resource::NONE);\n}|' ./libs/portable/build.rs
-          sed -i 's| \
-          embed_resource::compile("icon.rc", embed_resource::NONE);| \
-          embed_resource::compile("../../flutter/windows/runner/Runner.rc", embed_resource::NONE);| \
-          ' ./libs/portable/build.rs;
-
-      - name: print build.rs
-        continue-on-error: true
-        shell: bash
-        run: |
-          cat ./libs/portable/build.rs
-
       - name: Create source archive 1
         continue-on-error: true
         shell: bash
@@ -366,6 +350,22 @@ jobs:
           folder: './flutter/build/windows/runner/Release/'
           recursive: true
 
+      - name: Add version information for self-extract
+        continue-on-error: true
+        shell: bash
+        run: |
+          # sed -i 's|}|    embed_resource::compile("../../flutter/windows/runner/Runner.rc", embed_resource::NONE);\n}|' ./libs/portable/build.rs
+          sed -i 's| \
+          embed_resource::compile("icon.rc", embed_resource::NONE);| \
+          embed_resource::compile("../../flutter/windows/runner/Runner.rc", embed_resource::NONE);| \
+          ' ./libs/portable/build.rs;
+
+      - name: print build.rs
+        continue-on-error: true
+        shell: bash
+        run: |
+          cat ./libs/portable/build.rs
+
       - name: Build self-extracted executable
         continue-on-error: false
         shell: bash
@@ -413,3 +413,24 @@ jobs:
           tag_name: ${{ env.TAG_VERSION }}${{ env.TAG_BUILD }}
           files: |
             ./SignOutput/rustdesk-*.exe
+
+# zip release begin
+      - name: Create Archive ALL
+        uses: deep-soft/zip-release@v2
+        with:
+          type: 'zip'
+          filename: '${{ env.TAG_VERSION }}${{ env.TAG_BUILD }}-ALL'
+          directory: '.'
+          path: '.'
+          exclusions: '*.git* /*node_modules/* .editorconfig'
+          # archive name is ${{ env.ZIP_RELEASE_ARCHIVE }}
+
+      - name: Publish Archive ALL
+        continue-on-error: true
+        uses: deep-soft/action-gh-release@v1
+        with:
+          draft: true
+          tag_name: ${{ env.TAG_VERSION }}${{ env.TAG_BUILD }}-ALL
+          files: |
+              ${{ env.ZIP_RELEASE_ARCHIVE }}
+# zip release end
