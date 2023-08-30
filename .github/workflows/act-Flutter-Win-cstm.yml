@@ -355,10 +355,8 @@ jobs:
         shell: bash
         run: |
           # sed -i 's|}|    embed_resource::compile("../../flutter/windows/runner/Runner.rc", embed_resource::NONE);\n}|' ./libs/portable/build.rs
-          sed -i 's| \
-          embed_resource::compile("icon.rc", embed_resource::NONE);| \
-          embed_resource::compile("../../flutter/windows/runner/Runner.rc", embed_resource::NONE);| \
-          ' ./libs/portable/build.rs;
+          # sed -i 's|embed_resource::compile("icon.rc", embed_resource::NONE);|embed_resource::compile("../../flutter/windows/runner/Runner.rc", embed_resource::NONE);|' ./libs/portable/build.rs;
+          sed -i 's|"icon.rc"|"../../flutter/windows/runner/Runner.rc"|' ./libs/portable/build.rs;
 
       - name: print build.rs
         continue-on-error: true
