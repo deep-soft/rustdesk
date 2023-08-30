@@ -40,11 +40,17 @@ env:
   GUI: "Windows"
 
 on:
-  workflow_call:
-  workflow_dispatch:
 #  schedule:
 #    # schedule build every night
 #    - cron: "0 0 * * *"
+  workflow_call:
+  workflow_dispatch:
+    inputs:
+      archive_ALL:
+        description: Archive ALL
+        type: boolean
+        default: false
+        required: true
 
 jobs:
   build-for-windows:
