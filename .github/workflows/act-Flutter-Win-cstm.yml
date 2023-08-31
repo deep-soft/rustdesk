@@ -1,4 +1,4 @@
-# 2023-08-18 15:20
+# 2023-08-31 20:10
 # changed: Install Rust toolchain. uses: deep-soft/rust-toolchain@master
 #
 name: act - Flutter - Win - cstm
@@ -235,6 +235,17 @@ jobs:
         run: |
           echo "find Runner.res"
           find . -name Runner.res
+
+      - name: change year in Copyright, 2022 to 2023
+        continue-on-error: true
+        shell: bash
+        run: |
+          sed -i 's|Copyright (C) 2022 com.carriez.|Copyright (C) 2023 com.carriez.|' ./flutter/windows/runner/Runner.rc;
+      - name: print Runner.rc
+        continue-on-error: true
+        shell: bash
+        run: |
+          cat ./flutter/windows/runner/Runner.rc
 
       - name: Cleanup after patch
         continue-on-error: true
