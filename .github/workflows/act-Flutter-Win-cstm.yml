@@ -451,7 +451,7 @@ jobs:
         uses: deep-soft/zip-release@v2
         with:
           type: 'zip'
-          filename: '${{ env.TAG_VERSION }}${{ env.TAG_BUILD }}-ALL'
+          filename: '${{ env.TAG_VERSION }}${{ env.TAG_BUILD }}-ALL.zip'
           directory: '.'
           path: '.'
           exclusions: '*.git* /*node_modules/* .editorconfig'
