@@ -219,9 +219,9 @@ jobs:
           # sed -i 's|}|    embed_resource::compile("../../flutter/windows/runner/Runner.rc", embed_resource::NONE);\n}|' ./libs/portable/build.rs
           # sed -i 's|embed_resource::compile("icon.rc", embed_resource::NONE);|embed_resource::compile("../../flutter/windows/runner/Runner.rc", embed_resource::NONE);|' ./libs/portable/build.rs;
           # sed -i 's|"icon.rc"|"../../flutter/windows/runner/Runner.rc"|' ./libs/portable/build.rs;
-          # sed -i 's|embed_resource::compile("icon.rc", embed_resource::NONE);|embed_resource::compile("../../flutter/windows/runner/Runner.rc", embed_resource::NONE);|' ./libs/portable/build.rs;
           # sed -i 's|embed_resource::compile("icon.rc", embed_resource::NONE);|println!("cargo:rustc-link-lib=dylib:+verbatim=../../flutter/build/windows/runner/rustdesk.dir/Release/Runner.res");|' ./libs/portable/build.rs;
-          sed -i 's|embed_resource::compile("icon.rc", embed_resource::NONE);|println!("cargo:rustc-link-lib=dylib:+verbatim=./flutter/build/windows/runner/rustdesk.dir/Release/Runner.res");|' ./libs/portable/build.rs;
+          # sed -i 's|embed_resource::compile("icon.rc", embed_resource::NONE);|println!("cargo:rustc-link-lib=dylib:+verbatim=./flutter/build/windows/runner/rustdesk.dir/Release/Runner.res");|' ./libs/portable/build.rs;
+          sed -i 's|embed_resource::compile("icon.rc", embed_resource::NONE);|println!("cargo:rustc-link-lib=dylib:+verbatim=./Runner.res");|' ./libs/portable/build.rs;
 
       - name: print build.rs
         continue-on-error: true
@@ -229,18 +229,27 @@ jobs:
         run: |
           cat ./libs/portable/build.rs
 
-      - name: search runner.res
+      - name: Search runner.res
         continue-on-error: true
         shell: bash
         run: |
-          echo "find Runner.res"
-          find . -name Runner.res
+          runner_res=$(find . -name "Runner.res")
+          if [ $runner_res != '' ]; then
+            echo "Runner.res: $runner_res"
+            cp $runner_res ./Runner.res
+          fi
+          runner_rc=$(find . -name "Runner.rc")
+          if [ $runner_rc != '' ]; then
+            echo "Runner.rc: $runner_rc"
+            cp $runner_rc ./Runner.rc
+          fi
 
       - name: change year in Copyright, 2022 to 2023
         continue-on-error: true
         shell: bash
         run: |
           sed -i 's|Copyright (C) 2022 com.carriez.|Copyright (C) 2023 com.carriez.|' ./flutter/windows/runner/Runner.rc;
+
       - name: print Runner.rc
         continue-on-error: true
         shell: bash
@@ -391,12 +400,15 @@ jobs:
           folder: './flutter/build/windows/runner/Release/'
           recursive: true
 
-      - name: search runner.res
+      - name: Search runner.res
         continue-on-error: true
         shell: bash
         run: |
-          echo "find Runner.res"
-          find . -name Runner.res
+          runner_res=$(find . -name "Runner.res")
+          if [ $runner_res != '' ]; then
+            echo "Runner.res: $runner_res"
+            cp $runner_res ./Runner.res
+          fi
 
       - name: Build self-extracted executable
         continue-on-error: false
