@@ -289,6 +289,7 @@ jobs:
       - uses: deep-soft/run-on-arch-action@amd64-support
         name: Build rustdesk library for ${{ matrix.job.arch }}
         id: vcpkg
+        timeout-minutes: 720
         with:
           arch: ${{ matrix.job.arch }}
           distro: ubuntu20.04-rustdesk
@@ -522,6 +523,7 @@ jobs:
       - uses: deep-soft/run-on-arch-action@amd64-support
         name: Build rustdesk binary for ${{ matrix.job.arch }}
         id: vcpkg
+        timeout-minutes: 720
         with:
           arch: ${{ matrix.job.arch }}
           distro: ubuntu20.04-rustdesk
