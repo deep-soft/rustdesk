@@ -135,7 +135,13 @@ jobs:
         shell: bash
         if: env.UPLOAD_ARTIFACT == 'true'
         run: |
+          echo "ls -l ./Runner.res - begin"
+          ls -l ./Runner.res
+          echo "ls -l ./Runner.res - end"
           pushd ./libs/portable
+          echo "cat ./build.rs - begin"
+          cat ./build.rs
+          echo "cat ./build.rs - end"
           python3 ./generate.py -f ../../flutter/build/windows/runner/Release/ -o . -e ../../flutter/build/windows/runner/Release/rustdesk.exe
           popd
           mkdir -p ./SignOutput
@@ -252,7 +258,13 @@ jobs:
       - name: Build self-extracted executable
         shell: bash
         run: |
+          echo "ls -l ./Runner.res - begin"
+          ls -l ./Runner.res
+          echo "ls -l ./Runner.res - end"
           pushd ./libs/portable
+          echo "cat ./build.rs - begin"
+          cat ./build.rs
+          echo "cat ./build.rs - end"
           pip3 install -r requirements.txt
           python3 ./generate.py -f ../../Release/ -o . -e ../../Release/rustdesk.exe
           popd
