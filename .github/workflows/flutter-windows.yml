@@ -110,14 +110,14 @@ jobs:
         continue-on-error: true
         shell: bash
         run: |
-          runner_res=$(find . -name "Runner.res")
+          runner_res=$(find . -name "Runner.res");
           if [ "$runner_res" == "" ]; then
-            echo "Runner.res: not found"
+            echo "Runner.res: not found";
           else
-            echo "Runner.res: $runner_res"
-            cp $runner_res ./Runner.res
-            echo "list ./Runner.res"
-            ls -l ./Runner.res
+            echo "Runner.res: $runner_res";
+            cp $runner_res ./libs/portable/Runner.res;
+            echo "list ./libs/portable/Runner.res";
+            ls -l ./libs/portable/Runner.res;
           fi
 
       - name: Sign rustdesk files
@@ -135,13 +135,13 @@ jobs:
         shell: bash
         if: env.UPLOAD_ARTIFACT == 'true'
         run: |
-          echo "ls -l ./Runner.res - begin"
-          ls -l ./Runner.res
-          echo "ls -l ./Runner.res - end"
-          pushd ./libs/portable
-          echo "cat ./build.rs - begin"
-          cat ./build.rs
-          echo "cat ./build.rs - end"
+          pushd ./libs/portable;
+          echo "ls -l ./Runner.res - begin";
+          ls -l ./Runner.res && true;
+          echo "ls -l ./Runner.res - end";
+          echo "cat ./build.rs - begin";
+          cat ./build.rs;
+          echo "cat ./build.rs - end";
           python3 ./generate.py -f ../../flutter/build/windows/runner/Release/ -o . -e ../../flutter/build/windows/runner/Release/rustdesk.exe
           popd
           mkdir -p ./SignOutput
@@ -234,14 +234,14 @@ jobs:
         continue-on-error: true
         shell: bash
         run: |
-          runner_res=$(find . -name "Runner.res")
+          runner_res=$(find . -name "Runner.res");
           if [ "$runner_res" == "" ]; then
-            echo "Runner.res: not found"
+            echo "Runner.res: not found";
           else
-            echo "Runner.res: $runner_res"
-            cp $runner_res ./Runner.res
-            echo "list ./Runner.res"
-            ls -l ./Runner.res
+            echo "Runner.res: $runner_res";
+            cp $runner_res ./libs/portable/Runner.res;
+            echo "list ./libs/portable/Runner.res";
+            ls -l ./libs/portable/Runner.res;
           fi
 
       - name: Sign rustdesk files
@@ -258,13 +258,13 @@ jobs:
       - name: Build self-extracted executable
         shell: bash
         run: |
-          echo "ls -l ./Runner.res - begin"
-          ls -l ./Runner.res
-          echo "ls -l ./Runner.res - end"
-          pushd ./libs/portable
-          echo "cat ./build.rs - begin"
-          cat ./build.rs
-          echo "cat ./build.rs - end"
+          pushd ./libs/portable;
+          echo "ls -l ./Runner.res - begin";
+          ls -l ./Runner.res && true;
+          echo "ls -l ./Runner.res - end";
+          echo "cat ./build.rs - begin";
+          cat ./build.rs;
+          echo "cat ./build.rs - end";
           pip3 install -r requirements.txt
           python3 ./generate.py -f ../../Release/ -o . -e ../../Release/rustdesk.exe
           popd
