@@ -47,7 +47,6 @@ on:
 #    # schedule build every night
 #    - cron: "0 0 * * *"
 
-
 jobs:
   build-vcpkg-deps-linux:
     uses: ./.github/workflows/act-build-vcpkg-deps-linux.yml
