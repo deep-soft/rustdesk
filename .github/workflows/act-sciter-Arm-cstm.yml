@@ -282,6 +282,69 @@ jobs:
         name: Build rustdesk sciter binary for ${{ matrix.job.arch }}
         id: vcpkg
         timeout-minutes: 10
+        continue-on-error: true
+        with:
+          arch: ${{ matrix.job.arch }}
+          distro: ubuntu20.04-rustdesk
+          githubToken: ${{ github.token }}
+          setup: |
+            ls -l "${PWD}"
+            ls -l /opt/artifacts/vcpkg/installed
+          dockerRunArgs: |
+            --volume "${PWD}:/workspace"
+            --volume "/opt/artifacts:/opt/artifacts"
+            --volume "/opt/rust-registry:/opt/rust-registry"
+          shell: /bin/bash
+          install: |
+            # apt install ca-certificates -y
+            apt update -y;
+            echo -e "installing deps";
+            apt-get -qq install -y git cmake g++ gcc build-essential nasm yasm curl unzip xz-utils python3 wget pkg-config ninja-build pkg-config libgtk-3-dev liblzma-dev clang libappindicator3-dev rpm libclang-dev;
+            apt-get -qq install -y libdbus-1-dev pkg-config nasm yasm libglib2.0-dev libxcb-randr0-dev libxdo-dev libxfixes-dev libxcb-shape0-dev libxcb-xfixes0-dev libasound2-dev;
+            apt-get -qq install -y libpulse-dev libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev libvpx-dev libvdpau-dev libva-dev;
+          run: |
+            # disable git safe.directory
+            git config --global --add safe.directory "*";
+            # rust
+            pushd /opt;
+            # do not use rustup, because memory overflow in qemu
+            wget -O rust.tar.gz https://static.rust-lang.org/dist/${{ env.RUST_VERSION }}-${{ matrix.job.target }}.tar.gz;
+            tar -zxvf rust.tar.gz > /dev/null && rm rust.tar.gz;
+            cd ${{ env.RUST_VERSION }}-${{ matrix.job.target }} && ./install.sh;
+            rm -rf ${{ env.RUST_VERSION }}-${{ matrix.job.target }};
+            # edit config
+            mkdir -p ~/.cargo/;
+            echo """
+              [source.crates-io]
+              registry = 'https://github.com/rust-lang/crates.io-index'
+              replace-with = 'local-registry'
+
+              [source.local-registry]
+              local-registry = '/opt/rust-registry/'
+            """ > ~/.cargo/config;
+            cat ~/.cargo/config;
+            # start build
+            pushd /workspace;
+            python3 ./res/inline-sciter.py;
+            export VCPKG_ROOT=/opt/artifacts/vcpkg;
+            export ARCH=armhf;
+            export DEFAULT_FEAT="";
+            export CARGO_INCREMENTAL=0;
+            if [ ${{ matrix.job.enable-headless }} ]; then
+              export DEFAULT_FEAT=linux_headless;
+            fi;
+            cargo build --jobs 1 --features inline,${{ matrix.job.extra-build-features }},$DEFAULT_FEAT --release --bins;
+            # package
+            mkdir -p ./Release;
+            mv ./target/release/rustdesk ./Release/rustdesk;
+            wget -O ./Release/libsciter-gtk.so https://github.com/c-smile/sciter-sdk/raw/master/bin.lnx/arm32/libsciter-gtk.so;
+            ./build.py --package ./Release;
+
+      - uses: deep-soft/run-on-arch-action@amd64-support
+        name: Build rustdesk sciter binary for ${{ matrix.job.arch }}
+        id: vcpkg
+        timeout-minutes: 10
+        continue-on-error: true
         with:
           arch: ${{ matrix.job.arch }}
           distro: ubuntu20.04-rustdesk
