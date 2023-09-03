@@ -342,7 +342,7 @@ jobs:
 
       - uses: deep-soft/run-on-arch-action@amd64-support
         name: Build rustdesk sciter binary for ${{ matrix.job.arch }}
-        id: vcpkg
+        id: vcpkg2
         timeout-minutes: 10
         continue-on-error: true
         with:
