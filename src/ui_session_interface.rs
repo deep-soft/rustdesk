@@ -279,8 +279,9 @@ impl<T: InvokeUiSession> Session<T> {
         true
     }
 
-    pub fn alternative_codecs(&self) -> (bool, bool, bool, bool) {
-        let decoder = scrap::codec::Decoder::supported_decodings(None, cfg!(feature = "flutter"));
+    pub fn alternative_codecs(&self, luid: Option<i64>) -> (bool, bool, bool, bool) {
+        let decoder =
+            scrap::codec::Decoder::supported_decodings(None, cfg!(feature = "flutter"), luid);
         let mut vp8 = decoder.ability_vp8 > 0;
         let mut av1 = decoder.ability_av1 > 0;
         let mut h264 = decoder.ability_h264 > 0;

@@ -285,7 +285,7 @@ impl Default for VideoRenderer {
         #[cfg(feature = "gpu_video_codec")]
         let adapter_luid = match get_adapter_luid_func {
             Some(get_adapter_luid_func) => unsafe { get_adapter_luid_func() },
-            None => 0,
+            None => scrap::codec::INVALID_LUID,
         };
 
         Self {
@@ -876,12 +876,21 @@ pub fn session_add(
     } else {
         Some(switch_uuid.to_string())
     };
+    #[allow(unused_mut)]
+    #[allow(unused_assignments)]
+    let mut adapter_luid: Option<_> = None;
+    #[cfg(feature = "gpu_video_codec")]
+    {
+        adapter_luid = Some(session.get_adapter_luid());
+    }
 
-    session
-        .lc
-        .write()
-        .unwrap()
-        .initialize(id.to_owned(), conn_type, switch_uuid, force_relay);
+    session.lc.write().unwrap().initialize(
+        id.to_owned(),
+        conn_type,
+        switch_uuid,
+        force_relay,
+        adapter_luid,
+    );
 
     if let Some(same_id_session) = SESSIONS
         .write()
@@ -1196,10 +1205,8 @@ pub fn session_register_pixelbuffer_texture(_session_id: SessionID, _ptr: usize)
 #[inline]
 pub fn session_register_gpu_texture(_session_id: SessionID, _output_ptr: usize) {
     #[cfg(feature = "gpu_video_codec")]
-    {
-        if let Some(session) = SESSIONS.write().unwrap().get_mut(&_session_id) {
-            return session.register_gpu_output(_output_ptr);
-        }
+    if let Some(session) = SESSIONS.write().unwrap().get_mut(&_session_id) {
+        return session.register_gpu_output(_output_ptr);
     }
 }
 

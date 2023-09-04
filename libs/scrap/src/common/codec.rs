@@ -46,7 +46,7 @@ lazy_static::lazy_static! {
     static ref THREAD_LOG_TIME: Arc<Mutex<Option<Instant>>> = Arc::new(Mutex::new(None));
 }
 
-pub const INVALID_LUID: i64 = -1;
+pub const INVALID_LUID: i64 = 0;
 pub const ENCODE_NEED_SWITCH: &'static str = "ENCODE_NEED_SWITCH";
 
 #[derive(Debug, Clone)]
@@ -303,7 +303,11 @@ impl Encoder {
 }
 
 impl Decoder {
-    pub fn supported_decodings(id_for_perfer: Option<&str>, _allow_tex: bool) -> SupportedDecoding {
+    pub fn supported_decodings(
+        id_for_perfer: Option<&str>,
+        _allow_tex: bool,
+        _luid: Option<i64>,
+    ) -> SupportedDecoding {
         #[allow(unused_mut)]
         let mut decoding = SupportedDecoding {
             ability_vp8: 1,
@@ -324,13 +328,17 @@ impl Decoder {
         {
             if enable_gpu_video_codec_option() && _allow_tex {
                 decoding.ability_h264 |=
-                    if GvcDecoder::possible_available(CodecName::H264("".to_string())).len() > 0 {
+                    if GvcDecoder::possible_available(CodecName::H264("".to_string()), _luid).len()
+                        > 0
+                    {
                         1
                     } else {
                         0
                     };
                 decoding.ability_h265 |=
-                    if GvcDecoder::possible_available(CodecName::H265("".to_string())).len() > 0 {
+                    if GvcDecoder::possible_available(CodecName::H265("".to_string()), _luid).len()
+                        > 0
+                    {
                         1
                     } else {
                         0

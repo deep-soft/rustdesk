@@ -1238,7 +1238,14 @@ pub fn session_send_note(session_id: SessionID, note: String) {
 
 pub fn session_alternative_codecs(session_id: SessionID) -> String {
     if let Some(session) = SESSIONS.read().unwrap().get(&session_id) {
-        let (vp8, av1, h264, h265) = session.alternative_codecs();
+        #[allow(unused_mut)]
+        #[allow(unused_assignments)]
+        let mut luid = None;
+        #[cfg(feature = "gpu_video_codec")]
+        {
+            luid = Some(session.get_adapter_luid());
+        }
+        let (vp8, av1, h264, h265) = session.alternative_codecs(luid);
         let msg = HashMap::from([("vp8", vp8), ("av1", av1), ("h264", h264), ("h265", h265)]);
         serde_json::ser::to_string(&msg).unwrap_or("".to_owned())
     } else {

@@ -229,18 +229,23 @@ impl GvcDecoder {
         }
     }
 
-    pub fn possible_available(name: CodecName) -> Vec<DecodeContext> {
+    pub fn possible_available(name: CodecName, luid: Option<i64>) -> Vec<DecodeContext> {
         let data_format = match name {
             CodecName::H264(_) => gvc_common::DataFormat::H264,
             CodecName::H265(_) => gvc_common::DataFormat::H265,
             _ => return vec![],
         };
-        get_available_config()
+        let mut v: Vec<_> = get_available_config()
             .map(|c| c.d)
             .unwrap_or_default()
             .drain(..)
             .filter(|c| c.data_format == data_format)
-            .collect()
+            .collect();
+        let luid = luid.unwrap_or(crate::codec::INVALID_LUID);
+        if luid != crate::codec::INVALID_LUID {
+            v.retain(|d| d.luid == luid);
+        }
+        v
     }
 
     pub fn new_decoders(luid: i64) -> GvcDecoders {

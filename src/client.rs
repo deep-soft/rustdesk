@@ -1097,6 +1097,7 @@ pub struct LoginConfigHandler {
     pub received: bool,
     switch_uuid: Option<String>,
     pub save_ab_password_to_recent: bool, // true: connected with ab password
+    adapter_luid: Option<i64>,
 }
 
 impl Deref for LoginConfigHandler {
@@ -1130,6 +1131,7 @@ impl LoginConfigHandler {
         conn_type: ConnType,
         switch_uuid: Option<String>,
         force_relay: bool,
+        adapter_luid: Option<i64>,
     ) {
         self.id = id;
         self.conn_type = conn_type;
@@ -1148,6 +1150,7 @@ impl LoginConfigHandler {
         self.direct = None;
         self.received = false;
         self.switch_uuid = switch_uuid;
+        self.adapter_luid = adapter_luid;
     }
 
     /// Check if the client should auto login.
@@ -1431,9 +1434,12 @@ impl LoginConfigHandler {
             msg.disable_clipboard = BoolOption::Yes.into();
             n += 1;
         }
-        msg.supported_decoding = hbb_common::protobuf::MessageField::some(
-            Decoder::supported_decodings(Some(&self.id), cfg!(feature = "flutter")),
-        );
+        msg.supported_decoding =
+            hbb_common::protobuf::MessageField::some(Decoder::supported_decodings(
+                Some(&self.id),
+                cfg!(feature = "flutter"),
+                self.adapter_luid,
+            ));
         n += 1;
 
         if n > 0 {
@@ -1776,8 +1782,11 @@ impl LoginConfigHandler {
     }
 
     pub fn change_prefer_codec(&self) -> Message {
-        let decoding =
-            scrap::codec::Decoder::supported_decodings(Some(&self.id), cfg!(feature = "flutter"));
+        let decoding = scrap::codec::Decoder::supported_decodings(
+            Some(&self.id),
+            cfg!(feature = "flutter"),
+            self.adapter_luid,
+        );
         let mut misc = Misc::new();
         misc.set_option(OptionMessage {
             supported_decoding: hbb_common::protobuf::MessageField::some(decoding),
