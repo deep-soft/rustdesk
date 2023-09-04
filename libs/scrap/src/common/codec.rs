@@ -46,7 +46,6 @@ lazy_static::lazy_static! {
     static ref THREAD_LOG_TIME: Arc<Mutex<Option<Instant>>> = Arc::new(Mutex::new(None));
 }
 
-pub const INVALID_LUID: i64 = 0;
 pub const ENCODE_NEED_SWITCH: &'static str = "ENCODE_NEED_SWITCH";
 
 #[derive(Debug, Clone)]
@@ -131,6 +130,7 @@ pub enum EncodingUpdate {
     Remove(i32),
     NewOnlyVP9(i32),
     NoTexture,
+    Check,
 }
 
 impl Encoder {
@@ -192,6 +192,7 @@ impl Encoder {
             EncodingUpdate::NoTexture => {
                 _no_texture = true;
             }
+            EncodingUpdate::Check => {}
         }
 
         let vp8_useable = decodings.len() > 0 && decodings.iter().all(|(_, s)| s.ability_vp8 > 0);
@@ -384,7 +385,7 @@ impl Decoder {
                 HwDecoders::default()
             },
             #[cfg(feature = "gpu_video_codec")]
-            tex: if enable_gpu_video_codec_option() && _luid != INVALID_LUID {
+            tex: if enable_gpu_video_codec_option() && _luid != 0 {
                 GvcDecoder::new_decoders(_luid)
             } else {
                 GvcDecoders::default()

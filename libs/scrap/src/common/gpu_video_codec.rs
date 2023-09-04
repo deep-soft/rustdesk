@@ -1,4 +1,7 @@
-use std::ffi::c_void;
+use std::{
+    ffi::c_void,
+    sync::{Arc, Mutex},
+};
 
 use crate::{
     codec::{base_bitrate, EncoderApi, EncoderCfg},
@@ -21,6 +24,10 @@ use hbb_common::{
 };
 
 const OUTPUT_SHARED_HANDLE: bool = false;
+
+lazy_static::lazy_static! {
+    static ref VIDEO_SERVICE_ADAPTER_LUID: Arc<Mutex<Option<i64>>> = Default::default();
+}
 
 pub struct GvcEncoder {
     encoder: Encoder,
@@ -174,12 +181,20 @@ impl GvcEncoder {
             CodecName::H265(_) => gvc_common::DataFormat::H265,
             _ => return vec![],
         };
-        get_available_config()
+        let mut v: Vec<_> = get_available_config()
             .map(|c| c.e)
             .unwrap_or_default()
             .drain(..)
             .filter(|c| c.data_format == data_format)
-            .collect()
+            .collect();
+        let luid = VIDEO_SERVICE_ADAPTER_LUID
+            .lock()
+            .unwrap()
+            .unwrap_or_default();
+        if luid != 0 {
+            v.retain(|e| e.luid == luid);
+        }
+        v
     }
 
     pub fn encode(&mut self, texture: *mut c_void) -> ResultType<Vec<EncodeFrame>> {
@@ -201,6 +216,10 @@ impl GvcEncoder {
             Quality::Low => 50,
             Quality::Custom(b) => b,
         }
+    }
+
+    pub fn set_video_service_adapter_luid(luid: Option<i64>) {
+        *VIDEO_SERVICE_ADAPTER_LUID.lock().unwrap() = luid;
     }
 }
 
@@ -241,8 +260,8 @@ impl GvcDecoder {
             .drain(..)
             .filter(|c| c.data_format == data_format)
             .collect();
-        let luid = luid.unwrap_or(crate::codec::INVALID_LUID);
-        if luid != crate::codec::INVALID_LUID {
+        let luid = luid.unwrap_or_default();
+        if luid != 0 {
             v.retain(|d| d.luid == luid);
         }
         v

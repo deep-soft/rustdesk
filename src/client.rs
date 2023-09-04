@@ -1009,7 +1009,7 @@ impl VideoHandler {
         #[cfg(all(feature = "gpu_video_codec", feature = "flutter"))]
         let luid = crate::flutter::session_get_adapter_luid(session_id);
         #[cfg(not(all(feature = "gpu_video_codec", feature = "flutter")))]
-        let luid = scrap::codec::INVALID_LUID;
+        let luid = Default::default();
         println!("new session_get_adapter_luid: {:?}", luid);
         VideoHandler {
             decoder: Decoder::new(luid),
@@ -1050,7 +1050,7 @@ impl VideoHandler {
         #[cfg(all(feature = "flutter", feature = "gpu_video_codec"))]
         let luid = crate::flutter::session_get_adapter_luid(&self._session_id);
         #[cfg(not(all(feature = "flutter", feature = "gpu_video_codec")))]
-        let luid = scrap::codec::INVALID_LUID;
+        let luid = 0;
         self.decoder = Decoder::new(luid);
     }
 

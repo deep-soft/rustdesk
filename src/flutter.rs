@@ -285,7 +285,7 @@ impl Default for VideoRenderer {
         #[cfg(feature = "gpu_video_codec")]
         let adapter_luid = match get_adapter_luid_func {
             Some(get_adapter_luid_func) => unsafe { get_adapter_luid_func() },
-            None => scrap::codec::INVALID_LUID,
+            None => Default::default(),
         };
 
         Self {

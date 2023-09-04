@@ -475,6 +475,7 @@ pub fn try_plug_out_virtual_display() {
 }
 
 fn run(sp: GenericService) -> ResultType<()> {
+    let _cleaner = RunCleaner;
     #[cfg(not(any(target_os = "android", target_os = "ios")))]
     let _wake_lock = get_wake_lock();
 
@@ -499,8 +500,13 @@ fn run(sp: GenericService) -> ResultType<()> {
     let last_recording =
         (recorder.lock().unwrap().is_some() || video_qos.record()) && codec_name != CodecName::AV1;
     drop(video_qos);
-    let encoder_cfg =
-        get_encoder_config(&c, quality, last_recording, last_portable_service_running);
+    let encoder_cfg = get_encoder_config(
+        &sp,
+        &c,
+        quality,
+        last_recording,
+        last_portable_service_running,
+    );
 
     let mut encoder;
     match Encoder::new(encoder_cfg) {
@@ -756,7 +762,19 @@ fn run(sp: GenericService) -> ResultType<()> {
     Ok(())
 }
 
+struct RunCleaner;
+
+impl Drop for RunCleaner {
+    fn drop(&mut self) {
+        #[cfg(feature = "gpu_video_codec")]
+        {
+            scrap::gpu_video_codec::GvcEncoder::set_video_service_adapter_luid(None);
+        }
+    }
+}
+
 fn get_encoder_config(
+    sp: &GenericService,
     c: &CapturerInfo,
     quality: Quality,
     recording: bool,
@@ -768,6 +786,16 @@ fn get_encoder_config(
         c.is_gdi(),
         _portable_service
     );
+    #[cfg(feature = "gpu_video_codec")]
+    {
+        scrap::gpu_video_codec::GvcEncoder::set_video_service_adapter_luid(Some(c.device().luid));
+        scrap::codec::Encoder::update(scrap::codec::EncodingUpdate::Check);
+        let mut misc: Misc = Misc::new();
+        misc.set_supported_encoding(scrap::codec::Encoder::supported_encoding());
+        let mut msg = Message::new();
+        msg.set_misc(misc);
+        sp.send(msg);
+    }
     #[cfg(windows)]
     if _portable_service || c.is_gdi() {
         scrap::codec::Encoder::update(scrap::codec::EncodingUpdate::NoTexture);
@@ -1176,7 +1204,7 @@ fn try_get_displays() -> ResultType<Vec<Display>> {
     //         displays = Display::all()?;
     //     }
     // }
-    Ok( Display::all()?)
+    Ok(Display::all()?)
 }
 
 pub(super) fn get_current_display_2(mut all: Vec<Display>) -> ResultType<(usize, usize, Display)> {
