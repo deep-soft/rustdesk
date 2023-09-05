@@ -495,18 +495,13 @@ fn run(sp: GenericService) -> ResultType<()> {
     let mut quality = video_qos.quality();
     let abr = VideoQoS::abr_enabled();
     log::info!("init quality={:?}, abr enabled:{}", quality, abr);
+    check_encoder_config(&c, last_portable_service_running);
     let codec_name = Encoder::negotiated_codec();
     let recorder = get_recorder(c.width, c.height, &codec_name);
     let last_recording =
         (recorder.lock().unwrap().is_some() || video_qos.record()) && codec_name != CodecName::AV1;
     drop(video_qos);
-    let encoder_cfg = get_encoder_config(
-        &sp,
-        &c,
-        quality,
-        last_recording,
-        last_portable_service_running,
-    );
+    let encoder_cfg = get_encoder_config(&c, quality, last_recording);
 
     let mut encoder;
     match Encoder::new(encoder_cfg) {
@@ -567,6 +562,7 @@ fn run(sp: GenericService) -> ResultType<()> {
     let mut last_encode_counter: u32 = 0;
     #[cfg(all(windows, feature = "gpu_video_codec"))]
     let last_is_gdi = c.is_gdi();
+    let mut supported_encoding_update = false;
 
     while sp.ok() {
         #[cfg(windows)]
@@ -734,6 +730,10 @@ fn run(sp: GenericService) -> ResultType<()> {
                 }
             }
         }
+        if !supported_encoding_update {
+            supported_encoding_update = true;
+            update_supported_encoding(&sp);
+        }
 
         let mut fetched_conn_ids = HashSet::new();
         let timeout_millis = 3_000u64;
@@ -768,38 +768,35 @@ impl Drop for RunCleaner {
     fn drop(&mut self) {
         #[cfg(feature = "gpu_video_codec")]
         {
-            scrap::gpu_video_codec::GvcEncoder::set_video_service_adapter_luid(None);
+            use scrap::gpu_video_codec::GvcEncoder;
+            GvcEncoder::set_video_service_adapter_luid(None);
+            GvcEncoder::set_video_service_no_texture(false);
         }
     }
 }
 
-fn get_encoder_config(
-    sp: &GenericService,
-    c: &CapturerInfo,
-    quality: Quality,
-    recording: bool,
-    _portable_service: bool,
-) -> EncoderCfg {
-    #[cfg(windows)]
-    log::info!(
-        "get_encoder_config: gdi:{}, portable:{}",
-        c.is_gdi(),
-        _portable_service
-    );
+fn check_encoder_config(c: &CapturerInfo, _portable_service: bool) {
+    #[cfg(all(windows, feature = "gpu_video_codec"))]
+    if _portable_service || c.is_gdi() {
+        log::info!("gdi:{}, portable:{}", c.is_gdi(), _portable_service);
+        scrap::gpu_video_codec::GvcEncoder::set_video_service_no_texture(true);
+    }
     #[cfg(feature = "gpu_video_codec")]
     {
         scrap::gpu_video_codec::GvcEncoder::set_video_service_adapter_luid(Some(c.device().luid));
         scrap::codec::Encoder::update(scrap::codec::EncodingUpdate::Check);
-        let mut misc: Misc = Misc::new();
-        misc.set_supported_encoding(scrap::codec::Encoder::supported_encoding());
-        let mut msg = Message::new();
-        msg.set_misc(misc);
-        sp.send(msg);
     }
-    #[cfg(windows)]
-    if _portable_service || c.is_gdi() {
-        scrap::codec::Encoder::update(scrap::codec::EncodingUpdate::NoTexture);
-    }
+}
+
+fn update_supported_encoding(sp: &GenericService) {
+    let mut misc: Misc = Misc::new();
+    misc.set_supported_encoding(scrap::codec::Encoder::supported_encoding());
+    let mut msg = Message::new();
+    msg.set_misc(misc);
+    sp.send(msg);
+}
+
+fn get_encoder_config(c: &CapturerInfo, quality: Quality, recording: bool) -> EncoderCfg {
     // https://www.wowza.com/community/t/the-correct-keyframe-interval-in-obs-studio/95162
     let keyframe_interval = if recording { Some(240) } else { None };
     let negotiated_codec = Encoder::negotiated_codec();

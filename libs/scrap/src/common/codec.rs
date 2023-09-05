@@ -129,7 +129,6 @@ pub enum EncodingUpdate {
     New(i32, SupportedDecoding),
     Remove(i32),
     NewOnlyVP9(i32),
-    NoTexture,
     Check,
 }
 
@@ -172,7 +171,6 @@ impl Encoder {
     pub fn update(update: EncodingUpdate) {
         log::info!("update:{:?}", update);
         let mut decodings = PEER_DECODINGS.lock().unwrap();
-        let mut _no_texture = false;
         match update {
             EncodingUpdate::New(id, decoding) => {
                 decodings.insert(id, decoding);
@@ -189,9 +187,6 @@ impl Encoder {
                     },
                 );
             }
-            EncodingUpdate::NoTexture => {
-                _no_texture = true;
-            }
             EncodingUpdate::Check => {}
         }
 
@@ -206,7 +201,7 @@ impl Encoder {
         let _h265_useable =
             decodings.len() > 0 && decodings.iter().all(|(_, s)| s.ability_h265 > 0);
         #[cfg(feature = "gpu_video_codec")]
-        if enable_gpu_video_codec_option() && !_no_texture {
+        if enable_gpu_video_codec_option() {
             if _h264_useable && h264_name.is_none() {
                 if GvcEncoder::possible_available(CodecName::H264("".to_string())).len() > 0 {
                     h264_name = Some("".to_string());
