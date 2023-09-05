@@ -803,40 +803,27 @@ fn get_encoder_config(
         };
     let negotiated_codec = Encoder::negotiated_codec();
     match negotiated_codec.clone() {
-        scrap::CodecName::H264(_name) | scrap::CodecName::H265(_name) => {
+        scrap::CodecName::H264G | scrap::CodecName::H265G => {
             #[cfg(feature = "gpu_video_codec")]
+            if let Some(feature) =
+                scrap::gpu_video_codec::GvcEncoder::try_get(&c.device(), negotiated_codec.clone())
             {
-                if _name.is_empty() {
-                    if let Some(feature) = scrap::gpu_video_codec::GvcEncoder::try_get(
-                        &c.device(),
-                        negotiated_codec.clone(),
-                    ) {
-                        EncoderCfg::GVC(scrap::codec::GvcEncoderConfig {
-                            device: c.device(),
-                            width: c.width,
-                            height: c.height,
-                            quality,
-                            feature,
-                            keyframe_interval,
-                        })
-                    } else {
-                        handle_hw_encoder(
-                            negotiated_codec.clone(),
-                            c.width,
-                            c.height,
-                            quality as _,
-                            keyframe_interval,
-                        )
-                    }
-                } else {
-                    handle_hw_encoder(
-                        negotiated_codec.clone(),
-                        c.width,
-                        c.height,
-                        quality as _,
-                        keyframe_interval,
-                    )
-                }
+                EncoderCfg::GVC(scrap::codec::GvcEncoderConfig {
+                    device: c.device(),
+                    width: c.width,
+                    height: c.height,
+                    quality,
+                    feature,
+                    keyframe_interval,
+                })
+            } else {
+                handle_hw_encoder(
+                    negotiated_codec.clone(),
+                    c.width,
+                    c.height,
+                    quality as _,
+                    keyframe_interval,
+                )
             }
             #[cfg(not(feature = "gpu_video_codec"))]
             handle_hw_encoder(
@@ -847,6 +834,13 @@ fn get_encoder_config(
                 keyframe_interval,
             )
         }
+        scrap::CodecName::H264(_name) | scrap::CodecName::H265(_name) => handle_hw_encoder(
+            negotiated_codec.clone(),
+            c.width,
+            c.height,
+            quality as _,
+            keyframe_interval,
+        ),
         name @ (scrap::CodecName::VP8 | scrap::CodecName::VP9) => {
             EncoderCfg::VPX(VpxEncoderConfig {
                 width: c.width as _,
@@ -878,18 +872,12 @@ fn handle_hw_encoder(
 ) -> EncoderCfg {
     let f = || {
         #[cfg(feature = "hwcodec")]
-        {
-            let (is_h265, name) = match _name {
-                CodecName::H264(name) => (false, name),
-                CodecName::H265(name) => (true, name),
-                _ => {
-                    return Err(());
-                }
-            };
-            if name.is_empty() {
+        match _name {
+            CodecName::H264G | CodecName::H265G => {
                 if !scrap::codec::enable_hwcodec_option() {
                     return Err(());
                 }
+                let is_h265 = _name == CodecName::H265G;
                 let best = scrap::hwcodec::HwEncoder::best();
                 if let Some(h264) = best.h264 {
                     if !is_h265 {
@@ -915,7 +903,8 @@ fn handle_hw_encoder(
                         }));
                     }
                 }
-            } else {
+            }
+            CodecName::H264(name) | CodecName::H265(name) => {
                 return Ok(EncoderCfg::HW(scrap::codec::HwEncoderConfig {
                     name,
                     width,
@@ -924,7 +913,10 @@ fn handle_hw_encoder(
                     keyframe_interval,
                 }));
             }
-        }
+            _ => {
+                return Err(());
+            }
+        };
 
         Err(())
     };

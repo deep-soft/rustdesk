@@ -166,8 +166,8 @@ pub enum CodecName {
     AV1,
     H264(String),
     H265(String),
-    // H264Tex,
-    // H265Tex,
+    H264G,
+    H265G,
 }
 
 #[derive(PartialEq, Debug, Clone)]
@@ -199,8 +199,8 @@ impl From<&CodecName> for CodecFormat {
             CodecName::VP8 => Self::VP8,
             CodecName::VP9 => Self::VP9,
             CodecName::AV1 => Self::AV1,
-            CodecName::H264(_) => Self::H264,
-            CodecName::H265(_) => Self::H265,
+            CodecName::H264(_) | CodecName::H264G => Self::H264,
+            CodecName::H265(_) | CodecName::H265G => Self::H265,
         }
     }
 }

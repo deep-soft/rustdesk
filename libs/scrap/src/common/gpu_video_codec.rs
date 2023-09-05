@@ -177,8 +177,8 @@ impl GvcEncoder {
             return vec![];
         }
         let data_format = match name {
-            CodecName::H264(_) => gvc_common::DataFormat::H264,
-            CodecName::H265(_) => gvc_common::DataFormat::H265,
+            CodecName::H264G => gvc_common::DataFormat::H264,
+            CodecName::H265G => gvc_common::DataFormat::H265,
             _ => return vec![],
         };
         let mut v: Vec<_> = get_available_config()
@@ -249,8 +249,8 @@ impl GvcDecoder {
 
     pub fn possible_available(name: CodecName, luid: Option<i64>) -> Vec<DecodeContext> {
         let data_format = match name {
-            CodecName::H264(_) => gvc_common::DataFormat::H264,
-            CodecName::H265(_) => gvc_common::DataFormat::H265,
+            CodecName::H264G => gvc_common::DataFormat::H264,
+            CodecName::H265G => gvc_common::DataFormat::H265,
             _ => return vec![],
         };
         let mut v: Vec<_> = get_available_config()
@@ -269,10 +269,10 @@ impl GvcDecoder {
     pub fn new_decoders(luid: i64) -> GvcDecoders {
         let mut h264: Option<GvcDecoder> = None;
         let mut h265: Option<GvcDecoder> = None;
-        if let Ok(decoder) = GvcDecoder::new(CodecName::H264("".to_string()), luid) {
+        if let Ok(decoder) = GvcDecoder::new(CodecName::H264G, luid) {
             h264 = Some(decoder);
         }
-        if let Ok(decoder) = GvcDecoder::new(CodecName::H265("".to_string()), luid) {
+        if let Ok(decoder) = GvcDecoder::new(CodecName::H265G, luid) {
             h265 = Some(decoder);
         }
         log::info!(

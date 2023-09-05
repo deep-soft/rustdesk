@@ -192,27 +192,29 @@ impl Encoder {
 
         let vp8_useable = decodings.len() > 0 && decodings.iter().all(|(_, s)| s.ability_vp8 > 0);
         let av1_useable = decodings.len() > 0 && decodings.iter().all(|(_, s)| s.ability_av1 > 0);
-        #[allow(unused_mut)]
-        let mut h264_name = None;
-        #[allow(unused_mut)]
-        let mut h265_name = None;
         let _h264_useable =
             decodings.len() > 0 && decodings.iter().all(|(_, s)| s.ability_h264 > 0);
         let _h265_useable =
             decodings.len() > 0 && decodings.iter().all(|(_, s)| s.ability_h265 > 0);
+        let mut h264g = false;
+        let mut h265g = false;
         #[cfg(feature = "gpu_video_codec")]
         if enable_gpu_video_codec_option() {
-            if _h264_useable && h264_name.is_none() {
-                if GvcEncoder::possible_available(CodecName::H264("".to_string())).len() > 0 {
-                    h264_name = Some("".to_string());
+            if _h264_useable {
+                if GvcEncoder::possible_available(CodecName::H264G).len() > 0 {
+                    h264g = true;
                 }
             }
-            if _h265_useable && h265_name.is_none() {
-                if GvcEncoder::possible_available(CodecName::H265("".to_string())).len() > 0 {
-                    h265_name = Some("".to_string());
+            if _h265_useable {
+                if GvcEncoder::possible_available(CodecName::H265G).len() > 0 {
+                    h265g = true;
                 }
             }
         }
+        #[allow(unused_mut)]
+        let mut h264_name = None;
+        #[allow(unused_mut)]
+        let mut h265_name = None;
         #[cfg(feature = "hwcodec")]
         if enable_hwcodec_option() {
             let best = HwEncoder::best();
@@ -231,8 +233,8 @@ impl Encoder {
                 s.prefer == PreferCodec::VP9.into()
                     || s.prefer == PreferCodec::VP8.into() && vp8_useable
                     || s.prefer == PreferCodec::AV1.into() && av1_useable
-                    || s.prefer == PreferCodec::H264.into() && h264_name.is_some()
-                    || s.prefer == PreferCodec::H265.into() && h265_name.is_some()
+                    || s.prefer == PreferCodec::H264.into() && (h264_name.is_some() || h264g)
+                    || s.prefer == PreferCodec::H265.into() && (h265_name.is_some() || h265g)
             })
             .map(|(_, s)| s.prefer)
             .collect();
@@ -247,14 +249,30 @@ impl Encoder {
             auto_codec = CodecName::VP8
         }
 
-        match preference {
-            PreferCodec::VP8 => *name = CodecName::VP8,
-            PreferCodec::VP9 => *name = CodecName::VP9,
-            PreferCodec::AV1 => *name = CodecName::AV1,
-            PreferCodec::H264 => *name = h264_name.map_or(auto_codec, |c| CodecName::H264(c)),
-            PreferCodec::H265 => *name = h265_name.map_or(auto_codec, |c| CodecName::H265(c)),
-            PreferCodec::Auto => *name = auto_codec,
-        }
+        *name = match preference {
+            PreferCodec::VP8 => CodecName::VP8,
+            PreferCodec::VP9 => CodecName::VP9,
+            PreferCodec::AV1 => CodecName::AV1,
+            PreferCodec::H264 => {
+                if h264g {
+                    CodecName::H264G
+                } else if let Some(v) = h264_name {
+                    CodecName::H264(v)
+                } else {
+                    auto_codec
+                }
+            }
+            PreferCodec::H265 => {
+                if h265g {
+                    CodecName::H265G
+                } else if let Some(v) = h265_name {
+                    CodecName::H265(v)
+                } else {
+                    auto_codec
+                }
+            }
+            PreferCodec::Auto => auto_codec,
+        };
 
         log::info!(
             "connection count:{}, used preference:{:?}, encoder:{:?}",
@@ -284,10 +302,8 @@ impl Encoder {
         }
         #[cfg(feature = "gpu_video_codec")]
         if enable_gpu_video_codec_option() {
-            encoding.h264 |=
-                GvcEncoder::possible_available(CodecName::H264("".to_string())).len() > 0;
-            encoding.h265 |=
-                GvcEncoder::possible_available(CodecName::H265("".to_string())).len() > 0;
+            encoding.h264 |= GvcEncoder::possible_available(CodecName::H264G).len() > 0;
+            encoding.h265 |= GvcEncoder::possible_available(CodecName::H265G).len() > 0;
         }
         encoding
     }
@@ -324,17 +340,13 @@ impl Decoder {
         {
             if enable_gpu_video_codec_option() && _allow_tex {
                 decoding.ability_h264 |=
-                    if GvcDecoder::possible_available(CodecName::H264("".to_string()), _luid).len()
-                        > 0
-                    {
+                    if GvcDecoder::possible_available(CodecName::H264G, _luid).len() > 0 {
                         1
                     } else {
                         0
                     };
                 decoding.ability_h265 |=
-                    if GvcDecoder::possible_available(CodecName::H265("".to_string()), _luid).len()
-                        > 0
-                    {
+                    if GvcDecoder::possible_available(CodecName::H265G, _luid).len() > 0 {
                         1
                     } else {
                         0
