@@ -3,7 +3,6 @@ pub mod gdi;
 pub use gdi::CapturerGDI;
 pub mod mag;
 
-use hbb_common::{bail, ResultType};
 use winapi::{
     shared::{
         dxgi::*,
@@ -646,34 +645,4 @@ fn wrap_hresult(x: HRESULT) -> io::Result<()> {
         }
     })
     .into())
-}
-
-pub fn device_to_adapter_device(device: *mut c_void) -> ResultType<AdapterDevice> {
-    if device.is_null() {
-        bail!("device is null");
-    }
-    let dev = ComPtr(device as *mut ID3D11Device);
-    let dxgi_device = unsafe {
-        let mut dxgi_device: *mut IDXGIDevice = std::ptr::null_mut();
-        wrap_hresult((*dev.0).QueryInterface(
-            &IID_IDXGIDevice2,
-            &mut dxgi_device as *mut *mut _ as *mut *mut _,
-        ))?;
-        ComPtr(dxgi_device)
-    };
-    let dxgi_adapter = unsafe {
-        let mut dxgi_adapter: *mut IDXGIAdapter = std::ptr::null_mut();
-        wrap_hresult((*dxgi_device.0).GetAdapter(&mut dxgi_adapter))?;
-        ComPtr(dxgi_adapter)
-    };
-    #[allow(invalid_value)]
-    let mut adapter_desc = unsafe { mem::MaybeUninit::uninit().assume_init() };
-    unsafe { wrap_hresult((*dxgi_adapter.0).GetDesc(&mut adapter_desc))? };
-
-    Ok(AdapterDevice {
-        device,
-        vendor_id: adapter_desc.VendorId,
-        luid: ((adapter_desc.AdapterLuid.HighPart as i64) << 32)
-            | adapter_desc.AdapterLuid.LowPart as i64,
-    })
 }

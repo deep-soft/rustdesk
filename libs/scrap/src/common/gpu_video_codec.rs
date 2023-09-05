@@ -159,16 +159,9 @@ impl EncoderApi for GvcEncoder {
 
 impl GvcEncoder {
     pub fn try_get(device: &AdapterDevice, name: CodecName) -> Option<FeatureContext> {
-        let data_format = match name {
-            CodecName::H264(_) => gvc_common::DataFormat::H264,
-            CodecName::H265(_) => gvc_common::DataFormat::H265,
-            _ => return None,
-        };
-        let v: Vec<_> = get_available_config()
-            .map(|c| c.e)
-            .unwrap_or_default()
+        let v: Vec<_> = Self::possible_available(name)
             .drain(..)
-            .filter(|c| c.luid == device.luid && c.data_format == data_format)
+            .filter(|e| e.luid == device.luid)
             .collect();
         if v.len() > 0 {
             Some(v[0].clone())
@@ -245,13 +238,8 @@ pub struct GvcDecoders {
 }
 
 impl GvcDecoder {
-    pub fn try_get(luid: i64, data_format: gvc_common::DataFormat) -> Option<DecodeContext> {
-        let v: Vec<_> = get_available_config()
-            .map(|c| c.d)
-            .unwrap_or_default()
-            .drain(..)
-            .filter(|c| c.luid == luid && c.data_format == data_format)
-            .collect();
+    pub fn try_get(name: CodecName, luid: i64) -> Option<DecodeContext> {
+        let v: Vec<_> = Self::possible_available(name, Some(luid));
         if v.len() > 0 {
             Some(v[0].clone())
         } else {
@@ -281,10 +269,10 @@ impl GvcDecoder {
     pub fn new_decoders(luid: i64) -> GvcDecoders {
         let mut h264: Option<GvcDecoder> = None;
         let mut h265: Option<GvcDecoder> = None;
-        if let Ok(decoder) = GvcDecoder::new(gvc_common::DataFormat::H264, luid) {
+        if let Ok(decoder) = GvcDecoder::new(CodecName::H264("".to_string()), luid) {
             h264 = Some(decoder);
         }
-        if let Ok(decoder) = GvcDecoder::new(gvc_common::DataFormat::H265, luid) {
+        if let Ok(decoder) = GvcDecoder::new(CodecName::H265("".to_string()), luid) {
             h265 = Some(decoder);
         }
         log::info!(
@@ -295,9 +283,8 @@ impl GvcDecoder {
         GvcDecoders { h264, h265 }
     }
 
-    pub fn new(data_format: gvc_common::DataFormat, luid: i64) -> ResultType<Self> {
-        let ctx =
-            Self::try_get(luid, data_format).ok_or(anyhow!("Failed to get decode context"))?;
+    pub fn new(name: CodecName, luid: i64) -> ResultType<Self> {
+        let ctx = Self::try_get(name, luid).ok_or(anyhow!("Failed to get decode context"))?;
         match Decoder::new(ctx) {
             Ok(decoder) => Ok(Self { decoder }),
             Err(_) => Err(anyhow!(format!("Failed to create decoder"))),
