@@ -27,7 +27,8 @@ const OUTPUT_SHARED_HANDLE: bool = false;
 
 lazy_static::lazy_static! {
     static ref VIDEO_SERVICE_ADAPTER_LUID: Arc<Mutex<Option<i64>>> = Default::default();
-    static ref VIDEO_SERVICE_NO_TEXTURE: Arc<Mutex<bool>> = Default::default();
+    static ref VIDEO_SERVICE_NOT_USE: Arc<Mutex<bool>> = Default::default();
+    static ref THIS_PROCESS_ENCODING_NOT_USE: Arc<Mutex<bool>> = Default::default();
 }
 
 pub struct GvcEncoder {
@@ -108,7 +109,7 @@ impl EncoderApi for GvcEncoder {
                 if first_frame_len == self.last_bad_len {
                     self.same_bad_len_counter += 1;
                     if self.same_bad_len_counter >= MAX_BAD_COUNTER {
-                        *VIDEO_SERVICE_NO_TEXTURE.lock().unwrap() = true;
+                        *THIS_PROCESS_ENCODING_NOT_USE.lock().unwrap() = true;
                         log::info!(
                             "{} times encoding len is {}",
                             self.same_bad_len_counter,
@@ -177,7 +178,9 @@ impl GvcEncoder {
     }
 
     pub fn possible_available(name: CodecName) -> Vec<FeatureContext> {
-        if VIDEO_SERVICE_NO_TEXTURE.lock().unwrap().clone() {
+        if VIDEO_SERVICE_NOT_USE.lock().unwrap().clone()
+            || THIS_PROCESS_ENCODING_NOT_USE.lock().unwrap().clone()
+        {
             return vec![];
         }
         let data_format = match name {
@@ -226,8 +229,8 @@ impl GvcEncoder {
         *VIDEO_SERVICE_ADAPTER_LUID.lock().unwrap() = luid;
     }
 
-    pub fn set_video_service_no_texture(no_texture: bool) {
-        *VIDEO_SERVICE_NO_TEXTURE.lock().unwrap() = no_texture;
+    pub fn set_video_service_not_use(not_allowed: bool) {
+        *VIDEO_SERVICE_NOT_USE.lock().unwrap() = not_allowed;
     }
 }
 

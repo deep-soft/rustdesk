@@ -602,7 +602,7 @@ impl Decoder {
 }
 
 #[cfg(any(feature = "hwcodec", feature = "mediacodec"))]
-fn enable_hwcodec_option() -> bool {
+pub fn enable_hwcodec_option() -> bool {
     if let Some(v) = Config2::get().options.get("enable-hwcodec") {
         return v != "N";
     }

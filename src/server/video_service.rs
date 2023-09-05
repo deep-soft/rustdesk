@@ -495,13 +495,17 @@ fn run(sp: GenericService) -> ResultType<()> {
     let mut quality = video_qos.quality();
     let abr = VideoQoS::abr_enabled();
     log::info!("init quality={:?}, abr enabled:{}", quality, abr);
-    check_encoder_config(&c, last_portable_service_running);
+    let encoder_cfg = get_encoder_config(
+        &c,
+        quality,
+        video_qos.record(),
+        last_portable_service_running,
+    );
     let codec_name = Encoder::negotiated_codec();
     let recorder = get_recorder(c.width, c.height, &codec_name);
     let last_recording =
         (recorder.lock().unwrap().is_some() || video_qos.record()) && codec_name != CodecName::AV1;
     drop(video_qos);
-    let encoder_cfg = get_encoder_config(&c, quality, last_recording);
 
     let mut encoder;
     match Encoder::new(encoder_cfg) {
@@ -558,8 +562,6 @@ fn run(sp: GenericService) -> ResultType<()> {
     #[cfg(target_os = "linux")]
     let mut would_block_count = 0u32;
 
-    let mut last_encode_elapsed = Instant::now();
-    let mut last_encode_counter: u32 = 0;
     #[cfg(all(windows, feature = "gpu_video_codec"))]
     let last_is_gdi = c.is_gdi();
     let mut supported_encoding_update = false;
@@ -660,13 +662,6 @@ fn run(sp: GenericService) -> ResultType<()> {
                 let ms = (time.as_secs() * 1000 + time.subsec_millis() as u64) as i64;
                 let send_conn_ids =
                     handle_one_frame(&sp, frame, ms, &mut encoder, recorder.clone())?;
-                last_encode_counter += 1;
-                if last_encode_elapsed.elapsed().as_secs() >= 1 {
-                    last_encode_elapsed = Instant::now();
-                    log::info!("encode fps: {}", last_encode_counter);
-                    last_encode_counter = 0;
-                }
-
                 frame_controller.set_send(now, send_conn_ids);
                 #[cfg(windows)]
                 {
@@ -770,21 +765,8 @@ impl Drop for RunCleaner {
         {
             use scrap::gpu_video_codec::GvcEncoder;
             GvcEncoder::set_video_service_adapter_luid(None);
-            GvcEncoder::set_video_service_no_texture(false);
+            GvcEncoder::set_video_service_not_use(false);
         }
-    }
-}
-
-fn check_encoder_config(c: &CapturerInfo, _portable_service: bool) {
-    #[cfg(all(windows, feature = "gpu_video_codec"))]
-    if _portable_service || c.is_gdi() {
-        log::info!("gdi:{}, portable:{}", c.is_gdi(), _portable_service);
-        scrap::gpu_video_codec::GvcEncoder::set_video_service_no_texture(true);
-    }
-    #[cfg(feature = "gpu_video_codec")]
-    {
-        scrap::gpu_video_codec::GvcEncoder::set_video_service_adapter_luid(Some(c.device().luid));
-        scrap::codec::Encoder::update(scrap::codec::EncodingUpdate::Check);
     }
 }
 
@@ -796,9 +778,29 @@ fn update_supported_encoding(sp: &GenericService) {
     sp.send(msg);
 }
 
-fn get_encoder_config(c: &CapturerInfo, quality: Quality, recording: bool) -> EncoderCfg {
+fn get_encoder_config(
+    c: &CapturerInfo,
+    quality: Quality,
+    client_record: bool,
+    _portable_service: bool,
+) -> EncoderCfg {
+    #[cfg(all(windows, feature = "gpu_video_codec"))]
+    if _portable_service || c.is_gdi() {
+        log::info!("gdi:{}, portable:{}", c.is_gdi(), _portable_service);
+        scrap::gpu_video_codec::GvcEncoder::set_video_service_not_use(true);
+    }
+    #[cfg(feature = "gpu_video_codec")]
+    {
+        scrap::gpu_video_codec::GvcEncoder::set_video_service_adapter_luid(Some(c.device().luid));
+        scrap::codec::Encoder::update(scrap::codec::EncodingUpdate::Check);
+    }
     // https://www.wowza.com/community/t/the-correct-keyframe-interval-in-obs-studio/95162
-    let keyframe_interval = if recording { Some(240) } else { None };
+    let keyframe_interval =
+        if !Config::get_option("allow-auto-record-incoming").is_empty() || client_record {
+            Some(240)
+        } else {
+            None
+        };
     let negotiated_codec = Encoder::negotiated_codec();
     match negotiated_codec.clone() {
         scrap::CodecName::H264(_name) | scrap::CodecName::H265(_name) => {
@@ -862,7 +864,7 @@ fn get_encoder_config(c: &CapturerInfo, quality: Quality, recording: bool) -> En
             width: c.width as _,
             height: c.height as _,
             quality,
-            keyframe_interval,
+            keyframe_interval: None,
         }),
     }
 }
@@ -885,6 +887,9 @@ fn handle_hw_encoder(
                 }
             };
             if name.is_empty() {
+                if !scrap::codec::enable_hwcodec_option() {
+                    return Err(());
+                }
                 let best = scrap::hwcodec::HwEncoder::best();
                 if let Some(h264) = best.h264 {
                     if !is_h265 {
