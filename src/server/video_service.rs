@@ -501,17 +501,16 @@ fn run(sp: GenericService) -> ResultType<()> {
         video_qos.record(),
         last_portable_service_running,
     );
-    let codec_name = Encoder::negotiated_codec();
-    let recorder = get_recorder(c.width, c.height, &codec_name);
-    let last_recording =
-        (recorder.lock().unwrap().is_some() || video_qos.record()) && codec_name != CodecName::AV1;
-    drop(video_qos);
-
     let mut encoder;
     match Encoder::new(encoder_cfg) {
         Ok(x) => encoder = x,
         Err(err) => bail!("Failed to create encoder: {}", err),
     }
+    let codec_name = Encoder::negotiated_codec();
+    let recorder = get_recorder(c.width, c.height, &codec_name);
+    let last_recording =
+        (recorder.lock().unwrap().is_some() || video_qos.record()) && codec_name != CodecName::AV1;
+    drop(video_qos);
     c.set_output_format(encoder.input_format());
     VIDEO_QOS.lock().unwrap().store_bitrate(encoder.bitrate());
 
@@ -603,6 +602,9 @@ fn run(sp: GenericService) -> ResultType<()> {
         }
         #[cfg(all(windows, feature = "gpu_video_codec"))]
         if last_is_gdi != c.is_gdi() {
+            if c.is_gdi() && (codec_name == CodecName::H264G || codec_name == CodecName::H265G) {
+                scrap::gpu_video_codec::GvcEncoder::set_this_process_not_use(true);
+            }
             bail!("SWITCH");
         }
         check_privacy_mode_changed(&sp, c.privacy_mode_id)?;

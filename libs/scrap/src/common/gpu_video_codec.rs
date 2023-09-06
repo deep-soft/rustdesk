@@ -222,8 +222,12 @@ impl GvcEncoder {
         *VIDEO_SERVICE_ADAPTER_LUID.lock().unwrap() = luid;
     }
 
-    pub fn set_video_service_not_use(not_allowed: bool) {
-        *VIDEO_SERVICE_NOT_USE.lock().unwrap() = not_allowed;
+    pub fn set_video_service_not_use(not_use: bool) {
+        *VIDEO_SERVICE_NOT_USE.lock().unwrap() = not_use;
+    }
+
+    pub fn set_this_process_not_use(not_use: bool) {
+        *THIS_PROCESS_ENCODING_NOT_USE.lock().unwrap() = not_use;
     }
 }
 
