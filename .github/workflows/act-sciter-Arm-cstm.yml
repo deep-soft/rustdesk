@@ -281,7 +281,7 @@ jobs:
       - uses: deep-soft/run-on-arch-action@amd64-support
         name: Build rustdesk sciter binary for ${{ matrix.job.arch }}
         id: vcpkg
-        timeout-minutes: 300
+        # timeout-minutes: 300
         continue-on-error: true
         with:
           arch: ${{ matrix.job.arch }}
@@ -343,7 +343,7 @@ jobs:
       - uses: deep-soft/run-on-arch-action@amd64-support
         name: Build rustdesk sciter binary for ${{ matrix.job.arch }}
         id: vcpkg2
-        timeout-minutes: 300
+        # timeout-minutes: 300
         continue-on-error: true
         with:
           arch: ${{ matrix.job.arch }}
