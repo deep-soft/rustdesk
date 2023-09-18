@@ -1,4 +1,4 @@
-# 2023-08-31 20:10
+# 2023-09-18 22:30
 # changed: Install Rust toolchain. uses: deep-soft/rust-toolchain@master
 #
 name: act - Flutter - Win - cstm
@@ -460,6 +460,7 @@ jobs:
 
 # zip release begin
       - name: Create Archive ALL
+        if:  ${{ inputs.archive_ALL}}
         uses: deep-soft/zip-release@v2
         with:
           type: 'zip'
@@ -470,6 +471,7 @@ jobs:
           # archive name is ${{ env.ZIP_RELEASE_ARCHIVE }}
 
       - name: Publish Archive ALL
+        if:  ${{ inputs.archive_ALL}}
         continue-on-error: true
         uses: deep-soft/action-gh-release@v1
         with:
