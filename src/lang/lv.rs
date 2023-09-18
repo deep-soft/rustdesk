@@ -236,7 +236,7 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("Wrong credentials", "Nepareizs lietotājvārds vai parole"),
         ("The verification code is incorrect or has expired", "Verifikācijas kods ir nepareizs vai tam ir beidzies derīguma termiņš"),
         ("Edit Tag", "Rediģēt tagu"),
-        ("Unremember Password", "Neatcerēties paroli"),
+        ("Forget Password", "Neatcerēties paroli"),
         ("Favorites", "Izlase"),
         ("Add to Favorites", "Pievienot pie izlases"),
         ("Remove from Favorites", "Noņemt no izlases"),
@@ -558,5 +558,6 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("auto_disconnect_option_tip", "Automātiski aizvērt ienākošās sesijas lietotāja neaktivitātes gadījumā"),
         ("Connection failed due to inactivity", "Automātiski atvienots neaktivitātes dēļ"),
         ("Check for software update on startup", "Startējot pārbaudīt, vai nav programmatūras atjauninājumu"),
+        ("upgrade_rustdesk_server_pro_to_{}_tip", "Lūdzu, jauniniet RustDesk Server Pro uz versiju {} vai jaunāku!"),
     ].iter().cloned().collect();
 }
