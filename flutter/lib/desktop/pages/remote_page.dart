@@ -409,7 +409,7 @@ class _RemotePageState extends State<RemotePage>
           keyboardEnabled: _keyboardEnabled,
           remoteCursorMoved: _remoteCursorMoved,
           textureId: _renderTexture.textureId,
-          useTextureRender: _renderTexture.useTextureRender,
+          useTextureRender: RenderTexture.useTextureRender,
           listenerBuilder: (child) =>
               _buildRawTouchAndPointerRegion(child, enterView, leaveView),
         );
@@ -539,7 +539,10 @@ class _ImagePaintState extends State<ImagePaint> {
         imageWidget = SizedBox(
           width: imageWidth,
           height: imageHeight,
-          child: Obx(() => Texture(textureId: widget.textureId.value)),
+          child: Obx(() => Texture(
+                textureId: widget.textureId.value,
+                filterQuality: FilterQuality.none,
+              )),
         );
       } else {
         imageWidget = CustomPaint(
@@ -573,14 +576,19 @@ class _ImagePaintState extends State<ImagePaint> {
       late final Widget imageWidget;
       if (c.size.width > 0 && c.size.height > 0) {
         if (widget.useTextureRender) {
+          final x = Platform.isLinux ? c.x.toInt().toDouble() : c.x;
+          final y = Platform.isLinux ? c.y.toInt().toDouble() : c.y;
           imageWidget = Stack(
             children: [
               Positioned(
-                left: c.x.toInt().toDouble(),
-                top: c.y.toInt().toDouble(),
+                left: x,
+                top: y,
                 width: c.getDisplayWidth() * s,
                 height: c.getDisplayHeight() * s,
-                child: Texture(textureId: widget.textureId.value),
+                child: Texture(
+                  textureId: widget.textureId.value,
+                  filterQuality: FilterQuality.none,
+                ),
               )
             ],
           );
