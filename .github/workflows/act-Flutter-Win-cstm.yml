@@ -1,6 +1,6 @@
-# 2023-09-18 22:30
+# 2023-09-19 21:20
 # changed: Install Rust toolchain. uses: deep-soft/rust-toolchain@master
-#
+# git config --global core.longpaths true
 name: act - Flutter - Win - cstm
 
 env:
@@ -338,6 +338,7 @@ jobs:
 
       - name: Install flutter rust bridge deps
         run: |
+          git config --global core.longpaths true
           cargo install flutter_rust_bridge_codegen --version ${{ env.FLUTTER_RUST_BRIDGE_VERSION }}
           Push-Location flutter ; flutter pub get ; Pop-Location
           ~/.cargo/bin/flutter_rust_bridge_codegen --rust-input ./src/flutter_ffi.rs --dart-output ./flutter/lib/generated_bridge.dart
