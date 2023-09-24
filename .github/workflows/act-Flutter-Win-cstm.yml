@@ -1,6 +1,7 @@
-# 2023-09-24 08:20
+# 2023-09-24 08:30
 # changed: Install Rust toolchain. uses: deep-soft/rust-toolchain@master
 # git config --global core.longpaths true
+# windows-2019
 name: act - Flutter - Win - cstm
 
 env:
@@ -62,6 +63,7 @@ jobs:
         job:
 #         - { target: i686-pc-windows-msvc        , os: windows-2022 }
 #         - { target: x86_64-pc-windows-gnu       , os: windows-2022 }
+          - { target: x86_64-pc-windows-msvc      , os: windows-2019 }
           - { target: x86_64-pc-windows-msvc      , os: windows-2022 }
     steps:
       - name: Checkout source code
@@ -128,7 +130,7 @@ jobs:
         continue-on-error: true
         shell: bash
         run: |
-          staging="rdsk-src-${{ env.VERSION }}-${{ matrix.job.target }}-${{ matrix.job.extra-build-features }}-${{ env.GUI }}"
+          staging="rdsk-src-${{ env.VERSION }}-${{ matrix.job.target }}-${{ matrix.job.extra-build-features }}-${{ env.GUI }}-${{ matrix.job.os }}"
           if [ "${{ matrix.os }}" = "windows-2022" ]; then
             7z a "$staging.zip" "*" -x!target/* -x!vcpkg/* > nul
             echo "ASSET_SRC=$staging.zip" >> $GITHUB_ENV
@@ -267,8 +269,8 @@ jobs:
         continue-on-error: true
         shell: bash
         run: |
-          staging="rdsk-src1-${{ env.VERSION }}-${{ matrix.job.target }}-${{ matrix.job.extra-build-features }}-${{ env.GUI }}"
-          if [ "${{ matrix.os }}" = "windows-2022" ]; then
+          staging="rdsk-src1-${{ env.VERSION }}-${{ matrix.job.target }}-${{ matrix.job.extra-build-features }}-${{ env.GUI }}-${{ matrix.job.os }}"
+          if [ "${{ matrix.os }}" ~= "windows-20" ]; then
             7z a "$staging.zip" "*" -x!target/* -x!vcpkg/* > nul
             echo "ASSET_SRC1=$staging.zip" >> $GITHUB_ENV
             if [ "${{ env.DEBUG_LS }}" = "yes" ]; then
@@ -359,7 +361,7 @@ jobs:
         continue-on-error: true
         shell: bash
         run: |
-          staging="vcpkg-installed-${{ env.VERSION }}-${{ matrix.job.target }}-${{ env.GUI }}"
+          staging="vcpkg-installed-${{ env.VERSION }}-${{ matrix.job.target }}-${{ env.GUI }}-${{ matrix.job.os }}"
           touch "$staging.tar.xz"
           #tar -cfJ "$staging.tar.xz" --exclude "$staging.tar.xz" .
           tar --exclude=*.tar* --exclude=target/*  -cv vcpkg/installed | xz -9 > "$staging.tar.xz"
@@ -423,7 +425,7 @@ jobs:
           python3 ./generate.py -f ../../flutter/build/windows/runner/Release/ -o . -e ../../flutter/build/windows/runner/Release/rustdesk.exe
           popd
           mkdir -p ./SignOutput
-          mv ./target/release/rustdesk-portable-packer.exe ./SignOutput/rustdesk-${{ env.VERSION }}-${{ matrix.job.target }}.exe
+          mv ./target/release/rustdesk-portable-packer.exe ./SignOutput/rustdesk-${{ env.VERSION }}-${{ matrix.job.target }}-${{ matrix.job.os }}.exe
 
       # - name: Rename rustdesk
       #   shell: bash
