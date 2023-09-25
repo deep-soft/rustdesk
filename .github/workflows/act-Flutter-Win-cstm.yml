@@ -1,4 +1,4 @@
-# 2023-09-25 19:20
+# 2023-09-25 22:20
 # changed: Install Rust toolchain. uses: deep-soft/rust-toolchain@master
 # git config --global core.longpaths true
 # windows-2019
@@ -314,6 +314,10 @@ jobs:
           channel: "stable"
           flutter-version: ${{ env.FLUTTER_VERSION }}
           cache: true
+
+      - name: flutter no telemetry
+        run: |
+          flutter --disable-telemetry
 
 #       - name: Replace engine with rustdesk custom flutter engine
 #         run: |
