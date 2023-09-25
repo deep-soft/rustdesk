@@ -239,11 +239,13 @@ jobs:
           if [ "$runner_res" != "" ]; then
             echo "0: Runner.res: $runner_res"
             cp $runner_res ./Runner.res
+            cp $runner_res ./libs/portable/Runner.res
           fi
           runner_rc=$(find . -name "Runner.rc")
           if [ "$runner_rc" != "" ]; then
             echo "0: Runner.rc: $runner_rc"
             cp $runner_rc ./Runner.rc
+            cp $runner_rc ./libs/portable/Runner.rc
           fi
 
       - name: change year in Copyright, 2022 to 2023
@@ -415,6 +417,7 @@ jobs:
           if [ "$runner_res" != "" ]; then
             echo "1: Runner.res: $runner_res"
             cp $runner_res ./Runner.res
+            cp $runner_res ./libs/portable/Runner.res
           fi
           runner_res=$(find . -name "Runner.res")
           if [ "$runner_res" != "" ]; then
