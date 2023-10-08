@@ -557,5 +557,12 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("Check for software update on startup", "Kontrola aktualizace softwaru při spuštění"),
         ("upgrade_rustdesk_server_pro_to_{}_tip", "Aktualizujte prosím RustDesk Server Pro na verzi {} nebo novější!"),
         ("pull_group_failed_tip", "Nepodařilo se obnovit skupinu"),
+        ("switch_display_elevated_connections_tip", ""),
+        ("display_is_plugged_out_msg", ""),
+        ("No displays", ""),
+        ("elevated_switch_display_msg", ""),
+        ("Choose Display Behavior", ""),
+        ("Switch Display", ""),
+        ("Open in New Window", ""),
     ].iter().cloned().collect();
 }
