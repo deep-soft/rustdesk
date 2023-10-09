@@ -57,7 +57,6 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("ID Server", "ID serveris"),
         ("Relay Server", "Releja serveris"),
         ("API Server", "API serveris"),
-        ("Key", "Atslēga"),
         ("invalid_http", "jāsākas ar http:// vai https://"),
         ("Invalid IP", "Nederīga IP"),
         ("Invalid format", "Nederīgs formāts"),
@@ -297,7 +296,6 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("This file exists, skip or overwrite this file?", "Šis fails pastāv, izlaist vai pārrakstīt šo failu?"),
         ("Quit", "Iziet"),
         ("doc_mac_permission", "https://rustdesk.com/docs/en/manual/mac/#enable-permissions"),
-        ("doc_fix_wayland", "https://rustdesk.com/docs/en/manual/linux/#x11-required"),
         ("Help", "Palīdzība"),
         ("Failed", "Neizdevās"),
         ("Succeeded", "Izdevās"),
@@ -563,8 +561,7 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("display_is_plugged_out_msg", ""),
         ("No displays", ""),
         ("elevated_switch_display_msg", ""),
-        ("Choose display behavior", ""),
-        ("Switch display", ""),
         ("Open in new window", ""),
+        ("Show displays as individual windows", ""),
     ].iter().cloned().collect();
 }
