@@ -3,7 +3,7 @@
 # git config --global core.longpaths true
 # windows-2019
 # multi flutter ui sessions
-name: act - Flutter - Win - cstm - gpu
+name: act - Flutter - Win - cstm - mfuis
 
 env:
   TAG_NAME:      "Win-cstm-mfuis"
