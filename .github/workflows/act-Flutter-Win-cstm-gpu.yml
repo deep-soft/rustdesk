@@ -1,4 +1,4 @@
-# 2023-10-12 17:30
+# 2023-10-12 19:30
 # changed: Install Rust toolchain. uses: deep-soft/rust-toolchain@master
 # git config --global core.longpaths true
 # windows-2019
@@ -7,10 +7,10 @@ name: act - Flutter - Win - cstm - gpu
 
 env:
   TAG_NAME:      "Win-cstm-gpu"
-  TAG_VERSION:   "rdsk-v1.2.1"
+  TAG_VERSION:   "rdsk-gpu-v1.2.1"
   TAG_BUILD:     "-b"
   TAG_REF:       "0000000"
-  PROG_NAME:     "rdsk"
+  PROG_NAME:     "rdsk-gpu"
   PROG_VERSION:  "v1.0.0"
   VERSION:       "1.0.0"
   DEBUG_LS:      "yes"
