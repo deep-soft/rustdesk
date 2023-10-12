@@ -295,7 +295,6 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("Overwrite", "Felülírás"),
         ("This file exists, skip or overwrite this file?", "Ez a fájl már létezik, kihagyja vagy felülírja ezt a fájlt?"),
         ("Quit", "Kilépés"),
-        ("doc_mac_permission", "https://rustdesk.com/docs/hu/manual/mac/#enable-permissions"),
         ("Help", "Segítség"),
         ("Failed", "Sikertelen"),
         ("Succeeded", "Sikeres"),
@@ -557,5 +556,6 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("Check for software update on startup", ""),
         ("upgrade_rustdesk_server_pro_to_{}_tip", ""),
         ("pull_group_failed_tip", ""),
+        ("Filter by intersection", "")
     ].iter().cloned().collect();
 }

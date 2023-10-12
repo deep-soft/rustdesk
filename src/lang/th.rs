@@ -295,7 +295,6 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("Overwrite", "เขียนทับ"),
         ("This file exists, skip or overwrite this file?", "พบไฟล์ที่มีอยู่แล้ว ต้องการเขียนทับหรือไม่?"),
         ("Quit", "ออก"),
-        ("doc_mac_permission", "https://rustdesk.com/docs/en/manual/mac/#enable-permissions"),
         ("Help", "ช่วยเหลือ"),
         ("Failed", "ล้มเหลว"),
         ("Succeeded", "สำเร็จ"),
@@ -557,5 +556,6 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("Check for software update on startup", "ตรวจสอบการอัปเดตโปรแกรมเมื่อเริ่มต้นใช้งาน"),
         ("upgrade_rustdesk_server_pro_to_{}_tip", "กรุณาอัปเดต Rustdesk Server Pro ไปยังเวอร์ชัน {} หรือใหม่กว่า!"),
         ("pull_group_failed_tip", "การเรียกใช้งานกลุ่มล้มเหลว"),
+        ("Filter by intersection", "")
     ].iter().cloned().collect();
 }

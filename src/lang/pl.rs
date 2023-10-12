@@ -3,7 +3,7 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
     [
         ("Status", "Status"),
         ("Your Desktop", "Twój pulpit"),
-        ("desk_tip", "W celu połączenia się z tym urządzeniem należy użyć poniższego ID i hasła"),
+        ("desk_tip", "Aby połączyć się z tym urządzeniem, użyj poniższego ID i hasła"),
         ("Password", "Hasło"),
         ("Ready", "Gotowe"),
         ("Established", "Nawiązano"),
@@ -244,10 +244,10 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("Socks5 Proxy", "Proxy Socks5"),
         ("Hostname", "Nazwa hosta"),
         ("Discovered", "Wykryte"),
-        ("install_daemon_tip", "Podpowiedź instalacji daemona"),
+        ("install_daemon_tip", "By uruchomić RustDesk przy starcie systemu, musisz zainstalować usługę systemową."),
         ("Remote ID", "Zdalne ID"),
         ("Paste", "Wklej"),
-        ("Paste here?", "Wkleić tu?"),
+        ("Paste here?", "Wkleić tutaj?"),
         ("Are you sure to close the connection?", "Czy na pewno chcesz zakończyć połączenie?"),
         ("Download new version", "Pobierz nową wersję"),
         ("Touch mode", "Tryb dotykowy"),
@@ -295,7 +295,6 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("Overwrite", "Nadpisz"),
         ("This file exists, skip or overwrite this file?", "Ten plik istnieje, pominąć czy nadpisać ten plik?"),
         ("Quit", "Zrezygnuj"),
-        ("doc_mac_permission", "doc_mac_permission"),
         ("Help", "Pomoc"),
         ("Failed", "Niepowodzenie"),
         ("Succeeded", "Udało się"),
@@ -557,5 +556,6 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("Check for software update on startup", "Sprawdź aktualizacje przy starcie programu"),
         ("upgrade_rustdesk_server_pro_to_{}_tip", "Proszę zaktualizować RustDesk Server Pro do wersji {} lub nowszej!"),
         ("pull_group_failed_tip", "Błąd odświeżania grup"),
+        ("Filter by intersection", "")
     ].iter().cloned().collect();
 }
