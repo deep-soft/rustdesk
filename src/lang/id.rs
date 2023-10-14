@@ -19,7 +19,7 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("Recent Sessions", "Sesi Terkini"),
         ("Address Book", "Buku Alamat"),
         ("Confirmation", "Konfirmasi"),
-        ("TCP Tunneling", "TCP Tunneling"),
+        ("TCP Tunneling", "Tunneling TCP"),
         ("Remove", "Hapus"),
         ("Refresh random password", "Perbarui kata sandi acak"),
         ("Set your own password", "Tetapkan kata sandi Anda"),
@@ -172,7 +172,7 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("Local Port", "Port Lokal"),
         ("Local Address", "Alamat lokal"),
         ("Change Local Port", "Ubah Port Lokal"),
-        ("setup_server_tip", "Sudah siap, Untuk mendapatkan koneksi yang lebih baik, disarankan untuk menginstal di server anda sendiri"),
+        ("setup_server_tip", "Untuk mendapatkan koneksi yang lebih baik, disarankan untuk menginstal di server anda sendiri"),
         ("Too short, at least 6 characters.", "Terlalu pendek, setidaknya 6 karekter."),
         ("The confirmation is not identical.", "Konfirmasi tidak identik."),
         ("Permissions", "Izin"),
@@ -365,7 +365,6 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("Audio Input Device", "Input Perangkat Audio"),
         ("Use IP Whitelisting", "Gunakan daftar IP yang diizinkan"),
         ("Network", "Jaringan"),
-        ("Enable RDP", "Aktifkan RDP"),
         ("Pin Toolbar", "Sematkan Toolbar"),
         ("Unpin Toolbar", "Batal sematkan Toolbar"),
         ("Recording", "Sedang Merekam"),
@@ -556,6 +555,8 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("Check for software update on startup", "Periksa pembaruan aplikasi saat sistem dinyalakan."),
         ("upgrade_rustdesk_server_pro_to_{}_tip", "Silahkan perbarui RustDesk Server Pro ke versi {} atau yang lebih baru!"),
         ("pull_group_failed_tip", "Gagal memperbarui grup"),
-        ("Filter by intersection", "")
+        ("Filter by intersection", ""),
+        ("Remove wallpaper during incoming sessions", ""),
+        ("Test", ""),
     ].iter().cloned().collect();
 }

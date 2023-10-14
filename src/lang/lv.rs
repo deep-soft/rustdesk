@@ -365,7 +365,6 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("Audio Input Device", "Audio ievades ierīce"),
         ("Use IP Whitelisting", "Izmantot balto IP sarakstu"),
         ("Network", "Tīkls"),
-        ("Enable RDP", "Iespējot RDP"),
         ("Pin Toolbar", "Piespraust rīkjoslu"),
         ("Unpin Toolbar", "Atspraust rīkjoslu"),
         ("Recording", "Ierakstīšana"),
@@ -556,6 +555,8 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("Check for software update on startup", "Startējot pārbaudīt, vai nav programmatūras atjauninājumu"),
         ("upgrade_rustdesk_server_pro_to_{}_tip", "Lūdzu, jauniniet RustDesk Server Pro uz versiju {} vai jaunāku!"),
         ("pull_group_failed_tip", "Neizdevās atsvaidzināt grupu"),
-        ("Filter by intersection", "")
+        ("Filter by intersection", "Filtrēt pēc krustpunkta"),
+        ("Remove wallpaper during incoming sessions", ""),
+        ("Test", ""),
     ].iter().cloned().collect();
 }

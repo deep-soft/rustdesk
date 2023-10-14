@@ -365,7 +365,6 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("Audio Input Device", "Пристрій введення звуку"),
         ("Use IP Whitelisting", "Використовувати білий список IP"),
         ("Network", "Мережа"),
-        ("Enable RDP", "Увімкнути RDP"),
         ("Pin Toolbar", "Закріпити панель інструментів"),
         ("Unpin Toolbar", "Відкріпити панель інструментів"),
         ("Recording", "Запис"),
@@ -556,6 +555,8 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("Check for software update on startup", ""),
         ("upgrade_rustdesk_server_pro_to_{}_tip", ""),
         ("pull_group_failed_tip", ""),
-        ("Filter by intersection", "")
+        ("Filter by intersection", ""),
+        ("Remove wallpaper during incoming sessions", ""),
+        ("Test", ""),
     ].iter().cloned().collect();
 }
