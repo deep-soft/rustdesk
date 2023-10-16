@@ -1,4 +1,4 @@
-# 2023-09-14 07:20
+# 2023-10-16 08:00
 # This yaml shares the build vcpkg deps steps with ci and nightly.
 #and act-Flutter-Win-Arm-And-Mac-cstm
 name: act - Build vcpkg dependencies for linux clients
@@ -19,6 +19,7 @@ env:
   RDSK_PCH_SH:       '${{ secrets.RDSK_PCH_SH }}'
   RDSK_PCH_HL:       '${{ secrets.RDSK_PCH_HL }}'
   RDSK_PCH_SH2:      '${{ secrets.RDSK_PCH_SH2 }}'
+  RDSK_PCH_SH4:      '${{ secrets.RDSK_PCH_SH4 }}'
   RDSK_PCH_SH_CLN:   '${{ secrets.RDSK_PCH_SH_CLN }}'
   RUST_VERSION:                "rust-1.70.0"
   LLVM_VERSION:                "15.0.6"

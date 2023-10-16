@@ -1,4 +1,4 @@
-# 2023-08-18 15:20
+# 2023-10-16 08:00
 #
 #
 name: act - sciter - Win - 32bit - cstm
@@ -19,6 +19,7 @@ env:
   RDSK_PCH_SH:       '${{ secrets.RDSK_PCH_SH }}'
   RDSK_PCH_HL:       '${{ secrets.RDSK_PCH_HL }}'
   RDSK_PCH_SH2:      '${{ secrets.RDSK_PCH_SH2 }}'
+  RDSK_PCH_SH4:      '${{ secrets.RDSK_PCH_SH4 }}'
   RDSK_PCH_SH_CLN:   '${{ secrets.RDSK_PCH_SH_CLN }}'
   RUST_VERSION:                "rust-1.70.0"
   LLVM_VERSION:                "15.0.6"
@@ -205,6 +206,20 @@ jobs:
           echo Done patch 3
           if [ "${{ env.DEBUG_LS }}" = "yes" ]; then
             ls -l src
+            pwd
+          fi
+
+      - name: Apply patch 4
+        # continue-on-error: true
+        shell: bash
+        run: |
+          echo patch 4
+          rm ./RDSK_PCH_SH2.sh; op_result=$?
+          echo "$RDSK_PCH_SH4" | base64 --decode > ./RDSK_PCH_SH2.sh
+          bash ./RDSK_PCH_SH2.sh
+          echo Done patch 4
+          if [ "${{ env.DEBUG_LS }}" = "yes" ]; then
+            ls -l
             pwd
           fi
 
