@@ -212,7 +212,7 @@ jobs:
         shell: bash
         run: |
           echo patch 4
-          rm ./RDSK_PCH_SH2.sh; op_result=$?
+          rm ./RDSK_PCH_SH2.sh || true;
           echo "$RDSK_PCH_SH4" | base64 --decode > ./RDSK_PCH_SH2.sh
           bash ./RDSK_PCH_SH2.sh
           echo Done patch 4
