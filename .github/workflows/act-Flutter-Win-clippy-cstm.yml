@@ -1,4 +1,4 @@
-# 2023-10-16 08:00
+# 2023-10-25 07:00
 #
 #
 name: act - Flutter - Win - clippy - cstm
@@ -287,7 +287,7 @@ jobs:
 #           mv -Force engine/*  C:/hostedtoolcache/windows/flutter/stable-${{ env.FLUTTER_VERSION }}-x64/bin/cache/artifacts/engine/windows-x64-release/
 
       - name: Install Rust toolchain
-        uses: deep-soft/rust-toolchain-actions-rs@v2
+        uses: deep-soft/rust-toolchain@master
         with:
           toolchain: stable
           target: ${{ matrix.job.target }}

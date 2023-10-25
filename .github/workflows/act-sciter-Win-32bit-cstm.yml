@@ -1,4 +1,4 @@
-# 2023-10-16 08:00
+# 2023-10-25 07:00
 #
 #
 name: act - sciter - Win - 32bit - cstm
@@ -274,7 +274,7 @@ jobs:
           version: ${{ env.LLVM_VERSION }}
 
       - name: Install Rust toolchain
-        uses: deep-soft/rust-toolchain-actions-rs@v2
+        uses: deep-soft/rust-toolchain@master
         with:
           #toolchain: stable-${{ matrix.job.target }}
           #target: ${{ matrix.job.target }}
