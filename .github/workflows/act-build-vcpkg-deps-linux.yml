@@ -1,4 +1,5 @@
-# 2023-10-25 07:00
+# 2023-10-28 07:00
+# cmake-3.27.7
 # This yaml shares the build vcpkg deps steps with ci and nightly.
 #and act-Flutter-Win-Arm-And-Mac-cstm
 name: act - Build vcpkg dependencies for linux clients
@@ -92,11 +93,18 @@ jobs:
                 # apt update -y
                 # apt install -y curl zip unzip tar git cmake g++ gcc build-essential pkg-config wget nasm yasm ninja-build libjpeg8-dev
                 # CMake 3.20
+                # apt install -y curl zip unzip tar git g++ gcc build-essential pkg-config wget nasm yasm ninja-build libjpeg8-dev libssl-dev
+                # wget https://github.com/Kitware/CMake/releases/download/v3.20.2/cmake-3.20.2.tar.gz
+                # apt remove -y --purge cmake
+                # tar -zxvf cmake-3.20.2.tar.gz
+                # cd cmake-3.20.2
+                # CMake 3.27 begin
                 apt install -y curl zip unzip tar git g++ gcc build-essential pkg-config wget nasm yasm ninja-build libjpeg8-dev libssl-dev
-                wget https://github.com/Kitware/CMake/releases/download/v3.20.2/cmake-3.20.2.tar.gz
+                wget https://github.com/Kitware/CMake/releases/download/v3.27.7/cmake-3.27.7.tar.gz
                 apt remove -y --purge cmake
-                tar -zxvf cmake-3.20.2.tar.gz
-                cd cmake-3.20.2
+                tar -zxvf cmake-3.27.7.tar.gz
+                cd cmake-3.27.7
+                # CMake 3.27 end
                 ./bootstrap
                 make 
                 make install 
