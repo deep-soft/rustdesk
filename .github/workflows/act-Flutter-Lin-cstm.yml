@@ -1,4 +1,4 @@
-# 2023-10-31 21:00
+# 2023-11-01 15:50
 #
 #
 #
@@ -26,7 +26,7 @@ env:
   RUST_VERSION:                "rust-1.70.0"
   LLVM_VERSION:                "15.0.6"
   FLUTTER_VERSION:             "3.13.9"
-  FLUTTER_RUST_BRIDGE_VERSION: "1.79.0"
+  FLUTTER_RUST_BRIDGE_VERSION: "1.80.1"
   FLUTTER_ELINUX_VERSION:      "3.10.6"
   FLUTTER_ELINUX_COMMIT_ID:    "410b3ca42f2cd0c485edf517a1666652bab442d4"
   VCPKG_COMMIT_ID:             "662dbb50e63af15baa2909b7eac5b1b87e86a0aa"
