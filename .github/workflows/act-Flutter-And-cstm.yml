@@ -50,6 +50,10 @@ on:
 #    - cron: "0 0 * * *"
 
 jobs:
+  build-vcpkg-deps-linux:
+    uses: ./.github/workflows/act-build-vcpkg-deps-linux.yml
+    secrets: inherit
+
   generate-bridge-linux:
     uses: ./.github/workflows/act-build-bridge.yml
     secrets: inherit
@@ -249,25 +253,32 @@ jobs:
         with:
           channel: "stable"
           flutter-version: ${{ env.FLUTTER_VERSION }}
+
       - uses: deep-soft/setup-ndk@v1
         id: setup-ndk
         with:
           ndk-version: ${{ env.NDK_VERSION }}
           add-to-path: true
 
-      - name: Clone deps
-        shell: bash
-        run: |
-          # pushd /opt
-          # git clone https://github.com/Kingtous/rustdesk_thirdparty_lib.git --depth=1
-          pushd /opt
-          git clone https://github.com/deep-soft/rustdesk_thirdparty_lib.git --depth=1
+#      - name: Clone deps
+#        shell: bash
+#        run: |
+#          # pushd /opt
+#          # git clone https://github.com/Kingtous/rustdesk_thirdparty_lib.git --depth=1
+#          # pushd /opt
+#          # git clone https://github.com/deep-soft/rustdesk_thirdparty_lib.git --depth=1
 
       - name: Restore bridge files
         uses: deep-soft/download-artifact@main
         with:
           name: bridge-artifact
           path: ./
+
+      - name: Restore vcpkg files
+        uses: deep-soft/download-artifact@main
+        with:
+          name: vcpkg-artifact-${{ matrix.job.arch }}
+          path: /opt/artifacts/vcpkg/installed
 
       - name: Install Rust toolchain
         uses: deep-soft/rust-toolchain@master
