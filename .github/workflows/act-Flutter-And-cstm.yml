@@ -260,25 +260,20 @@ jobs:
           ndk-version: ${{ env.NDK_VERSION }}
           add-to-path: true
 
-#      - name: Clone deps
-#        shell: bash
-#        run: |
-#          # pushd /opt
-#          # git clone https://github.com/Kingtous/rustdesk_thirdparty_lib.git --depth=1
-#          # pushd /opt
-#          # git clone https://github.com/deep-soft/rustdesk_thirdparty_lib.git --depth=1
+      - name: Clone deps / Build deps
+        shell: bash
+        run: |
+          # pushd /opt
+          # git clone https://github.com/Kingtous/rustdesk_thirdparty_lib.git --depth=1
+          # pushd /opt
+          # git clone https://github.com/deep-soft/rustdesk_thirdparty_lib.git --depth=1
+          bash flutter/build_android_deps.sh
 
       - name: Restore bridge files
         uses: deep-soft/download-artifact@main
         with:
           name: bridge-artifact
           path: ./
-
-      - name: Restore vcpkg files
-        uses: deep-soft/download-artifact@main
-        with:
-          name: vcpkg-artifact-${{ matrix.job.arch }}
-          path: /opt/artifacts/vcpkg/installed
 
       - name: Install Rust toolchain
         uses: deep-soft/rust-toolchain@master
