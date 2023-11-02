@@ -1,4 +1,4 @@
-# 2023-11-02 01:10
+# 2023-11-02 04:00
 #
 #
 #
@@ -249,31 +249,17 @@ jobs:
         with:
           channel: "stable"
           flutter-version: ${{ env.FLUTTER_VERSION }}
-
       - uses: deep-soft/setup-ndk@v1
         id: setup-ndk
         with:
           ndk-version: ${{ env.NDK_VERSION }}
           add-to-path: true
 
-      - name: Clone deps / Build deps
+      - name: Clone deps
         shell: bash
-        env:
-          ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
-          ANDROID_NDK_ROOT: ${{ steps.setup-ndk.outputs.ndk-path }}
-          VCPKG_ROOT: /opt/rustdesk_thirdparty_lib/vcpkg
         run: |
-          # pushd /opt
-          # git clone https://github.com/Kingtous/rustdesk_thirdparty_lib.git --depth=1
-          # pushd /opt
-          # git clone https://github.com/deep-soft/rustdesk_thirdparty_lib.git --depth=1
-          mkdir -p $VCPKG_ROOT
-          if [[ ${{ matrix.job.target }} == 'aarch64-linux-android' ]]; then
-            bash flutter/build_android_deps.sh 'arm64-v8a'
-          fi
-          if [[ ${{ matrix.job.target }} == 'armv7-linux-androideabi' ]]; then
-            bash flutter/build_android_deps.sh 'armeabi-v7a'
-          fi
+          pushd /opt
+          git clone https://github.com/deep-soft/rustdesk_thirdparty_lib.git --depth=1
 
       - name: Restore bridge files
         uses: deep-soft/download-artifact@main
