@@ -1,4 +1,4 @@
-# 2023-11-02 04:00
+# 2023-11-07 20:00
 #
 #
 #
@@ -27,11 +27,11 @@ env:
   LLVM_VERSION:                "15.0.6"
   FLUTTER_VERSION:             "3.13.9"
   FLUTTER_RUST_BRIDGE_VERSION: "1.80.1"
-  FLUTTER_ELINUX_VERSION:      "3.10.6"
-  FLUTTER_ELINUX_COMMIT_ID:    "410b3ca42f2cd0c485edf517a1666652bab442d4"
+  FLUTTER_ELINUX_VERSION:      "3.13.9"
+  FLUTTER_ELINUX_COMMIT_ID:    "f4d4205893c16b0aa9cb6ba46b9f32b639d3b057"
   VCPKG_COMMIT_ID:             "662dbb50e63af15baa2909b7eac5b1b87e86a0aa"
   CARGO_NDK_VERSION:           "3.1.2"
-  NDK_VERSION:                 "r25c"
+  NDK_VERSION:                 "r26b"
   #signing keys env variable checks
   ANDROID_SIGNING_KEY: '${{ secrets.ANDROID_SIGNING_KEY }}'
   #  signingKeyBase64: '${{ secrets.ANDROID_SIGNING_KEY }}'
@@ -63,13 +63,21 @@ jobs:
       matrix:
         job:
           - { arch: x86_64, target: aarch64-linux-android  , os: ubuntu-20.04, extra-build-features: "", openssl-arch: android-arm64            }
-          - { arch: x86_64, target: armv7-linux-androideabi, os: ubuntu-20.04, extra-build-features: "", openssl-arch: android-arm              }
+          - { arch: armv7,  target: armv7-linux-androideabi, os: ubuntu-20.04, extra-build-features: "", openssl-arch: android-arm              }
     steps:
+      - name: Export GitHub Actions cache environment variables
+        uses: actions/github-script@v6
+        with:
+          script: |
+            core.exportVariable('ACTIONS_CACHE_URL',     process.env.ACTIONS_CACHE_URL     || '');
+            core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
+
       - name: Install dependencies
         run: |
           sudo apt install ca-certificates -y
           sudo apt update
-          sudo apt-get -qq install -y  git curl wget nasm yasm libgtk-3-dev clang libxcb-randr0-dev libxdo-dev libxfixes-dev libxcb-shape0-dev libxcb-xfixes0-dev libasound2-dev libpulse-dev cmake libclang-dev ninja-build libappindicator3-dev libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev libvdpau-dev libva-dev libclang-dev llvm-dev libclang-10-dev llvm-10-dev pkg-config tree g++ libc6-dev gcc-multilib g++-multilib openjdk-11-jdk-headless
+          # sudo apt-get -qq install -y git curl wget nasm yasm tree clang cmake libgtk-3-dev libxcb-randr0-dev libxdo-dev libxfixes-dev libxcb-shape0-dev libxcb-xfixes0-dev libasound2-dev libpulse-dev libclang-dev ninja-build libappindicator3-dev libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev libvdpau-dev libva-dev llvm-dev libclang-10-dev llvm-10-dev libpam0g-dev pkg-config g++ libc6-dev gcc-multilib g++-multilib openjdk-11-jdk-headless
+          sudo apt-get install -y git curl wget nasm yasm tree clang cmake libgtk-3-dev libxcb-randr0-dev libxdo-dev libxfixes-dev libxcb-shape0-dev libxcb-xfixes0-dev libasound2-dev libpulse-dev libclang-dev ninja-build libappindicator3-dev libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev libvdpau-dev libva-dev llvm-dev libclang-10-dev llvm-10-dev libpam0g-dev pkg-config g++ libc6-dev gcc-multilib g++-multilib openjdk-11-jdk-headless
 
       - name: Checkout source code
         uses: deep-soft/checkout@v3
@@ -249,17 +257,30 @@ jobs:
         with:
           channel: "stable"
           flutter-version: ${{ env.FLUTTER_VERSION }}
+
       - uses: deep-soft/setup-ndk@v1
         id: setup-ndk
         with:
           ndk-version: ${{ env.NDK_VERSION }}
           add-to-path: true
 
-      - name: Clone deps
+      - name: Setup vcpkg with Github Actions binary cache
+        uses: deep-soft/run-vcpkg@v11
+        with:
+          vcpkgDirectory: /opt/artifacts/vcpkg
+          vcpkgGitCommitId: ${{ env.VCPKG_COMMIT_ID }}
+
+      - name: Install vcpkg dependencies
         shell: bash
         run: |
-          pushd /opt
-          git clone https://github.com/deep-soft/rustdesk_thirdparty_lib.git --depth=1
+          case ${{ matrix.job.target }} in
+            aarch64-linux-android)
+              ./flutter/build_android_deps.sh arm64-v8a
+            ;;
+            armv7-linux-androideabi)
+              ./flutter/build_android_deps.sh armeabi-v7a
+            ;;
+          esac
 
       - name: Restore bridge files
         uses: deep-soft/download-artifact@main
@@ -271,19 +292,19 @@ jobs:
         uses: deep-soft/rust-toolchain@master
         with:
           toolchain: stable
-#          override: true
+          override: true
           profile: minimal # minimal component installation (ie, no documentation)
 
       - uses: deep-soft/rust-cache@v2
         with:
-          prefix-key: rustdesk-lib-cache
+          prefix-key: rustdesk-lib-cache-android # TODO: drop '-android' part after caches are invalidated
           key: ${{ matrix.job.target }}-${{ matrix.job.extra-build-features }}
 
       - name: Build rustdesk lib
         env:
           ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
           ANDROID_NDK_ROOT: ${{ steps.setup-ndk.outputs.ndk-path }}
-          VCPKG_ROOT: /opt/rustdesk_thirdparty_lib/vcpkg
+          # VCPKG_ROOT: /opt/rustdesk_thirdparty_lib/vcpkg
         run: |
           rustup target add ${{ matrix.job.target }} 
           cargo install cargo-ndk --version ${{ env.CARGO_NDK_VERSION }}
@@ -311,7 +332,7 @@ jobs:
           case ${{ matrix.job.target }} in
             aarch64-linux-android)
               mkdir -p ./flutter/android/app/src/main/jniLibs/arm64-v8a
-              cp /opt/rustdesk_thirdparty_lib/android/app/src/main/jniLibs/arm64-v8a/*.so ./flutter/android/app/src/main/jniLibs/arm64-v8a/
+              cp ${ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/aarch64-linux-android/libc++_shared.so ./flutter/android/app/src/main/jniLibs/arm64-v8a/
               cp ./target/${{ matrix.job.target }}/release/liblibrustdesk.so ./flutter/android/app/src/main/jniLibs/arm64-v8a/librustdesk.so
               # build flutter
               pushd flutter
@@ -320,7 +341,7 @@ jobs:
             ;;
             armv7-linux-androideabi)
               mkdir -p ./flutter/android/app/src/main/jniLibs/armeabi-v7a
-              cp /opt/rustdesk_thirdparty_lib/android/app/src/main/jniLibs/armeabi-v7a/*.so ./flutter/android/app/src/main/jniLibs/armeabi-v7a/
+              cp ${ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/arm-linux-androideabi/libc++_shared.so ./flutter/android/app/src/main/jniLibs/armeabi-v7a/
               cp ./target/${{ matrix.job.target }}/release/liblibrustdesk.so ./flutter/android/app/src/main/jniLibs/armeabi-v7a/librustdesk.so
               # build flutter
               pushd flutter

@@ -1,4 +1,4 @@
-# 2023-11-01 15:50
+# 2023-11-07 20:00
 #
 #
 #
@@ -27,11 +27,11 @@ env:
   LLVM_VERSION:                "15.0.6"
   FLUTTER_VERSION:             "3.13.9"
   FLUTTER_RUST_BRIDGE_VERSION: "1.80.1"
-  FLUTTER_ELINUX_VERSION:      "3.10.6"
-  FLUTTER_ELINUX_COMMIT_ID:    "410b3ca42f2cd0c485edf517a1666652bab442d4"
+  FLUTTER_ELINUX_VERSION:      "3.13.9"
+  FLUTTER_ELINUX_COMMIT_ID:    "f4d4205893c16b0aa9cb6ba46b9f32b639d3b057"
   VCPKG_COMMIT_ID:             "662dbb50e63af15baa2909b7eac5b1b87e86a0aa"
   CARGO_NDK_VERSION:           "3.1.2"
-  NDK_VERSION:                 "r25c"
+  NDK_VERSION:                 "r26b"
   #signing keys env variable checks
   ANDROID_SIGNING_KEY: '${{ secrets.ANDROID_SIGNING_KEY }}'
   #  signingKeyBase64: '${{ secrets.ANDROID_SIGNING_KEY }}'
@@ -60,6 +60,13 @@ jobs:
           - { target: x86_64-apple-darwin  , os: macos-latest, extra-build-args: "", arch: x86_64 }
 #         - { target: aarch64-apple-darwin , os: macos-latest, extra-build-args: "" }
     steps:
+      - name: Export GitHub Actions cache environment variables
+        uses: actions/github-script@v6
+        with:
+          script: |
+            core.exportVariable('ACTIONS_CACHE_URL',     process.env.ACTIONS_CACHE_URL     || '');
+            core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
+
       - name: Checkout source code
         uses: deep-soft/checkout@v3
 
@@ -281,7 +288,7 @@ jobs:
         with:
           toolchain: stable
           target: ${{ matrix.job.target }}
-#          override: true
+          override: true
           profile: minimal # minimal component installation (ie, no documentation)
 
       - uses: deep-soft/rust-cache@v2
@@ -295,15 +302,16 @@ jobs:
           pushd flutter && flutter pub get && popd
           ~/.cargo/bin/flutter_rust_bridge_codegen --rust-input ./src/flutter_ffi.rs --dart-output ./flutter/lib/generated_bridge.dart --c-output ./flutter/macos/Runner/bridge_generated.h
 
-      - name: Restore from cache and install vcpkg
-        uses: deep-soft/run-vcpkg@v10
+      - name: Setup vcpkg with Github Actions binary cache
+        uses: deep-soft/run-vcpkg@v11
         with:
-          setupOnly: true
+#          setupOnly: true
           vcpkgGitCommitId: ${{ env.VCPKG_COMMIT_ID }}
 
       - name: Install vcpkg dependencies
         run: |
-          $VCPKG_ROOT/vcpkg install libvpx libyuv opus aom
+          # $VCPKG_ROOT/vcpkg install libvpx libyuv opus aom
+          $VCPKG_ROOT/vcpkg install --x-install-root="$VCPKG_ROOT/installed"
 
       - name: Show version information (Rust, cargo, Clang)
         shell: bash

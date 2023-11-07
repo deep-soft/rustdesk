@@ -1,4 +1,4 @@
-# 2023-11-07 07:30
+# 2023-11-07 20:00
 # changed: Replace engine with rustdesk custom flutter engine
 # changed: Install Rust toolchain. uses: deep-soft/rust-toolchain@master
 # git config --global core.longpaths true
@@ -27,11 +27,11 @@ env:
   LLVM_VERSION:                "15.0.6"
   FLUTTER_VERSION:             "3.13.9"
   FLUTTER_RUST_BRIDGE_VERSION: "1.80.1"
-  FLUTTER_ELINUX_VERSION:      "3.10.6"
-  FLUTTER_ELINUX_COMMIT_ID:    "410b3ca42f2cd0c485edf517a1666652bab442d4"
+  FLUTTER_ELINUX_VERSION:      "3.13.9"
+  FLUTTER_ELINUX_COMMIT_ID:    "f4d4205893c16b0aa9cb6ba46b9f32b639d3b057"
   VCPKG_COMMIT_ID:             "662dbb50e63af15baa2909b7eac5b1b87e86a0aa"
   CARGO_NDK_VERSION:           "3.1.2"
-  NDK_VERSION:                 "r25c"
+  NDK_VERSION:                 "r26b"
   #signing keys env variable checks
   ANDROID_SIGNING_KEY: '${{ secrets.ANDROID_SIGNING_KEY }}'
   #  signingKeyBase64: '${{ secrets.ANDROID_SIGNING_KEY }}'
@@ -68,6 +68,13 @@ jobs:
           - { target: x86_64-pc-windows-msvc      , os: windows-2019 }
           - { target: x86_64-pc-windows-msvc      , os: windows-2022 }
     steps:
+      - name: Export GitHub Actions cache environment variables
+        uses: actions/github-script@v6
+        with:
+          script: |
+            core.exportVariable('ACTIONS_CACHE_URL',     process.env.ACTIONS_CACHE_URL     || '');
+            core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
+
       - name: Checkout source code
         uses: deep-soft/checkout@v3
 
@@ -374,16 +381,17 @@ jobs:
           Push-Location flutter ; flutter pub get ; Pop-Location
           ~/.cargo/bin/flutter_rust_bridge_codegen --rust-input ./src/flutter_ffi.rs --dart-output ./flutter/lib/generated_bridge.dart
 
-      - name: Restore from cache and install vcpkg
-        uses: deep-soft/run-vcpkg@v10
+      - name: Setup vcpkg with Github Actions binary cache
+        uses: deep-soft/run-vcpkg@v11
         with:
-#          setupOnly: true
+          vcpkgDirectory: C:\vcpkg
           vcpkgGitCommitId: ${{ env.VCPKG_COMMIT_ID }}
 
       - name: Install vcpkg dependencies
         shell: bash
         run: |
-          $VCPKG_ROOT/vcpkg install libvpx:x64-windows-static libyuv:x64-windows-static opus:x64-windows-static aom:x64-windows-static
+          # $VCPKG_ROOT/vcpkg install libvpx:x64-windows-static libyuv:x64-windows-static opus:x64-windows-static aom:x64-windows-static
+          $VCPKG_ROOT/vcpkg install --triplet x64-windows-static --x-install-root="$VCPKG_ROOT/installed"
 
 ###
       - name: Create vcpkg-installed archive
@@ -393,7 +401,7 @@ jobs:
           staging="vcpkg-installed-${{ env.VERSION }}-${{ matrix.job.target }}-${{ env.GUI }}-${{ matrix.job.os }}"
           touch "$staging.tar.xz"
           #tar -cfJ "$staging.tar.xz" --exclude "$staging.tar.xz" .
-          tar --exclude=*.tar* --exclude=target/*  -cv vcpkg/installed | xz -9 > "$staging.tar.xz"
+          tar --exclude=*.tar* --exclude=target/*  -cv $VCPKG_ROOT/installed | xz -9 > "$staging.tar.xz"
           echo "ASSET_VCPKG=$staging.tar.xz" >> $GITHUB_ENV
           if [ "${{ env.DEBUG_LS }}" = "yes" ]; then
             echo "ASSET_VCPKG archive name: "
@@ -433,19 +441,19 @@ jobs:
           recursive: true
 
       - name: Search runner.res
+        # Windows: find Runner.res (compiled from ./flutter/windows/runner/Runner.rc), copy to ./Runner.res
+        # Runner.rc does not contain actual version, but Runner.res does
         continue-on-error: true
         shell: bash
         run: |
-          runner_res=$(find . -name "Runner.res")
-          if [ "$runner_res" != "" ]; then
-            echo "1: Runner.res: $runner_res"
-            cp $runner_res ./Runner.res
-            cp $runner_res ./libs/portable/Runner.res
-          fi
-          runner_res=$(find . -name "Runner.res")
-          if [ "$runner_res" != "" ]; then
-            echo "2: Runner.res: ... "
-            echo "$runner_res"
+          runner_res=$(find . -name "Runner.res");
+          if [ "$runner_res" == "" ]; then
+            echo "Runner.res: not found";
+          else
+            echo "Runner.res: $runner_res";
+            cp $runner_res ./libs/portable/Runner.res;
+            echo "list ./libs/portable/Runner.res";
+            ls -l ./libs/portable/Runner.res;
           fi
 
       - name: Build self-extracted executable

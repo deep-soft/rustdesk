@@ -1,4 +1,4 @@
-# 2023-11-01 15:50
+# 2023-11-07 20:00
 # This yaml shares the build bridge steps with ci and nightly.
 #
 #
@@ -27,11 +27,11 @@ env:
   LLVM_VERSION:                "15.0.6"
   FLUTTER_VERSION:             "3.13.9"
   FLUTTER_RUST_BRIDGE_VERSION: "1.80.1"
-  FLUTTER_ELINUX_VERSION:      "3.10.6"
-  FLUTTER_ELINUX_COMMIT_ID:    "410b3ca42f2cd0c485edf517a1666652bab442d4"
+  FLUTTER_ELINUX_VERSION:      "3.13.9"
+  FLUTTER_ELINUX_COMMIT_ID:    "f4d4205893c16b0aa9cb6ba46b9f32b639d3b057"
   VCPKG_COMMIT_ID:             "662dbb50e63af15baa2909b7eac5b1b87e86a0aa"
   CARGO_NDK_VERSION:           "3.1.2"
-  NDK_VERSION:                 "r25c"
+  NDK_VERSION:                 "r26b"
   #signing keys env variable checks
   ANDROID_SIGNING_KEY: '${{ secrets.ANDROID_SIGNING_KEY }}'
   #  signingKeyBase64: '${{ secrets.ANDROID_SIGNING_KEY }}'
@@ -223,22 +223,37 @@ jobs:
 
       - name: Install prerequisites
         run: |
-          sudo apt install ca-certificates -y
-          sudo apt update -y
-          sudo apt install -y g++ gcc git curl wget nasm yasm libgtk-3-dev clang cmake libclang-dev ninja-build llvm-dev libclang-10-dev llvm-10-dev pkg-config
+          sudo apt-get install ca-certificates -y
+          sudo apt-get update -y
+          sudo apt-get install -y \
+            clang \
+            cmake \
+            curl \
+            gcc \
+            git \
+            g++ \
+            libclang-10-dev \
+            libclang-dev \
+            libgtk-3-dev \
+            llvm-10-dev \
+            llvm-dev \
+            nasm \
+            ninja-build \
+            pkg-config \
+            wget \
+            yasm
 
       - name: Install Rust toolchain
         uses: deep-soft/rust-toolchain@master
         with:
           toolchain: stable
           target: ${{ matrix.job.target }}
-#          override: true
+          override: true
           profile: minimal # minimal component installation (ie, no documentation)
 
       - uses: deep-soft/rust-cache@v2
         with:
           prefix-key: bridge-${{ matrix.job.os }}
-          workspace: "/tmp/flutter_rust_bridge/frb_codegen"
 
       - name: Cache Bridge
         id: cache-bridge
@@ -257,7 +272,7 @@ jobs:
       - name: Install flutter rust bridge deps
         shell: bash
         run: |
-          cargo install flutter_rust_bridge_codegen --version ${{ env.FLUTTER_RUST_BRIDGE_VERSION }}
+          cargo install flutter_rust_bridge_codegen --version ${{ env.FLUTTER_RUST_BRIDGE_VERSION }} --features "uuid"
           pushd flutter && flutter pub get && popd
 
       - name: Run flutter rust bridge
@@ -271,5 +286,5 @@ jobs:
           path: |
             ./src/bridge_generated.rs
             ./src/bridge_generated.io.rs
-            ./flutter/lib/generated_bridge.dart 
+            ./flutter/lib/generated_bridge.dart
             ./flutter/lib/generated_bridge.freezed.dart

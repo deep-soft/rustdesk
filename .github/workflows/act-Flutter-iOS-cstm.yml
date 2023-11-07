@@ -1,4 +1,4 @@
-# 2023-11-01 15:50
+# 2023-11-07 20:00
 #
 #
 #
@@ -27,11 +27,11 @@ env:
   LLVM_VERSION:                "15.0.6"
   FLUTTER_VERSION:             "3.13.9"
   FLUTTER_RUST_BRIDGE_VERSION: "1.80.1"
-  FLUTTER_ELINUX_VERSION:      "3.10.6"
-  FLUTTER_ELINUX_COMMIT_ID:    "410b3ca42f2cd0c485edf517a1666652bab442d4"
+  FLUTTER_ELINUX_VERSION:      "3.13.9"
+  FLUTTER_ELINUX_COMMIT_ID:    "f4d4205893c16b0aa9cb6ba46b9f32b639d3b057"
   VCPKG_COMMIT_ID:             "662dbb50e63af15baa2909b7eac5b1b87e86a0aa"
   CARGO_NDK_VERSION:           "3.1.2"
-  NDK_VERSION:                 "r25c"
+  NDK_VERSION:                 "r26b"
   #signing keys env variable checks
   ANDROID_SIGNING_KEY: '${{ secrets.ANDROID_SIGNING_KEY }}'
   #  signingKeyBase64: '${{ secrets.ANDROID_SIGNING_KEY }}'
@@ -50,12 +50,7 @@ on:
 #    - cron: "0 0 * * *"
 
 jobs:
-  generate-bridge-linux:
-    uses: ./.github/workflows/act-build-bridge.yml
-    secrets: inherit
-
   build-rustdesk-ios:
-    needs: [generate-bridge-linux]
     name: build rustdesk ios ipa ${{ matrix.job.target }} (${{ matrix.job.os }}) [${{ matrix.job.extra-build-features }}]
     runs-on: ${{ matrix.job.os }}
     strategy:
@@ -64,6 +59,13 @@ jobs:
         job:
           - { arch: aarch64, target: aarch64-apple-ios, os: macos-latest, extra-build-features: "", }
     steps:
+      - name: Export GitHub Actions cache environment variables
+        uses: actions/github-script@v6
+        with:
+          script: |
+            core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
+            core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
+
       - name: Install dependencies
         run: |
           brew install nasm yasm
@@ -127,24 +129,6 @@ jobs:
           echo "REF: ${{ env.TAG_REF }}
           echo "BLD: ${{ env.TAG_BUILD }}
           echo "${{ env.TAG_NAME }}-${{ env.TAG_BUILD }}" > _tag_name_.txt
-
-      - name: Install flutter
-        uses: deep-soft/flutter-action@v2
-        with:
-          channel: "stable"
-          flutter-version: ${{ env.FLUTTER_VERSION }}
-
-      - name: Clone deps
-        shell: bash
-        run: |
-          pushd /opt
-          sudo git clone https://github.com/rustdesk-org/rustdesk_thirdparty_lib.git --depth=1
-
-      - name: Restore bridge files
-        uses: deep-soft/download-artifact@main
-        with:
-          name: bridge-artifact
-          path: ./
 
       - name: Create source archive
         continue-on-error: true
@@ -259,6 +243,22 @@ jobs:
             ${{ env.ASSET_SRC }}
             ${{ env.ASSET_SRC1 }}
 
+      - name: Install flutter
+        uses: deep-soft/flutter-action@v2
+        with:
+          channel: "stable"
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+
+      - name: Setup vcpkg with Github Actions binary cache
+        uses: deep-soft/run-vcpkg@v11
+        with:
+          vcpkgGitCommitId: ${{ env.VCPKG_COMMIT_ID }}
+
+      - name: Install vcpkg dependencies
+        shell: bash
+        run: |
+          $VCPKG_ROOT/vcpkg install --triplet arm64-ios --x-install-root="$VCPKG_ROOT/installed"
+
       - name: Install Rust toolchain
         uses: deep-soft/rust-toolchain@master
         with:
@@ -269,7 +269,7 @@ jobs:
 
       - uses: deep-soft/rust-cache@v2
         with:
-          prefix-key: rustdesk-lib-cache
+          prefix-key: rustdesk-lib-cache-ios
           key: ${{ matrix.job.target }}-${{ matrix.job.extra-build-features }}
 
       - name: Install flutter rust bridge deps
