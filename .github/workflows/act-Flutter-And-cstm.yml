@@ -292,7 +292,7 @@ jobs:
         uses: deep-soft/rust-toolchain@master
         with:
           toolchain: stable
-          override: true
+          # override: true
           profile: minimal # minimal component installation (ie, no documentation)
 
       - uses: deep-soft/rust-cache@v2
