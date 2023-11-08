@@ -29,7 +29,7 @@ env:
   FLUTTER_RUST_BRIDGE_VERSION: "1.80.1"
   FLUTTER_ELINUX_VERSION:      "3.13.9"
   FLUTTER_ELINUX_COMMIT_ID:    "f4d4205893c16b0aa9cb6ba46b9f32b639d3b057"
-  VCPKG_COMMIT_ID:             "662dbb50e63af15baa2909b7eac5b1b87e86a0aa"
+  VCPKG_COMMIT_ID:             "8eb57355a4ffb410a2e94c07b4dca2dffbee8e50"
   CARGO_NDK_VERSION:           "3.1.2"
   NDK_VERSION:                 "r26b"
   #signing keys env variable checks
@@ -58,6 +58,13 @@ jobs:
         job:
           - { target: x86_64-unknown-linux-gnu, os: ubuntu-20.04, extra-build-args: "",            }
     steps:
+      - name: Export GitHub Actions cache environment variables
+        uses: actions/github-script@v6
+        with:
+          script: |
+            core.exportVariable('ACTIONS_CACHE_URL',     process.env.ACTIONS_CACHE_URL     || '');
+            core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
+
       - name: Checkout source code
         uses: deep-soft/checkout@v3
 
@@ -259,8 +266,10 @@ jobs:
         id: cache-bridge
         uses: deep-soft/cache@v3
         with:
-          path: /tmp/flutter_rust_bridge
-          key: vcpkg-${{ matrix.job.arch }}
+#          path: /tmp/flutter_rust_bridge
+#          key: vcpkg-${{ matrix.job.arch }}
+          path: /opt/hostedtoolcache/flutter
+          key: bridge-${{ matrix.job.arch }}
 
       - name: Install flutter
         uses: deep-soft/flutter-action@v2

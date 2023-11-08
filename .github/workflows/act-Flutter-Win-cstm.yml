@@ -398,12 +398,10 @@ jobs:
         continue-on-error: true
         shell: bash
         run: |
-          src_folder=$(echo "$VCPKG_ROOT/installed" | sed -e "s~\\\~/~g" -e "s/\([a-zA-Z]\):/\L\1/" -e "s/^/\\//g")
-          echo "src_folder=$src_folder"
           staging="vcpkg-installed-${{ env.VERSION }}-${{ matrix.job.target }}-${{ env.GUI }}-${{ matrix.job.os }}"
           touch "$staging.tar.xz"
           #tar -cfJ "$staging.tar.xz" --exclude "$staging.tar.xz" .
-          tar --exclude=*.tar* --exclude=target/*  -cv $src_folder | xz -9 > "$staging.tar.xz"
+          tar --exclude=*.tar* --exclude=target/*  -cv $VCPKG_ROOT/installed | xz -9 > "$staging.tar.xz"
           echo "ASSET_VCPKG=$staging.tar.xz" >> $GITHUB_ENV
           if [ "${{ env.DEBUG_LS }}" = "yes" ]; then
             echo "ASSET_VCPKG archive name: "
