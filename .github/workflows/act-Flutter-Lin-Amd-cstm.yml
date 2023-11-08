@@ -63,12 +63,12 @@ jobs:
       matrix:
         # use a high level qemu-user-static
         job:
-#         - { arch: x86_64, target: i686-unknown-linux-gnu    , os: ubuntu-20.04, extra-build-features: ""        , use-cross: true, enable-headless: true  }
-#         - { arch: x86_64, target: i686-unknown-linux-musl   , os: ubuntu-20.04, extra-build-features: ""        , use-cross: true, enable-headless: true  }
-          - { arch: x86_64, target: x86_64-unknown-linux-gnu  , os: ubuntu-20.04, extra-build-features: ""        ,                , enable-headless: true  }
-          - { arch: x86_64, target: x86_64-unknown-linux-gnu  , os: ubuntu-20.04, extra-build-features: "flatpak" ,                , enable-headless: false }
-          - { arch: x86_64, target: x86_64-unknown-linux-gnu  , os: ubuntu-20.04, extra-build-features: "appimage",                , enable-headless: false }
-#         - { arch: x86_64, target: x86_64-unknown-linux-musl , os: ubuntu-20.04, extra-build-features: ""        , use-cross: true, enable-headless: true  }
+#         - { arch: x86_64, target: i686-unknown-linux-gnu    , os: ubuntu-20.04, extra-build-features: ""        , enable-headless: true,  use-cross: true }
+#         - { arch: x86_64, target: i686-unknown-linux-musl   , os: ubuntu-20.04, extra-build-features: ""        , enable-headless: true,  use-cross: true }
+          - { arch: x86_64, target: x86_64-unknown-linux-gnu  , os: ubuntu-20.04, extra-build-features: ""        , enable-headless: true                   }
+          - { arch: x86_64, target: x86_64-unknown-linux-gnu  , os: ubuntu-20.04, extra-build-features: "flatpak" , enable-headless: false                  }
+          - { arch: x86_64, target: x86_64-unknown-linux-gnu  , os: ubuntu-20.04, extra-build-features: "appimage", enable-headless: false                  }
+#         - { arch: x86_64, target: x86_64-unknown-linux-musl , os: ubuntu-20.04, extra-build-features: ""        , enable-headless: true,  use-cross: true }
     steps:
       - name: Export GitHub Actions cache environment variables
         uses: actions/github-script@v6
