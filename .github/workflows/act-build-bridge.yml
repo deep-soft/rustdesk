@@ -262,14 +262,15 @@ jobs:
         with:
           prefix-key: bridge-${{ matrix.job.os }}
 
-      - name: Cache Bridge
-        id: cache-bridge
-        uses: deep-soft/cache@v3
-        with:
+# no need now?!
+#      - name: Cache Bridge
+#        id: cache-bridge
+#        uses: deep-soft/cache@v3
+#        with:
 #          path: /tmp/flutter_rust_bridge
 #          key: vcpkg-${{ matrix.job.arch }}
-          path: /opt/hostedtoolcache/flutter
-          key: bridge-${{ matrix.job.arch }}
+#          path: /opt/hostedtoolcache/flutter
+#          key: bridge-${{ matrix.job.target }}
 
       - name: Install flutter
         uses: deep-soft/flutter-action@v2
