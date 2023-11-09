@@ -288,7 +288,7 @@ jobs:
         with:
           toolchain: stable
           target: ${{ matrix.job.target }}
-          override: true
+          # override: true
           profile: minimal # minimal component installation (ie, no documentation)
 
       - uses: deep-soft/rust-cache@v2
