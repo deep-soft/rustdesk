@@ -1,46 +1,50 @@
-# 2023-11-07 20:00
+# 2023-11-09 16:00
 #
 #
 #
 #
-name: act - Flutter - Mac - 11 - cstm
+name: act - Flutter - Mac - cstm
 
 env:
-  TAG_NAME:      "Mac-cstm"
-  TAG_VERSION:   "rdsk-v1.2.1"
-  TAG_BUILD:     "-b"
-  TAG_REF:       "0000000"
-  PROG_NAME:     "rdsk"
-  PROG_VERSION:  "v1.0.0"
-  VERSION:       "1.0.0"
-  DEBUG_LS:      "yes"
+  TAG_NAME:                    "Mac-cstm"
+  TAG_VERSION:                 "rdsk-v1.2.1"
+  TAG_BUILD:                   "-b"
+  TAG_REF:                     "0000000"
+  PROG_NAME:                   "rdsk"
+  PROG_VERSION:                "v1.0.0"
+  VERSION:                     "1.0.0"
+  DEBUG_LS:                    "yes"
   # To make a custom build with your own servers set the below secret values
-  RS_PUB_KEY:        '${{ secrets.RS_PUB_KEY }}'
-  RENDEZVOUS_SERVER: '${{ secrets.RENDEZVOUS_SERVER }}'
-  RDSK_PCH_SH_PRE:   '${{ secrets.RDSK_PCH_SH_PRE }}'
-  RDSK_PCH_SH:       '${{ secrets.RDSK_PCH_SH }}'
-  RDSK_PCH_HL:       '${{ secrets.RDSK_PCH_HL }}'
-  RDSK_PCH_SH2:      '${{ secrets.RDSK_PCH_SH2 }}'
-  RDSK_PCH_SH4:      '${{ secrets.RDSK_PCH_SH4 }}'
-  RDSK_PCH_SH_CLN:   '${{ secrets.RDSK_PCH_SH_CLN }}'
+  RS_PUB_KEY:                  '${{ secrets.RS_PUB_KEY }}'
+  RENDEZVOUS_SERVER:           '${{ secrets.RENDEZVOUS_SERVER }}'
+  API_SERVER:                  '${{ secrets.API_SERVER }}'
+  RDSK_PCH_SH_PRE:             '${{ secrets.RDSK_PCH_SH_PRE }}'
+  RDSK_PCH_SH:                 '${{ secrets.RDSK_PCH_SH }}'
+  RDSK_PCH_HL:                 '${{ secrets.RDSK_PCH_HL }}'
+  RDSK_PCH_SH2:                '${{ secrets.RDSK_PCH_SH2 }}'
+  RDSK_PCH_SH4:                '${{ secrets.RDSK_PCH_SH4 }}'
+  RDSK_PCH_SH_CLN:             '${{ secrets.RDSK_PCH_SH_CLN }}'
   RUST_VERSION:                "rust-1.70.0"
   LLVM_VERSION:                "15.0.6"
   FLUTTER_VERSION:             "3.13.9"
   FLUTTER_RUST_BRIDGE_VERSION: "1.80.1"
   FLUTTER_ELINUX_VERSION:      "3.13.9"
   FLUTTER_ELINUX_COMMIT_ID:    "f4d4205893c16b0aa9cb6ba46b9f32b639d3b057"
+  # vcpkg version: 2023.10.19
+  # for multiarch gcc compatibility
   VCPKG_COMMIT_ID:             "8eb57355a4ffb410a2e94c07b4dca2dffbee8e50"
+  VCPKG_BINARY_SOURCES:        "clear;x-gha,readwrite"
   CARGO_NDK_VERSION:           "3.1.2"
   NDK_VERSION:                 "r26b"
   #signing keys env variable checks
-  ANDROID_SIGNING_KEY: '${{ secrets.ANDROID_SIGNING_KEY }}'
-  #  signingKeyBase64: '${{ secrets.ANDROID_SIGNING_KEY }}'
-  #  alias:            '${{ secrets.ANDROID_ALIAS }}'
-  #  keyStorePassword: '${{ secrets.ANDROID_KEY_STORE_PASSWORD }}'
-  #  keyPassword:      '${{ secrets.ANDROID_KEY_PASSWORD }}'
-  MACOS_P12_BASE64:    '${{ secrets.MACOS_P12_BASE64 }}'
-  cargo_clippy_log:    "cargo-clippy.log"
-  GUI: "macOS11"
+  ANDROID_SIGNING_KEY:         '${{ secrets.ANDROID_SIGNING_KEY }}'
+  #  signingKeyBase64:         '${{ secrets.ANDROID_SIGNING_KEY }}'
+  #  alias:                    '${{ secrets.ANDROID_ALIAS }}'
+  #  keyStorePassword:         '${{ secrets.ANDROID_KEY_STORE_PASSWORD }}'
+  #  keyPassword:              '${{ secrets.ANDROID_KEY_PASSWORD }}'
+  MACOS_P12_BASE64:            '${{ secrets.MACOS_P12_BASE64 }}'
+  cargo_clippy_log:            "cargo-clippy.log"
+  GUI:                         "macOS"
 
 on:
   workflow_call:
@@ -57,9 +61,16 @@ jobs:
       fail-fast: false
       matrix:
         job:
-          - { target: x86_64-apple-darwin  , os: macos-11, extra-build-args: "", arch: x86_64 }
-#         - { target: aarch64-apple-darwin , os: macos-latest, extra-build-args: "" }
+          - { target: x86_64-apple-darwin  , os: macos-11,     extra-build-args: "", arch: x86_64 }
+#         - { target: aarch64-apple-darwin , os: macos-11,     extra-build-args: "" }
     steps:
+      - name: Export GitHub Actions cache environment variables
+        uses: actions/github-script@v6
+        with:
+          script: |
+            core.exportVariable('ACTIONS_CACHE_URL',     process.env.ACTIONS_CACHE_URL     || '');
+            core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
+
       - name: Checkout source code
         uses: deep-soft/checkout@v3
 
@@ -244,6 +255,7 @@ jobs:
       - name: Check sign and import sign key
         if: env.MACOS_P12_BASE64 != null
         run: |
+          # Unlock keychain
           security default-keychain -s rustdesk.keychain
           security find-identity -v
 
@@ -281,7 +293,7 @@ jobs:
         with:
           toolchain: stable
           target: ${{ matrix.job.target }}
-#          override: true
+          # override: true
           profile: minimal # minimal component installation (ie, no documentation)
 
       - uses: deep-soft/rust-cache@v2
@@ -295,15 +307,16 @@ jobs:
           pushd flutter && flutter pub get && popd
           ~/.cargo/bin/flutter_rust_bridge_codegen --rust-input ./src/flutter_ffi.rs --dart-output ./flutter/lib/generated_bridge.dart --c-output ./flutter/macos/Runner/bridge_generated.h
 
-      - name: Restore from cache and install vcpkg
-        uses: deep-soft/run-vcpkg@v10
+      - name: Setup vcpkg with Github Actions binary cache
+        uses: deep-soft/run-vcpkg@v11
         with:
 #          setupOnly: true
           vcpkgGitCommitId: ${{ env.VCPKG_COMMIT_ID }}
 
       - name: Install vcpkg dependencies
         run: |
-          $VCPKG_ROOT/vcpkg install libvpx libyuv opus aom
+          # $VCPKG_ROOT/vcpkg install libvpx libyuv opus aom
+          $VCPKG_ROOT/vcpkg install --x-install-root="$VCPKG_ROOT/installed"
 
       - name: Show version information (Rust, cargo, Clang)
         shell: bash
@@ -323,6 +336,11 @@ jobs:
       - name: Codesign app and create signed dmg
         if: env.MACOS_P12_BASE64 != null
         run: |
+          # Patch create-dmg to give more attempts to unmount image
+          CREATE_DMG="$(command -v create-dmg)"
+          CREATE_DMG="$(readlink -f "$CREATE_DMG")"
+          sed -i -e 's/MAXIMUM_UNMOUNTING_ATTEMPTS=3/MAXIMUM_UNMOUNTING_ATTEMPTS=7/' "$CREATE_DMG"
+          # Unlock keychain
           security default-keychain -s rustdesk.keychain
           security unlock-keychain -p ${{ secrets.MACOS_P12_PASSWORD }} rustdesk.keychain
           # start sign the rustdesk.app and dmg
@@ -336,16 +354,16 @@ jobs:
       - name: Rename rustdesk
         run: |
           for name in rustdesk*??.dmg; do
-              mv "$name" "${name%%.dmg}-${{ matrix.job.arch }}-${{ env.GUI }}.dmg"
+              mv "$name" "${name%%.dmg}-${{ matrix.job.arch }}.dmg"
           done
 
       - name: Publish DMG package
         uses: deep-soft/action-gh-release@v1
         with:
           draft: true
-          tag_name: ${{ env.TAG_NAME }}-${{ env.GUI }}
+          tag_name: ${{ env.TAG_NAME }}
           files: |
-            rustdesk*-${{ matrix.job.arch }}-${{ env.GUI }}.dmg
+            rustdesk*-${{ matrix.job.arch }}.dmg
             ${{ env.ASSET_SRC }}
             ${{ env.ASSET_SRC1 }}
 
@@ -355,4 +373,4 @@ jobs:
           draft: true
           tag_name: ${{ env.TAG_VERSION }}${{ env.TAG_BUILD }}
           files: |
-            rustdesk*-${{ matrix.job.arch }}-${{ env.GUI }}.dmg
+            rustdesk*-${{ matrix.job.arch }}.dmg

@@ -1,4 +1,4 @@
-# 2023-11-07 20:00
+# 2023-11-09 16:00
 #
 #
 #
@@ -6,42 +6,46 @@
 name: act - sciter - Win - 32bit - cstm
 
 env:
-  TAG_NAME:      "Win-sciter-cstm-act"
-  TAG_VERSION:   "rdsk-v1.2.1"
-  TAG_BUILD:     "-b"
-  TAG_REF:       "0000000"
-  PROG_NAME:     "rdsk"
-  PROG_VERSION:  "v1.0.0"
-  VERSION:       "1.0.0"
-  DEBUG_LS:      "yes"
+  TAG_NAME:                    "Win-sciter-cstm-act"
+  TAG_VERSION:                 "rdsk-v1.2.1"
+  TAG_BUILD:                   "-b"
+  TAG_REF:                     "0000000"
+  PROG_NAME:                   "rdsk"
+  PROG_VERSION:                "v1.0.0"
+  VERSION:                     "1.0.0"
+  DEBUG_LS:                    "yes"
   # To make a custom build with your own servers set the below secret values
-  RS_PUB_KEY:        '${{ secrets.RS_PUB_KEY }}'
-  RENDEZVOUS_SERVER: '${{ secrets.RENDEZVOUS_SERVER }}'
-  RDSK_PCH_SH_PRE:   '${{ secrets.RDSK_PCH_SH_PRE }}'
-  RDSK_PCH_SH:       '${{ secrets.RDSK_PCH_SH }}'
-  RDSK_PCH_HL:       '${{ secrets.RDSK_PCH_HL }}'
-  RDSK_PCH_SH2:      '${{ secrets.RDSK_PCH_SH2 }}'
-  RDSK_PCH_SH4:      '${{ secrets.RDSK_PCH_SH4 }}'
-  RDSK_PCH_SH_CLN:   '${{ secrets.RDSK_PCH_SH_CLN }}'
+  RS_PUB_KEY:                  '${{ secrets.RS_PUB_KEY }}'
+  RENDEZVOUS_SERVER:           '${{ secrets.RENDEZVOUS_SERVER }}'
+  API_SERVER:                  '${{ secrets.API_SERVER }}'
+  RDSK_PCH_SH_PRE:             '${{ secrets.RDSK_PCH_SH_PRE }}'
+  RDSK_PCH_SH:                 '${{ secrets.RDSK_PCH_SH }}'
+  RDSK_PCH_HL:                 '${{ secrets.RDSK_PCH_HL }}'
+  RDSK_PCH_SH2:                '${{ secrets.RDSK_PCH_SH2 }}'
+  RDSK_PCH_SH4:                '${{ secrets.RDSK_PCH_SH4 }}'
+  RDSK_PCH_SH_CLN:             '${{ secrets.RDSK_PCH_SH_CLN }}'
   RUST_VERSION:                "rust-1.70.0"
   LLVM_VERSION:                "15.0.6"
   FLUTTER_VERSION:             "3.13.9"
   FLUTTER_RUST_BRIDGE_VERSION: "1.80.1"
   FLUTTER_ELINUX_VERSION:      "3.13.9"
   FLUTTER_ELINUX_COMMIT_ID:    "f4d4205893c16b0aa9cb6ba46b9f32b639d3b057"
+  # vcpkg version: 2023.10.19
+  # for multiarch gcc compatibility
   VCPKG_COMMIT_ID:             "8eb57355a4ffb410a2e94c07b4dca2dffbee8e50"
+  VCPKG_BINARY_SOURCES:        "clear;x-gha,readwrite"
   CARGO_NDK_VERSION:           "3.1.2"
   NDK_VERSION:                 "r26b"
   #signing keys env variable checks
-  ANDROID_SIGNING_KEY: '${{ secrets.ANDROID_SIGNING_KEY }}'
-  #  signingKeyBase64: '${{ secrets.ANDROID_SIGNING_KEY }}'
-  #  alias:            '${{ secrets.ANDROID_ALIAS }}'
-  #  keyStorePassword: '${{ secrets.ANDROID_KEY_STORE_PASSWORD }}'
-  #  keyPassword:      '${{ secrets.ANDROID_KEY_PASSWORD }}'
-  MACOS_P12_BASE64:    '${{ secrets.MACOS_P12_BASE64 }}'
-  cargo_clippy_log:    "cargo-clippy.log"
-  VCPKG_MAX_CONCURRENCY: "1"
-  GUI: "sciter"
+  ANDROID_SIGNING_KEY:         '${{ secrets.ANDROID_SIGNING_KEY }}'
+  #  signingKeyBase64:         '${{ secrets.ANDROID_SIGNING_KEY }}'
+  #  alias:                    '${{ secrets.ANDROID_ALIAS }}'
+  #  keyStorePassword:         '${{ secrets.ANDROID_KEY_STORE_PASSWORD }}'
+  #  keyPassword:              '${{ secrets.ANDROID_KEY_PASSWORD }}'
+  MACOS_P12_BASE64:            '${{ secrets.MACOS_P12_BASE64 }}'
+  cargo_clippy_log:            "cargo-clippy.log"
+  GUI:                         "sciter"
+  VCPKG_MAX_CONCURRENCY:       "1"
 
 on:
   workflow_call:
