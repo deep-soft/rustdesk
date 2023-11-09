@@ -265,7 +265,7 @@ jobs:
           toolchain: stable
           target: ${{ matrix.job.target }}
           # override: true
-          profile: minimal # minimal component installation (ie, no documentation)
+          # profile: minimal # minimal component installation (ie, no documentation)
 
       - name: Save Rust toolchain version
         run: |
