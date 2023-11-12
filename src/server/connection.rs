@@ -1165,7 +1165,7 @@ impl Connection {
         #[cfg(not(any(target_os = "android", target_os = "ios")))]
         {
             pi.resolutions = Some(SupportedResolutions {
-                resolutions: display_service::try_get_displays()
+                resolutions: display_service::try_get_displays(true)
                     .map(|displays| {
                         displays
                             .get(self.display_idx)
@@ -1484,7 +1484,10 @@ impl Connection {
                 .await
                 {
                     log::error!("ipc to connection manager exit: {}", err);
-                    allow_err!(tx_from_cm_clone.send(Data::CmErr(err.to_string())));
+                    #[cfg(windows)]
+                    if !crate::platform::is_prelogin() {
+                        allow_err!(tx_from_cm_clone.send(Data::CmErr(err.to_string())));
+                    }
                 }
             });
             #[cfg(all(windows, feature = "flutter"))]
@@ -2366,7 +2369,7 @@ impl Connection {
     #[cfg(not(any(target_os = "android", target_os = "ios")))]
     fn change_resolution(&mut self, r: &Resolution) {
         if self.keyboard {
-            if let Ok(displays) = display_service::try_get_displays() {
+            if let Ok(displays) = display_service::try_get_displays(true) {
                 if let Some(display) = displays.get(self.display_idx) {
                     let name = display.name();
                     #[cfg(all(windows, feature = "virtual_display_driver"))]
