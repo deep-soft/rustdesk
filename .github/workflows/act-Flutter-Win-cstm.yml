@@ -1,8 +1,8 @@
-# 2023-11-09 16:00
+# 2023-11-15 22:00
 # changed: Replace engine with rustdesk custom flutter engine
 # changed: Install Rust toolchain. uses: deep-soft/rust-toolchain@master
-# git config --global core.longpaths true
 # windows-2019
+# WindowInjection.dll
 name: act - Flutter - Win - cstm
 
 env:
@@ -435,6 +435,17 @@ jobs:
       - name: Build rustdesk
         continue-on-error: false
         run: python3 .\build.py --portable --hwcodec --flutter --feature IddDriver
+
+      - name: Replace WindowInjection.dll
+        continue-on-error: true
+        shell: bash
+        run: |
+          if [[ -f bins/WindowInjection.dll ]]; then
+            echo "folder: ./flutter/build/windows/runner/Release/"
+            ls -la ./flutter/build/windows/runner/Release/
+            echo "Replace WindowInjection.dll"
+            cp bins/WindowInjection.dll ./flutter/build/windows/runner/Release/WindowInjection.dll
+          fi
 
       - name: Sign rustdesk files
         uses: deep-soft/code-sign-action@master
