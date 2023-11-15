@@ -445,6 +445,8 @@ jobs:
             ls -la ./flutter/build/windows/runner/Release/
             echo "Replace WindowInjection.dll"
             cp bins/WindowInjection.dll ./flutter/build/windows/runner/Release/WindowInjection.dll
+            echo "folder: ./flutter/build/windows/runner/Release/"
+            ls -la ./flutter/build/windows/runner/Release/
           fi
 
       - name: Sign rustdesk files
