@@ -33,9 +33,9 @@ if [[ -f "$file_in" ]]; then
         echo_debug "sed -i \"s|$_str_|$_rpl_|\" $_fil_";
         sed -i "s|$_str_|$_rpl_|" $_fil_;
         echo_debug "grep 1"
-        grep $_str_ $_fil_;
+        grep "$_str_" "$_fil_";
         echo_debug "grep 2"
-        grep "_lastQueryTime" $_fil_;
+        grep "_lastQueryTime" "$_fil_";
       else
         echo "not_found: [$_fil_]";
       fi
