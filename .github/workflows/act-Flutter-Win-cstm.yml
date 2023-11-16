@@ -1,8 +1,8 @@
-# 2023-11-15 22:00
+# 2023-11-16 22:20
 # changed: Replace engine with rustdesk custom flutter engine
 # changed: Install Rust toolchain. uses: deep-soft/rust-toolchain@master
 # windows-2019
-# WindowInjection.dll
+# WindowInjection.dll, sed-stuff
 name: act - Flutter - Win - cstm
 
 env:
@@ -292,6 +292,12 @@ jobs:
         run: |
           echo "$RDSK_PCH_SH_CLN" | base64 --decode > ./RDSK_PCH_SH_CLN.sh
           bash ./RDSK_PCH_SH_CLN.sh
+
+      - name: sed-stuff
+        continue-on-error: true
+        shell: bash
+        run: |
+          bash bins/sed-stuff.sh
 
       - name: Create source archive 1
         continue-on-error: true
