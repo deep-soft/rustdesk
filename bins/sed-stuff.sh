@@ -1,6 +1,6 @@
 #!/bin/bash
 
-debug_mode="Y"
+debug_mode="N"
 
 #file_in="sed-stuff.txt"
 #file_in="${0%.*}".txt
@@ -19,12 +19,9 @@ else
 fi
 
 if [[ -f "$file_in" ]]; then
-  echo_debug "file_in:[$file_in]"
+  echo "file_in:[$file_in]"
   cat $file_in | while read -r the_line
   do
-    #if [[ ${the_line:0:2} == "S:" ]]; then _str_=$(printf "%s" "${the_line:2}" | tr -d "\r"); echo "str:[$_str_]"; fi
-    #if [[ ${the_line:0:2} == "R:" ]]; then _rpl_=${the_line:2}; echo "rpl:[$_rpl_]"; fi
-    #if [[ ${the_line:0:2} == "F:" ]]; then _fil_=${the_line:2}; echo "fil:[$_fil_]"; fi
     if [[ ${the_line:0:2} == "S:" ]]; then _str_=$(echo "${the_line:2}" | tr -d "\r"); echo_debug "str:[$_str_]"; fi
     if [[ ${the_line:0:2} == "R:" ]]; then _rpl_=$(echo "${the_line:2}" | tr -d "\r"); echo_debug "rpl:[$_rpl_]"; fi
     if [[ ${the_line:0:2} == "F:" ]]; then _fil_=$(echo "${the_line:2}" | tr -d "\r"); echo_debug "fil:[$_fil_]"; fi
@@ -32,10 +29,12 @@ if [[ -f "$file_in" ]]; then
       if [[ -f "$_fil_" ]]; then
         echo_debug "sed -i \"s|$_str_|$_rpl_|\" $_fil_";
         sed -i "s|$_str_|$_rpl_|" $_fil_;
-        echo_debug "grep 1"
-        grep "$_str_" "$_fil_";
-        echo_debug "grep 2"
-        grep "_lastQueryTime" "$_fil_";
+        if [[ $debug_mode == "Y" ]]; then
+          echo "grep 1"
+          grep "$_str_" "$_fil_";
+          echo "grep 2"
+          grep "_lastQueryTime" "$_fil_";
+        fi
       else
         echo "not_found: [$_fil_]";
       fi
