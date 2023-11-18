@@ -13,6 +13,6 @@ R:https://github.com/deep-soft/RustDeskTempTopMostWindow/releases/download/TempT
 F:build.py
 #4
 S:'/TempTopMostWindow_x64_pic_en.zip',
-R:
+R:,
 F:build.py
 #EOF#
