@@ -1,6 +1,18 @@
 #BOF#
-# 1
+#1
 S:var _lastQueryTime = DateTime.now().add(const Duration(seconds: 30));
 R:var _lastQueryTime = DateTime.now().add(const Duration(seconds: 60));
 F:flutter/lib/common/widgets/peers_view.dart
+#2
+S:https://github.com/fufesou/RustDeskIddDriver/releases/download/v0.3/RustDeskIddDriver_x64.zip
+R:https://github.com/deep-soft/RustDeskIddDriver/releases/download/RustDeskIddDriver/RustDeskIddDriver-Release-x64-Windows10.zip
+F:build.py
+#3
+S:https://github.com/fufesou/RustDeskTempTopMostWindow/releases/download/v0.1
+R:https://github.com/deep-soft/RustDeskTempTopMostWindow/releases/download/TempTopMostWindow-latest/TempTopMostWindow.x64.zip
+F:build.py
+#4
+S:'/TempTopMostWindow_x64_pic_en.zip',
+R:
+F:build.py
 #EOF#
