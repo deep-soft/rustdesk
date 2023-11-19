@@ -412,6 +412,22 @@ jobs:
         continue-on-error: false
         run: python3 .\build.py --portable --hwcodec --flutter --feature IddDriver
 
+      - name: Replace RustDeskIddDriver
+        continue-on-error: true
+        shell: bash
+        run: |
+          if [[ -f bins/RustDeskIddDriver-Release-x64-Windows10.zip ]]; then
+            echo "folder: ./flutter/build/windows/runner/Release/"
+            ls -la ./flutter/build/windows/runner/Release/
+            echo "Replace RustDeskIddDriver"
+            cp bins/RustDeskIddDriver-Release-x64-Windows10.zip ./flutter/build/windows/runner/Release/
+            pushd ./flutter/build/windows/runner/Release/
+            7z x RustDeskIddDriver-Release-x64-Windows10.zip
+            popd
+            echo "folder: ./flutter/build/windows/runner/Release/"
+            ls -la ./flutter/build/windows/runner/Release/
+          fi
+
       - name: Replace WindowInjection.dll
         continue-on-error: true
         shell: bash
