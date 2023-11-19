@@ -20,6 +20,7 @@ fi
 
 if [[ -f "$file_in" ]]; then
   count=0
+  countf=0
   echo "file_in:[$file_in]"
   cat $file_in | while read -r the_line
   do
@@ -29,13 +30,14 @@ if [[ -f "$file_in" ]]; then
     if [[ ${the_line:0:2} == "F:" ]]; then _fil_=$(echo "${the_line:2}" | tr -d "\r"); echo_debug "fil:[$_fil_]"; fi
     if [[ "$_fil_" != "" ]]; then
       if [[ -f "$_fil_" ]]; then
+        ((countf++)
         echo_debug "sed -i \"s|$_str_|$_rpl_|\" $_fil_";
         sed -i "s|$_str_|$_rpl_|" $_fil_;
         _str_n_=$(grep "$_str_" "$_fil_");
         if [[ "$_str_n_" == "" ]]; then
-          echo "OK_OK: $count";
+          echo "OK_OK: [CNT:$count, CNTF:$countf]";
         else
-          echo "NOTOK: $count";
+          echo "NOTOK: [CNT:$count, CNTF:$countf]";
         fi
         if [[ $debug_mode == "Y" ]]; then
           echo "grep 1"
@@ -51,5 +53,5 @@ if [[ -f "$file_in" ]]; then
       _fil_="";
     fi
   done
-  echo "count:[$count]"
+  echo "CNT:[$count], CNTF:[$countf]"
 fi
