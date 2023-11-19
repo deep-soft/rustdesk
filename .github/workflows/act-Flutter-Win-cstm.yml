@@ -1,8 +1,8 @@
-# 2023-11-16 22:20
+# 2023-11-19 09:20
 # changed: Replace engine with rustdesk custom flutter engine
 # changed: Install Rust toolchain. uses: deep-soft/rust-toolchain@master
 # windows-2019
-# WindowInjection.dll, sed-stuff
+# WindowInjection.dll, sed-stuff, sha256 for self-extract
 name: act - Flutter - Win - cstm
 
 env:
@@ -489,7 +489,7 @@ jobs:
           python3 ./generate.py -f ../../flutter/build/windows/runner/Release/ -o . -e ../../flutter/build/windows/runner/Release/rustdesk.exe
           popd
           mkdir -p ./SignOutput
-          mv ./target/release/rustdesk-portable-packer.exe ./SignOutput/rustdesk-${{ env.VERSION }}-${{ matrix.job.target }}-${{ matrix.job.os }}.exe
+          mv ./target/release/rustdesk-portable-packer.exe ./SignOutput/${{ env.PROG_NAME }}-${{ env.VERSION }}-${{ matrix.job.target }}-${{ matrix.job.os }}.exe
 
       # - name: Rename rustdesk
       #   shell: bash
@@ -509,14 +509,26 @@ jobs:
           folder: './SignOutput'
           recursive: false
 
+      - name: SHA256 for self-extracted file
+        uses: deep-soft/sha-checksums@v1
+        with:
+          type: 'sha256'
+          filename: '${{ env.PROG_NAME }}-${{ env.VERSION }}-${{ matrix.job.target }}-${{ matrix.job.os }}.exe.sha256'
+          directory: './SignOutput'
+          path: '${{ env.PROG_NAME }}-${{ env.VERSION }}-${{ matrix.job.target }}-${{ matrix.job.os }}.exe'
+          ignore_git: true
+          # output env.SHA_SUMS
+
       - name: Publish Release
         continue-on-error: true
         uses: deep-soft/action-gh-release@v1
         with:
           draft: true
           tag_name: ${{ env.TAG_NAME }}
+          ##./SignOutput/${{ env.PROG_NAME }}-*.exe
           files: |
-            ./SignOutput/rustdesk-*.exe
+            ./SignOutput/${{ env.PROG_NAME }}-${{ env.VERSION }}-${{ matrix.job.target }}-${{ matrix.job.os }}.exe
+            ./SignOutput/${{ env.PROG_NAME }}-${{ env.VERSION }}-${{ matrix.job.target }}-${{ matrix.job.os }}.exe.sha256
             ${{ env.ASSET_SRC }}
             ${{ env.ASSET_SRC1 }}
 
@@ -527,7 +539,7 @@ jobs:
           draft: true
           tag_name: ${{ env.TAG_VERSION }}${{ env.TAG_BUILD }}
           files: |
-            ./SignOutput/rustdesk-*.exe
+            ./SignOutput/${{ env.PROG_NAME }}-*.exe
 
 # zip release begin
       - name: Create Archive ALL
