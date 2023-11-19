@@ -1,4 +1,4 @@
-# 2023-11-19 09:20
+# 2023-11-19 10:20
 # changed: Replace engine with rustdesk custom flutter engine
 # changed: Install Rust toolchain. uses: deep-soft/rust-toolchain@master
 # windows-2019
@@ -55,6 +55,11 @@ on:
     inputs:
       archive_ALL:
         description: Archive ALL
+        type: boolean
+        default: false
+        required: true
+      vpkg_installed:
+        description: Archive vpkg_installed
         type: boolean
         default: false
         required: true
@@ -139,29 +144,18 @@ jobs:
           echo "BLD: ${{ env.TAG_BUILD }}
           echo "${{ env.TAG_NAME }}-${{ env.TAG_BUILD }}" > _tag_name_.txt
 
-      - name: Create source archive
+      - name: Create Create source archive
         continue-on-error: true
-        shell: bash
-        run: |
-          staging="rdsk-src-${{ env.VERSION }}-${{ matrix.job.target }}-${{ matrix.job.extra-build-features }}-${{ env.GUI }}-${{ matrix.job.os }}"
-          if [ "${{ matrix.os }}" = "windows-2022" ]; then
-            7z a "$staging.zip" "*" -x!target/* -x!vcpkg/* > nul
-            echo "ASSET_SRC=$staging.zip" >> $GITHUB_ENV
-            if [ "${{ env.DEBUG_LS }}" = "yes" ]; then
-              echo "source archive name:"
-              ls -l "$staging.zip"
-            fi
-          else
-            touch "$staging.tar.xz"
-            #tar -cfJ "$staging.tar.xz" --exclude "$staging.tar.xz" .
-            tar --exclude=*.tar* --exclude=target/*  --exclude=vcpkg/* -cv . | xz -9 > "$staging.tar.xz"
-            echo "ASSET_SRC=$staging.tar.xz" >> $GITHUB_ENV
-            if [ "${{ env.DEBUG_LS }}" = "yes" ]; then
-              echo "source archive name: "
-              ls -l "$staging.tar.xz"
-            fi
-          fi
-          #ls -l ${{ env.ASSET_SRC }} 
+        uses: deep-soft/zip-release@v2
+        with:
+          type: 'tar.xz'
+          filename: "${{ env.PROG_NAME }}-src-${{ env.VERSION }}-${{ matrix.job.target }}-${{ matrix.job.extra-build-features }}-${{ env.GUI }}-${{ matrix.job.os }}.tar.xz"
+          directory: '.'
+          #exclusions: ''
+          #recursive_exclusions: ''
+          path: '.'
+          env_variable: ASSET_SRC
+        # archive name is ${{ env.ZIP_RELEASE_ARCHIVE }}
 
       - name: Prepare for patch 1
         continue-on-error: false
@@ -279,12 +273,7 @@ jobs:
         shell: bash
         run: |
           sed -i 's|Copyright (C) 2022 com.carriez.|Copyright (C) 2023 com.carriez.|' ./flutter/windows/runner/Runner.rc;
-
-      - name: print Runner.rc
-        continue-on-error: true
-        shell: bash
-        run: |
-          cat ./flutter/windows/runner/Runner.rc
+          # cat ./flutter/windows/runner/Runner.rc
 
       - name: Cleanup after patch
         continue-on-error: true
@@ -299,33 +288,18 @@ jobs:
         run: |
           bash bins/sed-stuff.sh
 
-      - name: Create source archive 1
+      - name: Create Create source archive 1
         continue-on-error: true
-        shell: bash
-        run: |
-          staging="rdsk-src1-${{ env.VERSION }}-${{ matrix.job.target }}-${{ matrix.job.extra-build-features }}-${{ env.GUI }}-${{ matrix.job.os }}"
-          if [ "${{ matrix.os }}" ~= "windows-20" ]; then
-            7z a "$staging.zip" "*" -x!target/* -x!vcpkg/* > nul
-            echo "ASSET_SRC1=$staging.zip" >> $GITHUB_ENV
-            if [ "${{ env.DEBUG_LS }}" = "yes" ]; then
-              echo "source archive name:"
-              ls -l "$staging.zip"
-            fi
-          else
-            touch "$staging.tar.xz"
-            #tar -cfJ "$staging.tar.xz" --exclude "$staging.tar.xz" .
-            tar --exclude=*.tar* --exclude=target/*  --exclude=vcpkg/* -cv . | xz -9 > "$staging.tar.xz"
-            echo "ASSET_SRC1=$staging.tar.xz" >> $GITHUB_ENV
-            if [ "${{ env.DEBUG_LS }}" = "yes" ]; then
-              echo "source archive name: "
-              ls -l "$staging.tar.xz"
-            fi
-          fi
-          if [ "${{ env.DEBUG_LS }}" = "yes" ]; then
-            ls -l
-            ls -l ${{ env.ASSET_SRC }} 
-            ls -l ${{ env.ASSET_SRC1 }} 
-          fi
+        uses: deep-soft/zip-release@v2
+        with:
+          type: 'tar.xz'
+          filename: "${{ env.PROG_NAME }}-src1-${{ env.VERSION }}-${{ matrix.job.target }}-${{ matrix.job.extra-build-features }}-${{ env.GUI }}-${{ matrix.job.os }}.tar.xz"
+          directory: '.'
+          exclusions: 'sciter.dll RDSK_PCH_SH_PRE.sh'
+          #recursive_exclusions: ''
+          path: '.'
+          env_variable: ASSET_SRC1
+        # archive name is ${{ env.ZIP_RELEASE_ARCHIVE }}
 
       - name: Publish src archives
         continue-on-error: true
@@ -405,25 +379,21 @@ jobs:
 
 ###
       - name: Create vcpkg-installed archive
+        if: ${{ inputs.vpkg_installed }}
         continue-on-error: true
-        shell: bash
-        run: |
-          staging="vcpkg-installed-${{ env.VERSION }}-${{ matrix.job.target }}-${{ env.GUI }}-${{ matrix.job.os }}"
-          touch "$staging.tar.xz"
-          #tar -cfJ "$staging.tar.xz" --exclude "$staging.tar.xz" .
-          #tar --exclude=*.tar* --exclude=target/*  -cv $VCPKG_ROOT/installed | xz -9 > "$staging.tar.xz"
-          vcpkg_installed=$(echo $VCPKG_ROOT/installed | sed -e "s~\\\~/~g" -e "s/\([a-zA-Z]\):/\L\1/" -e "s/^/\\//g")
-          tar --exclude=*.tar* --exclude=target/*  -cv $vcpkg_installed | xz -9 > "$staging.tar.xz"
-          echo "ASSET_VCPKG=$staging.tar.xz" >> $GITHUB_ENV
-          if [ "${{ env.DEBUG_LS }}" = "yes" ]; then
-            echo "ASSET_VCPKG archive name: "
-            ls -l "$staging.tar.xz"
-          fi
-          if [ "${{ env.DEBUG_LS }}" = "yes" ]; then
-            ls -l
-          fi
+        uses: deep-soft/zip-release@v2
+        with:
+          type: 'tar.xz'
+          filename: "vcpkg-installed-${{ env.VERSION }}-${{ matrix.job.target }}-${{ env.GUI }}-${{ matrix.job.os }}.tar.xz"
+          directory: '.'
+          #exclusions: ''
+          #recursive_exclusions: ''
+          path: '.'
+          env_variable: ASSET_VCPKG
+        # archive name is ${{ env.ZIP_RELEASE_ARCHIVE }}
 
       - name: Publish vcpkg-installed archive
+        if: ${{ inputs.vpkg_installed }}
         continue-on-error: true
         uses: deep-soft/action-gh-release@v1
         with:
