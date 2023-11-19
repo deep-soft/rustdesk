@@ -1,4 +1,4 @@
-# 2023-11-19 10:20
+# 2023-11-19 11:40
 # changed: Replace engine with rustdesk custom flutter engine
 # changed: Install Rust toolchain. uses: deep-soft/rust-toolchain@master
 # windows-2019
@@ -149,10 +149,10 @@ jobs:
         uses: deep-soft/zip-release@v2
         with:
           type: 'tar.xz'
-          filename: "${{ env.PROG_NAME }}-src-${{ env.VERSION }}-${{ matrix.job.target }}-${{ matrix.job.extra-build-features }}-${{ env.GUI }}-${{ matrix.job.os }}.tar.xz"
+          filename: "${{ env.PROG_NAME }}-src-${{ env.VERSION }}-${{ matrix.job.target }}-${{ matrix.job.extra-build-features }}-${{ env.GUI }}-${{ matrix.job.os }}"
           directory: '.'
-          #exclusions: ''
-          #recursive_exclusions: ''
+          exclusions: ''
+          recursive_exclusions: ''
           path: '.'
           env_variable: ASSET_SRC
         # archive name is ${{ env.ZIP_RELEASE_ARCHIVE }}
@@ -293,10 +293,10 @@ jobs:
         uses: deep-soft/zip-release@v2
         with:
           type: 'tar.xz'
-          filename: "${{ env.PROG_NAME }}-src1-${{ env.VERSION }}-${{ matrix.job.target }}-${{ matrix.job.extra-build-features }}-${{ env.GUI }}-${{ matrix.job.os }}.tar.xz"
+          filename: "${{ env.PROG_NAME }}-src1-${{ env.VERSION }}-${{ matrix.job.target }}-${{ matrix.job.extra-build-features }}-${{ env.GUI }}-${{ matrix.job.os }}"
           directory: '.'
           exclusions: 'sciter.dll RDSK_PCH_SH_PRE.sh'
-          #recursive_exclusions: ''
+          recursive_exclusions: ''
           path: '.'
           env_variable: ASSET_SRC1
         # archive name is ${{ env.ZIP_RELEASE_ARCHIVE }}
@@ -384,10 +384,10 @@ jobs:
         uses: deep-soft/zip-release@v2
         with:
           type: 'tar.xz'
-          filename: "vcpkg-installed-${{ env.VERSION }}-${{ matrix.job.target }}-${{ env.GUI }}-${{ matrix.job.os }}.tar.xz"
+          filename: "vcpkg-installed-${{ env.VERSION }}-${{ matrix.job.target }}-${{ env.GUI }}-${{ matrix.job.os }}"
           directory: '.'
-          #exclusions: ''
-          #recursive_exclusions: ''
+          exclusions: ''
+          recursive_exclusions: ''
           path: '.'
           env_variable: ASSET_VCPKG
         # archive name is ${{ env.ZIP_RELEASE_ARCHIVE }}
@@ -517,7 +517,7 @@ jobs:
         uses: deep-soft/zip-release@v2
         with:
           type: 'zip'
-          filename: '${{ env.TAG_VERSION }}${{ env.TAG_BUILD }}-ALL.zip'
+          filename: '${{ env.TAG_VERSION }}${{ env.TAG_BUILD }}-ALL'
           directory: '.'
           path: '.'
           exclusions: '*.git* /*node_modules/* .editorconfig'
