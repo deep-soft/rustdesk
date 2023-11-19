@@ -8,26 +8,26 @@ debug_mode="N"
 
 echo_debug () {
 if [[ $debug_mode == "Y" ]]; then
-  echo "$1"
-fi
+  echo "$1";
+fi;
 }
 
 if [[ "$1" != "" && -f "$1" ]]; then
-  file_in="$1"
+  file_in="$1";
 else
-  file_in="${0%.*}".txt
-fi
+  file_in="${0%.*}".txt;
+fi;
 
 if [[ -f "$file_in" ]]; then
   count=0;
   countf=0;
-  echo "file_in:[$file_in]"
+  echo "file_in:[$file_in]";
   cat $file_in | while read -r the_line
   do
     ((count++);
-    if [[ ${the_line:0:2} == "S:" ]]; then _str_=$(echo "${the_line:2}" | tr -d "\r"); echo_debug "str:[$_str_]"; fi
-    if [[ ${the_line:0:2} == "R:" ]]; then _rpl_=$(echo "${the_line:2}" | tr -d "\r"); echo_debug "rpl:[$_rpl_]"; fi
-    if [[ ${the_line:0:2} == "F:" ]]; then _fil_=$(echo "${the_line:2}" | tr -d "\r"); echo_debug "fil:[$_fil_]"; fi
+    if [[ ${the_line:0:2} == "S:" ]]; then _str_=$(echo "${the_line:2}" | tr -d "\r"); echo_debug "str:[$_str_]"; fi;
+    if [[ ${the_line:0:2} == "R:" ]]; then _rpl_=$(echo "${the_line:2}" | tr -d "\r"); echo_debug "rpl:[$_rpl_]"; fi;
+    if [[ ${the_line:0:2} == "F:" ]]; then _fil_=$(echo "${the_line:2}" | tr -d "\r"); echo_debug "fil:[$_fil_]"; fi;
     if [[ "$_fil_" != "" ]]; then
       if [[ -f "$_fil_" ]]; then
         ((countf++);
@@ -38,20 +38,20 @@ if [[ -f "$file_in" ]]; then
           echo "OK_OK: [CNT:$count, CNTF:$countf]";
         else
           echo "NOTOK: [CNT:$count, CNTF:$countf]";
-        fi
+        fi;
         if [[ $debug_mode == "Y" ]]; then
-          echo "grep 1"
+          echo "grep 1";
           grep "$_str_" "$_fil_";
-          echo "grep 2"
+          echo "grep 2";
           grep "_lastQueryTime" "$_fil_";
-        fi
+        fi;
       else
         echo "not_found: [$_fil_]";
-      fi
+      fi;
       _str_="";
       _rpl_="";
       _fil_="";
-    fi
-  done
+    fi;
+  done;
   echo "CNT:[$count], CNTF:[$countf]";
-fi
+fi;
