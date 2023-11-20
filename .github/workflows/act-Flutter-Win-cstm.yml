@@ -418,9 +418,9 @@ jobs:
         shell: bash
         run: |
           if [[ ${{ inputs.IDD_driver }} ]]; then
-            python3 .\build.py --portable --hwcodec --flutter --feature IddDriver
+            python3 build.py --portable --hwcodec --flutter --feature IddDriver
           else
-            python3 .\build.py --portable --hwcodec --flutter
+            python3 build.py --portable --hwcodec --flutter
           fi
 
       - name: Replace RustDeskIddDriver
