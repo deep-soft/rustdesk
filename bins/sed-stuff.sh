@@ -1,7 +1,15 @@
 #!/bin/bash
 
-debug_mode="N"
-debug_mode_2="Y"
+debug_mode="$DEBUG_MODE_1"
+debug_mode_2="$DEBUG_MODE_2"
+
+if [[ "$debug_mode" == "" ]]; then
+  debug_mode="N";
+fi
+
+if [[ "$debug_mode_2" == "" ]]; then
+  debug_mode_2="N";
+fi
 
 #file_in="sed-stuff.txt"
 #file_in="${0%.*}".txt
@@ -63,7 +71,7 @@ if [[ -f "$file_in" ]]; then
     fi;
     # status=$(echo "[CNT:$count, CNTF:$countf]");
   done;
-  if [[ "$debug_mode_2" == "Y" ]]; then
+  if [[ "$debug_mode" == "Y" ]]; then
     echo " [[ build.py : begin ]]";
     cat build.py;
     echo " [[ build.py : end ]]";
