@@ -17,17 +17,17 @@ R:'checksum_url': 'https://github.com/deep-soft/RustDeskIddDriver/releases/downl
 F:build.py
 
 #4
-S:'zip_url': 'https://github.com/fufesou/RustDeskTempTopMostWindow/releases/download/v0.2'
+S:'zip_url': 'https://github.com/fufesou/RustDeskTempTopMostWindow/releases/download/v0.3'
 R:'zip_url': 'https://github.com/deep-soft/RustDeskTempTopMostWindow/releases/download/TempTopMostWindow-latest/TempTopMostWindow.x64.zip',
 F:build.py
 
 #5
-S:'/TempTopMostWindow_x64_pic_en.zip',
+S:'/TempTopMostWindow_x64.zip',
 R:
 F:build.py
 
 #6
-S:'checksum_url': 'https://github.com/fufesou/RustDeskTempTopMostWindow/releases/download/v0.2/checksum_md5',
+S:'checksum_url': 'https://github.com/fufesou/RustDeskTempTopMostWindow/releases/download/v0.3/checksum_md5',
 R:'checksum_url': 'https://github.com/deep-soft/RustDeskTempTopMostWindow/releases/download/TempTopMostWindow-latest/TempTopMostWindow.x64.zip.md5',
 F:build.py
 
