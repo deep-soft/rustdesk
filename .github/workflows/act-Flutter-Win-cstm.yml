@@ -68,6 +68,14 @@ on:
         type: boolean
         default: false
         required: true
+      DEBUG_MODE_1:
+        description: DEBUG_MODE_1
+        default: "N"
+        required: true
+      DEBUG_MODE_2:
+        description: DEBUG_MODE_1
+        default: "N"
+        required: true
 
 jobs:
   build-for-windows:
@@ -290,6 +298,9 @@ jobs:
       - name: sed-stuff
         continue-on-error: true
         shell: bash
+        env:
+          DEBUG_MODE_1: ${{ env.DEBUG_MODE_1 }}
+          DEBUG_MODE_2: ${{ env.DEBUG_MODE_2 }}
         run: |
           bash bins/sed-stuff.sh
 
