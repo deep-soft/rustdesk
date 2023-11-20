@@ -1,4 +1,4 @@
-# 2023-11-19 11:40
+# 2023-11-20 07:10
 # changed: Replace engine with rustdesk custom flutter engine
 # changed: Install Rust toolchain. uses: deep-soft/rust-toolchain@master
 # windows-2019
@@ -60,6 +60,11 @@ on:
         required: true
       vpkg_installed:
         description: Archive vpkg_installed
+        type: boolean
+        default: false
+        required: true
+      IDD_driver:
+        description: feature IDD_driver
         type: boolean
         default: false
         required: true
@@ -410,9 +415,16 @@ jobs:
 
       - name: Build rustdesk
         continue-on-error: false
-        run: python3 .\build.py --portable --hwcodec --flutter --feature IddDriver
+        shell: bash
+        run: |
+          if [[ ${{ inputs.IDD_driver }} ]]; then
+            python3 .\build.py --portable --hwcodec --flutter --feature IddDriver
+          else
+            python3 .\build.py --portable --hwcodec --flutter
+          fi
 
       - name: Replace RustDeskIddDriver
+        if: ${{ inputs.IDD_driver }}
         continue-on-error: true
         shell: bash
         run: |
