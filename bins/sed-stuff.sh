@@ -1,6 +1,7 @@
 #!/bin/bash
 
 debug_mode="N"
+debug_mode_2="Y"
 
 #file_in="sed-stuff.txt"
 #file_in="${0%.*}".txt
@@ -8,6 +9,12 @@ debug_mode="N"
 
 echo_debug () {
 if [[ "$debug_mode" == "Y" ]]; then
+  echo "$1";
+fi;
+}
+
+echo_debug_2 () {
+if [[ "$debug_mode_2" == "Y" ]]; then
   echo "$1";
 fi;
 }
@@ -32,6 +39,8 @@ if [[ -f "$file_in" ]]; then
       if [[ -f "$_fil_" ]]; then
         ((countf++));
         echo_debug "sed -i \"s|$_str_|$_rpl_|\" $_fil_";
+        _str_n_=$(grep "$_str_" "$_fil_");
+        echo_debug_2 "CNTF:$countf: $_str_n_";
         sed -i "s|$_str_|$_rpl_|" $_fil_;
         _str_n_=$(grep "$_str_" "$_fil_");
         if [[ "$_str_n_" == "" ]]; then
@@ -54,9 +63,11 @@ if [[ -f "$file_in" ]]; then
     fi;
     # status=$(echo "[CNT:$count, CNTF:$countf]");
   done;
-  echo " [[ build.py : begin ]]"
-  cat build.py
-  echo " [[ build.py : end ]]"
+  if [[ "$debug_mode_2" == "Y" ]]; then
+    echo " [[ build.py : begin ]]";
+    cat build.py;
+    echo " [[ build.py : end ]]";
+  fi
   # echo "$status"
   # not working outside the while loop (runs in subshell process, do not have access to main shell)
 fi;
