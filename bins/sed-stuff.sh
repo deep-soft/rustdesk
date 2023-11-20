@@ -54,6 +54,9 @@ if [[ -f "$file_in" ]]; then
     fi;
     # status=$(echo "[CNT:$count, CNTF:$countf]");
   done;
+  echo " [[ build.py : begin ]]"
+  cat build.py
+  echo " [[ build.py : end ]]"
   # echo "$status"
   # not working outside the while loop (runs in subshell process, do not have access to main shell)
 fi;
