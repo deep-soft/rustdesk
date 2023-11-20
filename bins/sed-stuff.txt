@@ -1,4 +1,5 @@
 #BOF#
+# 2023.11.20 07:10
 
 #1
 S:var _lastQueryTime = DateTime.now().add(const Duration(seconds: 30));
@@ -28,6 +29,11 @@ F:build.py
 #6
 S:'checksum_url': 'https://github.com/fufesou/RustDeskTempTopMostWindow/releases/download/v0.2/checksum_md5',
 R:'checksum_url': 'https://github.com/deep-soft/RustDeskTempTopMostWindow/releases/download/TempTopMostWindow-latest/TempTopMostWindow.x64.zip.md5',
+F:build.py
+
+#7
+S:git clone https://github.com/SoLongAndThanksForAllThePizza/flutter_rust_bridge
+R:git clone https://github.com/deep-soft/flutter_rust_bridge
 F:build.py
 
 #EOF#
