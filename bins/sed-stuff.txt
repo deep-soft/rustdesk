@@ -36,4 +36,9 @@ S:git clone https://github.com/SoLongAndThanksForAllThePizza/flutter_rust_bridge
 R:git clone https://github.com/deep-soft/flutter_rust_bridge
 F:build.py
 
+#8
+S:print(f'{feat} download end. extract bein')
+R:print(f'{feat} download end. extract begin')\n                print(f'url:{zip_url}')
+F:build.py
+
 #EOF#
