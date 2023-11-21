@@ -562,6 +562,7 @@ jobs:
           tag_name: ${{ env.TAG_VERSION }}${{ env.TAG_BUILD }}
           files: |
             ./SignOutput/${{ env.PROG_NAME }}-*.exe
+            ./SignOutput/${{ env.PROG_NAME }}-*.exe.sha256
 
 # zip release begin
       - name: Create Archive ALL
