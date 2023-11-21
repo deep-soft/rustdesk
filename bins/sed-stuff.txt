@@ -38,7 +38,7 @@ F:build.py
 
 #8
 S:print(f'{feat} download end. extract bein')
-R:print(f'{feat} download end. extract begin')\n                print(f'url:{zip_url}')
+R:print(f'{feat} download end. extract begin')\n                zipURL=feat_info['zip_url']\n                print(f'url:{zipURL}')
 F:build.py
 
 #EOF#
