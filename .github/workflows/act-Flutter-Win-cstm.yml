@@ -551,6 +551,19 @@ jobs:
           ignore_git: true
           # output env.SHA_SUMS
 
+      - name: Create Create source archive 2
+        continue-on-error: true
+        uses: deep-soft/zip-release@v2
+        with:
+          type: 'tar.xz'
+          filename: "${{ env.PROG_NAME }}-src2-${{ env.VERSION }}-${{ matrix.job.target }}-${{ matrix.job.extra-build-features }}-${{ env.GUI }}-${{ matrix.job.os }}"
+          directory: '.'
+          exclusions: 'sciter.dll RDSK_PCH_SH_PRE.sh target/*'
+          recursive_exclusions: ''
+          path: '.'
+          env_variable: ASSET_SRC2
+        # archive name is ${{ env.ZIP_RELEASE_ARCHIVE }}
+
       - name: Publish Release
         continue-on-error: true
         uses: deep-soft/action-gh-release@v1
@@ -563,6 +576,7 @@ jobs:
             ./SignOutput/${{ env.PROG_NAME }}-${{ env.VERSION }}-${{ matrix.job.target }}-${{ matrix.job.os }}.exe.sha256
             ${{ env.ASSET_SRC }}
             ${{ env.ASSET_SRC1 }}
+            ${{ env.ASSET_SRC2 }}
 
       - name: Publish version build - Release
         continue-on-error: false
