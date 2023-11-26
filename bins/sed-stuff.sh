@@ -30,13 +30,10 @@ fi;
 #file_in="${0%.*}".txt
 #echo $file_in
 
-if [[ $# -eq 2 ]]; then
-  FILE_TO_CAT="$2";
-  if [[ "$1" != "_" && -f "$1" ]]; then
-    file_in="$1";
-  else
-    file_in="${0%.*}".txt;
-  fi
+if [[ "$1" != "_" && -f "$1" ]]; then
+  file_in="$1";
+else
+  file_in="${0%.*}".txt;
 fi
 
 if [[ -f "$file_in" ]]; then
@@ -87,4 +84,5 @@ if [[ -f "$file_in" ]]; then
   # echo "$status"
   # not working outside the while loop (runs in subshell process, do not have access to main shell)
 fi;
+
 #EOF
