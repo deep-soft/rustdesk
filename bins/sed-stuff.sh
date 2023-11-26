@@ -1,5 +1,7 @@
 #!/bin/bash
+#sed-stuff.sh
 
+FILE_TO_CAT="$1"
 debug_mode="$DEBUG_MODE_1"
 debug_mode_2="$DEBUG_MODE_2"
 
@@ -47,11 +49,11 @@ if [[ -f "$file_in" ]]; then
       if [[ -f "$_fil_" ]]; then
         ((countf++));
         echo_debug "sed -i \"s|$_str_|$_rpl_|\" $_fil_";
-        _str_n_=$(grep "$_str_" "$_fil_");
+        _str_s_=$(grep "$_str_" "$_fil_");
         echo_debug_2 "CNTF:$countf: $_str_n_";
         sed -i "s|$_str_|$_rpl_|" $_fil_;
-        _str_n_=$(grep "$_str_" "$_fil_");
-        if [[ "$_str_n_" == "" ]]; then
+        _str_r_=$(grep "$_rpl_" "$_fil_");
+        if [[ "$_str_s_" != "" ]] && [[ "$_str_r_" != "" ]]; then
           echo "OK_OK: [CNT:$count, CNTF:$countf]";
         else
           echo "NOTOK: [CNT:$count, CNTF:$countf]";
@@ -60,7 +62,7 @@ if [[ -f "$file_in" ]]; then
           echo "grep 1";
           grep "$_str_" "$_fil_";
           echo "grep 2";
-          grep "_lastQueryTime" "$_fil_";
+          grep "$_rpl_" "$_fil_";
         fi;
       else
         echo "not_found: [$_fil_]";
@@ -72,9 +74,11 @@ if [[ -f "$file_in" ]]; then
     # status=$(echo "[CNT:$count, CNTF:$countf]");
   done;
   if [[ "$debug_mode" == "Y" ]]; then
-    echo " [[ build.py : begin ]]";
-    cat build.py;
-    echo " [[ build.py : end ]]";
+    if [[ "$FILE_TO_CAT" != "" ]]; then
+      echo " [[ $FILE_TO_CAT : begin ]]";
+      cat $FILE_TO_CAT;
+      echo " [[ $FILE_TO_CAT : end ]]";
+    fi
   fi
   # echo "$status"
   # not working outside the while loop (runs in subshell process, do not have access to main shell)
