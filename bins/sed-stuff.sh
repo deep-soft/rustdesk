@@ -1,9 +1,10 @@
 #!/bin/bash
 #sed-stuff.sh
+#BOF
 
-FILE_TO_CAT="$1"
-debug_mode="$DEBUG_MODE_1"
-debug_mode_2="$DEBUG_MODE_2"
+FILE_TO_CAT="$2";
+debug_mode="$DEBUG_MODE_1";
+debug_mode_2="$DEBUG_MODE_2";
 
 if [[ "$debug_mode" == "" ]]; then
   debug_mode="N";
@@ -12,10 +13,6 @@ fi
 if [[ "$debug_mode_2" == "" ]]; then
   debug_mode_2="N";
 fi
-
-#file_in="sed-stuff.txt"
-#file_in="${0%.*}".txt
-#echo $file_in
 
 echo_debug () {
 if [[ "$debug_mode" == "Y" ]]; then
@@ -29,11 +26,18 @@ if [[ "$debug_mode_2" == "Y" ]]; then
 fi;
 }
 
-if [[ "$1" != "" && -f "$1" ]]; then
-  file_in="$1";
-else
-  file_in="${0%.*}".txt;
-fi;
+#file_in="sed-stuff.txt"
+#file_in="${0%.*}".txt
+#echo $file_in
+
+if [[ $# -eq 2 ]]; then
+  FILE_TO_CAT="$2";
+  if [[ "$1" != "_" && -f "$1" ]]; then
+    file_in="$1";
+  else
+    file_in="${0%.*}".txt;
+  fi
+fi
 
 if [[ -f "$file_in" ]]; then
   _count_=0;
@@ -83,3 +87,4 @@ if [[ -f "$file_in" ]]; then
   # echo "$status"
   # not working outside the while loop (runs in subshell process, do not have access to main shell)
 fi;
+#EOF
