@@ -322,7 +322,7 @@ jobs:
           DEBUG_MODE_1: ${{ inputs.DEBUG_MODE_1 }}
           DEBUG_MODE_2: ${{ inputs.DEBUG_MODE_2 }}
         run: |
-          bash bins/sed-stuff.sh ${{ inputs.SED_STUFF_PARAMS }}
+          bash bins/sed-stuff.sh "_" "${{ inputs.SED_STUFF_PARAMS }}"
 
       - name: Create Create source archive 1
         continue-on-error: true
