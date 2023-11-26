@@ -53,6 +53,11 @@ on:
   workflow_call:
   workflow_dispatch:
     inputs:
+      archive_SRC2:
+        description: Archive SRC2
+        type: boolean
+        default: false
+        required: true
       archive_ALL:
         description: Archive ALL
         type: boolean
@@ -552,6 +557,7 @@ jobs:
           # output env.SHA_SUMS
 
       - name: Create Create source archive 2
+        if: ${{ inputs.archive_SRC2 }}
         continue-on-error: true
         uses: deep-soft/zip-release@v2
         with:
