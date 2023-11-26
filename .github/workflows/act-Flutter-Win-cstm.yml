@@ -85,7 +85,7 @@ on:
         required: true
       SED_STUFF_PARAMS:
         description: SED_STUFF_PARAMS
-        default: "src/ui/fs.rs"
+        default: "build.py"
         required: true
       DEBUG_MODE_1:
         description: DEBUG_MODE_1
