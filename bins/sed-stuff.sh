@@ -61,9 +61,9 @@ if [[ -f "$file_in" ]]; then
         fi;
         if [[ "$debug_mode" == "Y" ]]; then
           echo "grep 1";
-          grep "$_str_" "$_fil_";
+          if [[ "$_str_" != "" ]]; then grep "$_str_" "$_fil_"; else echo ""; fi
           echo "grep 2";
-          grep "$_rpl_" "$_fil_";
+          if [[ "$$_rpl_" != "" ]]; then grep "$$_rpl_" "$_fil_"; else echo ""; fi
         fi;
       else
         echo "not_found: [$_fil_]";
