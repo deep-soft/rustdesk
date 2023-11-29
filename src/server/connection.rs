@@ -2130,10 +2130,16 @@ impl Connection {
                         return false;
                     }
 
-                    Some(misc::Union::RestartRemoteDevice(_)) =>
-                    {
+                    Some(misc::Union::RestartRemoteDevice(_)) => {
                         #[cfg(not(any(target_os = "android", target_os = "ios")))]
                         if self.restart {
+                            // force_reboot, not work on linux vm and macos 14
+                            #[cfg(any(target_os = "linux", target_os = "windows"))]
+                            match system_shutdown::force_reboot() {
+                                Ok(_) => log::info!("Restart by the peer"),
+                                Err(e) => log::error!("Failed to restart: {}", e),
+                            }
+                            #[cfg(any(target_os = "linux", target_os = "macos"))]
                             match system_shutdown::reboot() {
                                 Ok(_) => log::info!("Restart by the peer"),
                                 Err(e) => log::error!("Failed to restart: {}", e),
@@ -2326,6 +2332,22 @@ impl Connection {
     }
 
     async fn capture_displays(&mut self, add: &[usize], sub: &[usize], set: &[usize]) {
+        #[cfg(windows)]
+        if portable_client::running() && (add.len() > 0 || set.len() > 1) {
+            log::info!("Capturing multiple displays is not supported in the elevated mode.");
+            let mut msg_out = Message::new();
+            let res = MessageBox {
+                msgtype: "nook-nocancel-hasclose".to_owned(),
+                title: "Prompt".to_owned(),
+                text: "capture_display_elevated_connections_tip".to_owned(),
+                link: "".to_owned(),
+                ..Default::default()
+            };
+            msg_out.set_message_box(res);
+            self.send(msg_out).await;
+            return;
+        }
+
         if let Some(sever) = self.server.upgrade() {
             let mut lock = sever.write().unwrap();
             for display in add.iter() {

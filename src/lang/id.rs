@@ -552,6 +552,7 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("Remove wallpaper during incoming sessions", "Hilangkan latar dinding ketika ada sesi yang masuk"),
         ("Test", "Tes"),
         ("switch_display_elevated_connections_tip", "Pada mode elevasi, jika terdapat beberapa tampilan yang aktif, maka tidak diizinkan berpindah ke yang bukan tampilan utama, silahkan coba lagi setelah proses instalasi jika kamu ingin melakukan kontrol ke tampilan layar lainnya"),
+        ("capture_display_elevated_connections_tip", ""),
         ("display_is_plugged_out_msg", "Layar terputus, pindah ke layar pertama"),
         ("No displays", "Tidak ada tampilan"),
         ("elevated_switch_display_msg", "Pindah ke tampilan utama, pada mode elevasi, pengggunaan lebih dari satu layar tidak diizinkan"),
@@ -573,5 +574,7 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("Enter privacy mode", "Masuk mode privasi"),
         ("Exit privacy mode", "Keluar mode privasi"),
         ("idd_not_support_under_win10_2004_tip", "Driver grafis yang Anda gunakan tidak kompatibel dengan versi Windows Anda dan memerlukan Windows 10 versi 2004 atau yang lebih baru"),
+        ("input_source_1_tip", ""),
+        ("input_source_2_tip", ""),
     ].iter().cloned().collect();
 }

@@ -552,6 +552,7 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("Remove wallpaper during incoming sessions", "Noņemt fona tapeti ienākošo sesiju laikā"),
         ("Test", "Pārbaudīt"),
         ("switch_display_elevated_connections_tip", "Pārslēgšanās uz ne primāro displeju netiek atbalstīta paaugstinātajā režīmā, ja ir vairāki savienojumi. Lūdzu, mēģiniet vēlreiz pēc instalēšanas, ja vēlaties kontrolēt vairākus displejus."),
+        ("capture_display_elevated_connections_tip", ""),
         ("display_is_plugged_out_msg", "Displejs ir atvienots, pārslēdzieties uz pirmo displeju."),
         ("No displays", "Nav displeju"),
         ("elevated_switch_display_msg", "Pārslēdzieties uz primāro displeju, jo paaugstinātajā režīmā netiek atbalstīti vairāki displeji."),
@@ -573,5 +574,7 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("Enter privacy mode", "Ieiet privātuma režīmā"),
         ("Exit privacy mode", "Iziet no privātuma režīma"),
         ("idd_not_support_under_win10_2004_tip", "Netiešā displeja draiveris netiek atbalstīts. Nepieciešama operētājsistēma Windows 10, versija 2004 vai jaunāka."),
+        ("input_source_1_tip", ""),
+        ("input_source_2_tip", ""),
     ].iter().cloned().collect();
 }

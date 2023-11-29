@@ -552,6 +552,7 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("Remove wallpaper during incoming sessions", ""),
         ("Test", ""),
         ("switch_display_elevated_connections_tip", ""),
+        ("capture_display_elevated_connections_tip", ""),
         ("display_is_plugged_out_msg", ""),
         ("No displays", ""),
         ("elevated_switch_display_msg", ""),
@@ -573,5 +574,7 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("Enter privacy mode", ""),
         ("Exit privacy mode", ""),
         ("idd_not_support_under_win10_2004_tip", ""),
+        ("input_source_1_tip", ""),
+        ("input_source_2_tip", ""),
     ].iter().cloned().collect();
 }
