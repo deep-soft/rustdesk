@@ -53,6 +53,10 @@ on:
   workflow_call:
   workflow_dispatch:
     inputs:
+      custom_TAG_NAME:
+        description: custom TAG_NAME
+        default: "Win-cstm"
+        required: true
       archive_SRC2:
         description: Archive SRC2
         type: boolean
@@ -123,6 +127,13 @@ jobs:
 
       - name: Checkout source code
         uses: deep-soft/checkout@v3
+
+      - name: Set custom_TAG_NAME
+        shell: bash
+        run: |
+          if [[ "${{ inputs.custom_TAG_NAME }} != "" ]]; then
+            echo "TAG_NAME=${{ inputs.custom_TAG_NAME }}" >> $GITHUB_ENV;
+          fi
 
 ## -- read from toml - begin
       - name: Read toml package.version
