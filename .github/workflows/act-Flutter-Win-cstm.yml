@@ -75,22 +75,22 @@ on:
       IDD_driver:
         description: feature IDD_driver
         type: boolean
-        default: false
+        default: true
         required: true
       Replace_IDD_driver:
         description: Replace IDD_driver
         type: boolean
-        default: false
+        default: true
         required: true
       Replace_WindowInjection:
         description: Replace WindowInjection
         type: boolean
-        default: false
+        default: true
         required: true
       SED_STUFF:
         description: SED_STUFF
         type: boolean
-        default: false
+        default: true
         required: true
       SED_STUFF_PARAMS:
         description: SED_STUFF_PARAMS
