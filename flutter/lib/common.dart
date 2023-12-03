@@ -106,6 +106,8 @@ class ColorThemeExtension extends ThemeExtension<ColorThemeExtension> {
     required this.shadow,
     required this.errorBannerBg,
     required this.me,
+    required this.toastBg,
+    required this.toastText,
   });
 
   final Color? border;
@@ -115,6 +117,8 @@ class ColorThemeExtension extends ThemeExtension<ColorThemeExtension> {
   final Color? shadow;
   final Color? errorBannerBg;
   final Color? me;
+  final Color? toastBg;
+  final Color? toastText;
 
   static final light = ColorThemeExtension(
     border: Color(0xFFCCCCCC),
@@ -124,6 +128,8 @@ class ColorThemeExtension extends ThemeExtension<ColorThemeExtension> {
     shadow: Colors.black,
     errorBannerBg: Color(0xFFFDEEEB),
     me: Colors.green,
+    toastBg: Colors.black.withOpacity(0.6),
+    toastText: Colors.white,
   );
 
   static final dark = ColorThemeExtension(
@@ -134,6 +140,8 @@ class ColorThemeExtension extends ThemeExtension<ColorThemeExtension> {
     shadow: Colors.grey,
     errorBannerBg: Color(0xFF470F2D),
     me: Colors.greenAccent,
+    toastBg: Colors.white.withOpacity(0.6),
+    toastText: Colors.black,
   );
 
   @override
@@ -145,6 +153,8 @@ class ColorThemeExtension extends ThemeExtension<ColorThemeExtension> {
     Color? shadow,
     Color? errorBannerBg,
     Color? me,
+    Color? toastBg,
+    Color? toastText,
   }) {
     return ColorThemeExtension(
       border: border ?? this.border,
@@ -154,6 +164,8 @@ class ColorThemeExtension extends ThemeExtension<ColorThemeExtension> {
       shadow: shadow ?? this.shadow,
       errorBannerBg: errorBannerBg ?? this.errorBannerBg,
       me: me ?? this.me,
+      toastBg: toastBg ?? this.toastBg,
+      toastText: toastText ?? this.toastText,
     );
   }
 
@@ -171,6 +183,8 @@ class ColorThemeExtension extends ThemeExtension<ColorThemeExtension> {
       shadow: Color.lerp(shadow, other.shadow, t),
       errorBannerBg: Color.lerp(shadow, other.errorBannerBg, t),
       me: Color.lerp(shadow, other.me, t),
+      toastBg: Color.lerp(shadow, other.toastBg, t),
+      toastText: Color.lerp(shadow, other.toastText, t),
     );
   }
 }
@@ -848,16 +862,16 @@ class OverlayDialogManager {
   }
 }
 
-void showToast(String text, {Duration timeout = const Duration(seconds: 2)}) {
+void showToast(String text, {Duration timeout = const Duration(seconds: 3)}) {
   final overlayState = globalKey.currentState?.overlay;
   if (overlayState == null) return;
-  final entry = OverlayEntry(builder: (_) {
+  final entry = OverlayEntry(builder: (context) {
     return IgnorePointer(
         child: Align(
             alignment: const Alignment(0.0, 0.8),
             child: Container(
               decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.6),
+                color: MyTheme.color(context).toastBg,
                 borderRadius: const BorderRadius.all(
                   Radius.circular(20),
                 ),
@@ -866,11 +880,11 @@ void showToast(String text, {Duration timeout = const Duration(seconds: 2)}) {
               child: Text(
                 text,
                 textAlign: TextAlign.center,
-                style: const TextStyle(
+                style: TextStyle(
                     decoration: TextDecoration.none,
                     fontWeight: FontWeight.w300,
                     fontSize: 18,
-                    color: Colors.white),
+                    color: MyTheme.color(context).toastText),
               ),
             )));
   });
@@ -1963,6 +1977,25 @@ List<String>? urlLinkToCmdArgs(Uri uri) {
     // For compatibility
     command = '--connect';
     id = uri.path.substring("/new/".length);
+  } else if (uri.authority == "config") {
+    if (Platform.isAndroid || Platform.isIOS) {
+      final config = uri.path.substring("/".length);
+      // add a timer to make showToast work
+      Timer(Duration(seconds: 1), () {
+        importConfig(null, null, config);
+      });
+    }
+    return null;
+  } else if (uri.authority == "password") {
+    if (Platform.isAndroid || Platform.isIOS) {
+      final password = uri.path.substring("/".length);
+      if (password.isNotEmpty) {
+        Timer(Duration(seconds: 1), () async {
+          await bind.mainSetPermanentPassword(password: password);
+          showToast(translate('Successful'));
+        });
+      }
+    }
   } else if (options.contains(uri.authority)) {
     final optionIndex = options.indexOf(uri.authority);
     command = '--${uri.authority}';
@@ -1977,15 +2010,30 @@ List<String>? urlLinkToCmdArgs(Uri uri) {
       }
       return null;
     }
-  } else if (uri.authority.length > 2 && uri.path.length <= 1) {
+  } else if (uri.authority.length > 2 &&
+      (uri.path.length <= 1 ||
+          (uri.path == '/r' || uri.path.startsWith('/r@')))) {
     // rustdesk://<connect-id>
+    // rustdesk://<connect-id>/r
+    // rustdesk://<connect-id>/r@<server>
     command = '--connect';
     id = uri.authority;
+    if (uri.path.length > 1) {
+      id = id + uri.path;
+    }
+  }
+    
+  var key = uri.queryParameters["key"];
+  if (id != null) {
+    if (key != null) {
+      id = "$id?key=$key";
+    }
   }
 
   if (isMobile) {
     if (id != null) {
-      connect(Get.context!, id);
+      final forceRelay = uri.queryParameters["relay"] != null;
+      connect(Get.context!, id, forceRelay: forceRelay);
       return null;
     }
   }
@@ -2032,6 +2080,7 @@ connect(
   bool isFileTransfer = false,
   bool isTcpTunneling = false,
   bool isRDP = false,
+  bool forceRelay = false,
 }) async {
   if (id == '') return;
   if (!isDesktop || desktopType == DesktopType.main) {
@@ -2049,7 +2098,7 @@ connect(
   id = id.replaceAll(' ', '');
   final oldId = id;
   id = await bind.mainHandleRelayId(id: id);
-  final forceRelay = id != oldId;
+  final forceRelay2 = id != oldId || forceRelay;
   assert(!(isFileTransfer && isTcpTunneling && isRDP),
       "more than one connect type");
 
@@ -2060,7 +2109,7 @@ connect(
         isFileTransfer: isFileTransfer,
         isTcpTunneling: isTcpTunneling,
         isRDP: isRDP,
-        forceRelay: forceRelay,
+        forceRelay: forceRelay2,
       );
     } else {
       await rustDeskWinManager.call(WindowType.Main, kWindowConnect, {
@@ -2698,7 +2747,8 @@ Future<List<Rect>> getScreenRectList() async {
       : await getScreenListNotWayland();
 }
 
-openMonitorInTheSameTab(int i, FFI ffi, PeerInfo pi, {bool updateCursorPos = true}) {
+openMonitorInTheSameTab(int i, FFI ffi, PeerInfo pi,
+    {bool updateCursorPos = true}) {
   final displays = i == kAllDisplayValue
       ? List.generate(pi.displays.length, (index) => index)
       : [i];
@@ -2707,7 +2757,8 @@ openMonitorInTheSameTab(int i, FFI ffi, PeerInfo pi, {bool updateCursorPos = tru
     sessionId: ffi.sessionId,
     value: Int32List.fromList(displays),
   );
-  ffi.ffiModel.switchToNewDisplay(i, ffi.sessionId, ffi.id, updateCursorPos: updateCursorPos);
+  ffi.ffiModel.switchToNewDisplay(i, ffi.sessionId, ffi.id,
+      updateCursorPos: updateCursorPos);
 }
 
 // Open new tab or window to show this monitor.
@@ -2821,4 +2872,88 @@ class _ReconnectCountDownButtonState extends State<_ReconnectCountDownButton> {
       isOutline: true,
     );
   }
+}
+
+importConfig(List<TextEditingController>? controllers, List<RxString>? errMsgs,
+    String? text) {
+  if (text != null && text.isNotEmpty) {
+    try {
+      final sc = ServerConfig.decode(text);
+      if (sc.idServer.isNotEmpty) {
+        Future<bool> success = setServerConfig(controllers, errMsgs, sc);
+        success.then((value) {
+          if (value) {
+            showToast(translate('Import server configuration successfully'));
+          } else {
+            showToast(translate('Invalid server configuration'));
+          }
+        });
+      } else {
+        showToast(translate('Invalid server configuration'));
+      }
+      return sc;
+    } catch (e) {
+      showToast(translate('Invalid server configuration'));
+    }
+  } else {
+    showToast(translate('Clipboard is empty'));
+  }
+}
+
+Future<bool> setServerConfig(
+  List<TextEditingController>? controllers,
+  List<RxString>? errMsgs,
+  ServerConfig config,
+) async {
+  config.idServer = config.idServer.trim();
+  config.relayServer = config.relayServer.trim();
+  config.apiServer = config.apiServer.trim();
+  config.key = config.key.trim();
+  if (controllers != null) {
+    controllers[0].text = config.idServer;
+    controllers[1].text = config.relayServer;
+    controllers[2].text = config.apiServer;
+    controllers[3].text = config.key;
+  }
+  // id
+  if (config.idServer.isNotEmpty && errMsgs != null) {
+    errMsgs[0].value =
+        translate(await bind.mainTestIfValidServer(server: config.idServer));
+    if (errMsgs[0].isNotEmpty) {
+      return false;
+    }
+  }
+  // relay
+  if (config.relayServer.isNotEmpty && errMsgs != null) {
+    errMsgs[1].value =
+        translate(await bind.mainTestIfValidServer(server: config.relayServer));
+    if (errMsgs[1].isNotEmpty) {
+      return false;
+    }
+  }
+  // api
+  if (config.apiServer.isNotEmpty && errMsgs != null) {
+    if (!config.apiServer.startsWith('http://') &&
+        !config.apiServer.startsWith('https://')) {
+      errMsgs[2].value =
+          '${translate("API Server")}: ${translate("invalid_http")}';
+      return false;
+    }
+  }
+  final oldApiServer = await bind.mainGetApiServer();
+
+  // should set one by one
+  await bind.mainSetOption(
+      key: 'custom-rendezvous-server', value: config.idServer);
+  await bind.mainSetOption(key: 'relay-server', value: config.relayServer);
+  await bind.mainSetOption(key: 'api-server', value: config.apiServer);
+  await bind.mainSetOption(key: 'key', value: config.key);
+
+  final newApiServer = await bind.mainGetApiServer();
+  if (oldApiServer.isNotEmpty &&
+      oldApiServer != newApiServer &&
+      gFFI.userModel.isLogin) {
+    gFFI.userModel.logOut(apiServer: oldApiServer);
+  }
+  return true;
 }
