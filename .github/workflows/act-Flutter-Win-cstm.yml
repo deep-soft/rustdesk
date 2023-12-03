@@ -96,12 +96,8 @@ on:
         description: SED_STUFF_PARAMS
         default: "build.py"
         required: true
-      DEBUG_MODE_1:
-        description: DEBUG_MODE_1
-        default: "N"
-        required: true
-      DEBUG_MODE_2:
-        description: DEBUG_MODE_2
+      DEBUG_MODE:
+        description: DEBUG_MODE
         default: "N"
         required: true
 
@@ -335,8 +331,8 @@ jobs:
         continue-on-error: true
         shell: bash
         env:
-          DEBUG_MODE_1: ${{ inputs.DEBUG_MODE_1 }}
-          DEBUG_MODE_2: ${{ inputs.DEBUG_MODE_2 }}
+          DEBUG_MODE_1: ${{ inputs.DEBUG_MODE }}
+          DEBUG_MODE_2: ${{ inputs.DEBUG_MODE }}
         run: |
           bash bins/sed-stuff.sh "_" "${{ inputs.SED_STUFF_PARAMS }}"
 
