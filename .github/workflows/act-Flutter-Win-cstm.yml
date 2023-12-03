@@ -490,6 +490,7 @@ jobs:
             cp bins/RustDeskIddDriver-Release-x64-Windows10.zip ./flutter/build/windows/runner/Release/
             pushd ./flutter/build/windows/runner/Release/
             7z x -y RustDeskIddDriver-Release-x64-Windows10.zip
+            rm RustDeskIddDriver-Release-x64-Windows10.zip
             popd
             echo "folder: ./flutter/build/windows/runner/Release/"
             ls -la ./flutter/build/windows/runner/Release/
