@@ -421,11 +421,10 @@ class FfiModel with ChangeNotifier {
       return;
     }
     if (newRect != _rect) {
-      if (updateCursorPos) {
-        if (newRect.left != _rect?.left || newRect.top != _rect?.top) {
-          parent.target?.cursorModel
-              .updateDisplayOrigin(newRect.left, newRect.top);
-        }
+      if (newRect.left != _rect?.left || newRect.top != _rect?.top) {
+        parent.target?.cursorModel.updateDisplayOrigin(
+            newRect.left, newRect.top,
+            updateCursorPos: updateCursorPos);
       }
       _rect = newRect;
       parent.target?.canvasModel
@@ -1206,6 +1205,9 @@ class CanvasModel with ChangeNotifier {
   ScrollStyle _scrollStyle = ScrollStyle.scrollauto;
   ViewStyle _lastViewStyle = ViewStyle.defaultViewStyle();
 
+  final ScrollController _horizontal = ScrollController();
+  final ScrollController _vertical = ScrollController();
+
   final _imageOverflow = false.obs;
 
   WeakReference<FFI> parent;
@@ -1230,6 +1232,8 @@ class CanvasModel with ChangeNotifier {
     _scrollY = y;
   }
 
+  ScrollController get scrollHorizontal => _horizontal;
+  ScrollController get scrollVertical => _vertical;
   double get scrollX => _scrollX;
   double get scrollY => _scrollY;
 
@@ -1289,6 +1293,10 @@ class CanvasModel with ChangeNotifier {
     notifyListeners();
     if (refreshMousePos) {
       parent.target?.inputModel.refreshMousePos();
+    }
+    if (style == kRemoteViewStyleOriginal &&
+        _scrollStyle == ScrollStyle.scrollbar) {
+      updateScrollPercent();
     }
   }
 
@@ -1424,6 +1432,22 @@ class CanvasModel with ChangeNotifier {
     _y = 0;
     _scale = 1.0;
     if (notify) notifyListeners();
+  }
+
+  updateScrollPercent() {
+    final percentX = _horizontal.hasClients
+        ? _horizontal.position.extentBefore /
+            (_horizontal.position.extentBefore +
+                _horizontal.position.extentInside +
+                _horizontal.position.extentAfter)
+        : 0.0;
+    final percentY = _vertical.hasClients
+        ? _vertical.position.extentBefore /
+            (_vertical.position.extentBefore +
+                _vertical.position.extentInside +
+                _vertical.position.extentAfter)
+        : 0.0;
+    setScrollPercent(percentX, percentY);
   }
 }
 
@@ -1842,12 +1866,14 @@ class CursorModel with ChangeNotifier {
     notifyListeners();
   }
 
-  updateDisplayOrigin(double x, double y) {
+  updateDisplayOrigin(double x, double y, {updateCursorPos = true}) {
     _displayOriginX = x;
     _displayOriginY = y;
-    _x = x + 1;
-    _y = y + 1;
-    parent.target?.inputModel.moveMouse(x, y);
+    if (updateCursorPos) {
+      _x = x + 1;
+      _y = y + 1;
+      parent.target?.inputModel.moveMouse(x, y);
+    }
     parent.target?.canvasModel.resetOffset();
     notifyListeners();
   }
