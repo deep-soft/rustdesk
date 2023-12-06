@@ -80,17 +80,17 @@ on:
       Replace_IDD_driver:
         description: Replace IDD_driver
         type: boolean
-        default: true
+        default: false
         required: true
       Replace_WindowInjection:
         description: Replace WindowInjection
         type: boolean
-        default: true
+        default: false
         required: true
       SED_STUFF:
         description: SED_STUFF
         type: boolean
-        default: true
+        default: false
         required: true
       SED_STUFF_PARAMS:
         description: SED_STUFF_PARAMS
