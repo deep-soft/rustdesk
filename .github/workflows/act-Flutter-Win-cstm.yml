@@ -469,7 +469,7 @@ jobs:
           fi
 
       - name: Sign rustdesk files
-        uses: deep-soft/code-sign-action@master
+        uses: deep-soft/code-sign-action@v8
         with:
           certificate: '${{ secrets.WINDOWS_PFX_BASE64 }}'
           password: '${{ secrets.WINDOWS_PFX_PASSWORD }}'
@@ -545,7 +545,7 @@ jobs:
 
       - name: Sign rustdesk self-extracted file
         continue-on-error: false
-        uses: deep-soft/code-sign-action@master
+        uses: deep-soft/code-sign-action@v8
         with:
           certificate: '${{ secrets.WINDOWS_PFX_BASE64 }}'
           password: '${{ secrets.WINDOWS_PFX_PASSWORD }}'
