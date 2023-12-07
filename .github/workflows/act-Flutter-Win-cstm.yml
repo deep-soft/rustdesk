@@ -1,8 +1,8 @@
-# 2023-11-20 07:10
+# 2023-12-07 12:10
 # changed: Replace engine with rustdesk custom flutter engine
 # changed: Install Rust toolchain. uses: deep-soft/rust-toolchain@master
-# windows-2019
-# WindowInjection.dll, sed-stuff, sha256 for self-extract
+# windows-2019, WindowInjection.dll, sed-stuff, sha256 for self-extract
+# is_windows_version_or_greater(10, 0, 19041, 0, 0)
 name: act - Flutter - Win - cstm
 
 env:
@@ -77,13 +77,8 @@ on:
         type: boolean
         default: true
         required: true
-      Replace_IDD_driver:
+      Replace_IDD_driver_WindowInjection:
         description: Replace IDD_driver
-        type: boolean
-        default: false
-        required: true
-      Replace_WindowInjection:
-        description: Replace WindowInjection
         type: boolean
         default: false
         required: true
@@ -99,6 +94,11 @@ on:
       DEBUG_MODE:
         description: DEBUG_MODE
         default: "N"
+        required: true
+      SED_Win10GT:
+        description: SED_Win10GT (crash on win11 ?!)
+        type: boolean
+        default: true
         required: true
 
 jobs:
@@ -336,6 +336,21 @@ jobs:
         run: |
           bash bins/sed-stuff.sh "_" "${{ inputs.SED_STUFF_PARAMS }}"
 
+# is_windows_version_or_greater(10
+      - name: sed is_windows_version_or_greater(10
+        if: ${{ inputs.SED_Win10GT }}
+        continue-on-error: true
+        shell: bash
+        run: |
+          echo "grep 1"
+          grep -R "is_windows_version_or_greater" src/*
+          echo "sed 1"
+          sed -ibak "s!is_windows_version_or_greater(10!is_windows_version_or_greater(12!" "src/virtual_display_manager.rs";
+          echo "sed 2"
+          sed -ibak "s!is_windows_version_or_greater(10!is_windows_version_or_greater(12!" "privacy_mode/win_exclude_from_capture.rs";
+          echo "grep 2"
+          grep -R "is_windows_version_or_greater" src/*
+
       - name: Create Create source archive 1
         continue-on-error: true
         uses: deep-soft/zip-release@v2
@@ -478,8 +493,8 @@ jobs:
           folder: './flutter/build/windows/runner/Release/'
           recursive: true
 
-      - name: Replace RustDeskIddDriver
-        if: ${{ inputs.Replace_IDD_driver }}
+      - name: Replace RustDeskIddDriver and WindowInjection
+        if: ${{ inputs.Replace_IDD_driver_WindowInjection }}
         continue-on-error: true
         shell: bash
         run: |
@@ -495,12 +510,6 @@ jobs:
             echo "folder: ./flutter/build/windows/runner/Release/"
             ls -la ./flutter/build/windows/runner/Release/
           fi
-
-      - name: Replace WindowInjection.dll
-        if: ${{ inputs.Replace_WindowInjection }}
-        continue-on-error: true
-        shell: bash
-        run: |
           if [[ -f bins/WindowInjection.dll ]]; then
             echo "folder: ./flutter/build/windows/runner/Release/"
             ls -la ./flutter/build/windows/runner/Release/
