@@ -78,7 +78,7 @@ on:
         default: true
         required: true
       Replace_IDD_driver_WindowInjection:
-        description: Replace IDD_driver
+        description: Replace IDD_driver and WindowInjection
         type: boolean
         default: false
         required: true
