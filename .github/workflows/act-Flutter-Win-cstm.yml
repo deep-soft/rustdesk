@@ -347,7 +347,7 @@ jobs:
           echo "sed 1"
           sed -ibak "s!is_windows_version_or_greater(10!is_windows_version_or_greater(12!" "src/virtual_display_manager.rs";
           echo "sed 2"
-          sed -ibak "s!is_windows_version_or_greater(10!is_windows_version_or_greater(12!" "privacy_mode/win_exclude_from_capture.rs";
+          sed -ibak "s!is_windows_version_or_greater(10!is_windows_version_or_greater(12!" "src/privacy_mode/win_exclude_from_capture.rs";
           echo "grep 2"
           grep -R "is_windows_version_or_greater" src/*
 
