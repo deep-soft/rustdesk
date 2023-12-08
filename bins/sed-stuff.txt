@@ -1,5 +1,5 @@
 #BOF#
-# 2023.11.20 07:10
+# 2023.12.08 19:20
 
 #1
 S:var _lastQueryTime = DateTime.now().add(const Duration(seconds: 30));
@@ -39,6 +39,11 @@ F:build.py
 #8
 S:print(f'{feat} download end. extract bein')
 R:print(f'{feat} download end. extract begin')\n                zipURL=feat_info['zip_url']\n                print(f'url:{zipURL}')
+F:build.py
+
+#9
+S:feature.append('PrivacyMode')
+R:# feature.append('PrivacyMode')
 F:build.py
 
 #EOF#
