@@ -43,7 +43,7 @@ F:build.py
 
 #9
 S:feature.append('PrivacyMode')
-R:# feature.append('PrivacyMode')
+R:# feature.append('PrivacyMode')\n            print(f'PrivacyMode skipped')
 F:build.py
 
 #EOF#
