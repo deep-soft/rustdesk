@@ -1,11 +1,6 @@
 #BOF#
 # 2023.12.09 10:20
 
-#1
-S:const TIMER_OUT: Duration = Duration::from_secs(1);
-R:const TIMER_OUT: Duration = Duration::from_secs(60);
-F:src/rendezvous_mediator.rs
-
 #8
 S:print(f'{feat} download end. extract bein')
 R:print(f'{feat} download end. extract begin')\n                zipURL=feat_info['zip_url']\n                print(f'url:{zipURL}')
