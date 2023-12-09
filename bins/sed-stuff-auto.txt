@@ -1,49 +1,14 @@
 #BOF#
-# 2023.12.08 19:20
+# 2023.12.09 10:20
 
 #1
-S:var _lastQueryTime = DateTime.now().add(const Duration(seconds: 30));
-R:var _lastQueryTime = DateTime.now().add(const Duration(seconds: 60));
-F:flutter/lib/common/widgets/peers_view.dart
-
-#2
-S:'zip_url': 'https://github.com/fufesou/RustDeskIddDriver/releases/download/v0.3/RustDeskIddDriver_x64.zip',
-R:'zip_url': 'https://github.com/deep-soft/RustDeskIddDriver/releases/download/RustDeskIddDriver/RustDeskIddDriver-Release-x64-Windows10.zip',
-F:build.py
-
-#3
-S:'checksum_url': 'https://github.com/fufesou/RustDeskIddDriver/releases/download/v0.3/checksum_md5',
-R:'checksum_url': 'https://github.com/deep-soft/RustDeskIddDriver/releases/download/RustDeskIddDriver/RustDeskIddDriver-Release-x64-Windows10.zip.md5',
-F:build.py
-
-#4
-S:'zip_url': 'https://github.com/fufesou/RustDeskTempTopMostWindow/releases/download/v0.3'
-R:'zip_url': 'https://github.com/deep-soft/RustDeskTempTopMostWindow/releases/download/TempTopMostWindow-latest/TempTopMostWindow.x64.zip',
-F:build.py
-
-#5
-S:'/TempTopMostWindow_x64.zip',
-R:
-F:build.py
-
-#6
-S:'checksum_url': 'https://github.com/fufesou/RustDeskTempTopMostWindow/releases/download/v0.3/checksum_md5',
-R:'checksum_url': 'https://github.com/deep-soft/RustDeskTempTopMostWindow/releases/download/TempTopMostWindow-latest/TempTopMostWindow.x64.zip.md5',
-F:build.py
-
-#7
-S:git clone https://github.com/SoLongAndThanksForAllThePizza/flutter_rust_bridge
-R:git clone https://github.com/deep-soft/flutter_rust_bridge
-F:build.py
+S:const TIMER_OUT: Duration = Duration::from_secs(1);
+R:const TIMER_OUT: Duration = Duration::from_secs(60);
+F:src/rendezvous_mediator.rs
 
 #8
 S:print(f'{feat} download end. extract bein')
 R:print(f'{feat} download end. extract begin')\n                zipURL=feat_info['zip_url']\n                print(f'url:{zipURL}')
-F:build.py
-
-#9
-S:feature.append('PrivacyMode')
-R:# feature.append('PrivacyMode')\n            print(f'PrivacyMode skipped')
 F:build.py
 
 #EOF#
