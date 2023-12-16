@@ -1,0 +1,646 @@
+# 2023-12-11 07:10
+# changed: Replace engine with rustdesk custom flutter engine
+# changed: Install Rust toolchain. uses: deep-soft/rust-toolchain@master
+# windows-2019, WindowInjection.dll, sed-stuff, sha256 for self-extract
+# is_windows_version_or_greater(10, 0, 19041, 0, 0)
+name: act - Flutter - Win - cstm
+
+env:
+  TAG_NAME:                    "Win-cstm"
+  TAG_VERSION:                 "rdsk-v1.2.1"
+  TAG_BUILD:                   "-b"
+  TAG_REF:                     "0000000"
+  PROG_NAME:                   "rdsk"
+  PROG_VERSION:                "v1.0.0"
+  VERSION:                     "1.0.0"
+  DEBUG_LS:                    "yes"
+  # To make a custom build with your own servers set the below secret values
+  RS_PUB_KEY:                  '${{ secrets.RS_PUB_KEY }}'
+  RENDEZVOUS_SERVER:           '${{ secrets.RENDEZVOUS_SERVER }}'
+  API_SERVER:                  '${{ secrets.API_SERVER }}'
+  RDSK_PCH_SH_PRE:             '${{ secrets.RDSK_PCH_SH_PRE }}'
+  RDSK_PCH_SH:                 '${{ secrets.RDSK_PCH_SH }}'
+  RDSK_PCH_HL:                 '${{ secrets.RDSK_PCH_HL }}'
+  RDSK_PCH_SH2:                '${{ secrets.RDSK_PCH_SH2 }}'
+  RDSK_PCH_SH4:                '${{ secrets.RDSK_PCH_SH4 }}'
+  RDSK_PCH_SH_CLN:             '${{ secrets.RDSK_PCH_SH_CLN }}'
+  RUST_VERSION:                "rust-1.70.0"
+  LLVM_VERSION:                "15.0.6"
+  FLUTTER_VERSION:             "3.13.9"
+  FLUTTER_RUST_BRIDGE_VERSION: "1.80.1"
+  FLUTTER_ELINUX_VERSION:      "3.13.9"
+  FLUTTER_ELINUX_COMMIT_ID:    "f4d4205893c16b0aa9cb6ba46b9f32b639d3b057"
+  # vcpkg version: 2023.10.19
+  # for multiarch gcc compatibility
+  VCPKG_COMMIT_ID:             "8eb57355a4ffb410a2e94c07b4dca2dffbee8e50"
+  VCPKG_BINARY_SOURCES:        "clear;x-gha,readwrite"
+  CARGO_NDK_VERSION:           "3.1.2"
+  NDK_VERSION:                 "r26b"
+  #signing keys env variable checks
+  ANDROID_SIGNING_KEY:         '${{ secrets.ANDROID_SIGNING_KEY }}'
+  #  signingKeyBase64:         '${{ secrets.ANDROID_SIGNING_KEY }}'
+  #  alias:                    '${{ secrets.ANDROID_ALIAS }}'
+  #  keyStorePassword:         '${{ secrets.ANDROID_KEY_STORE_PASSWORD }}'
+  #  keyPassword:              '${{ secrets.ANDROID_KEY_PASSWORD }}'
+  MACOS_P12_BASE64:            '${{ secrets.MACOS_P12_BASE64 }}'
+  cargo_clippy_log:            "cargo-clippy.log"
+  GUI:                         "Windows"
+
+on:
+#  schedule:
+#    # schedule build every night
+#    - cron: "0 0 * * *"
+  workflow_call:
+  workflow_dispatch:
+    inputs:
+      custom_TAG_NAME:
+        description: custom TAG_NAME
+        default: "Win-cstm"
+        required: true
+      archive_SRC2:
+        description: Archive SRC2
+        type: boolean
+        default: false
+        required: true
+      archive_ALL:
+        description: Archive ALL
+        type: boolean
+        default: false
+        required: true
+      vpkg_installed:
+        description: Archive vpkg_installed
+        type: boolean
+        default: false
+        required: true
+      IDD_driver:
+        description: feature IDD_driver
+        type: boolean
+        default: true
+        required: true
+      Replace_IDD_driver_WindowInjection:
+        description: Replace IDD_driver and WindowInjection
+        type: boolean
+        default: false
+        required: true
+      SED_STUFF:
+        description: SED_STUFF
+        type: boolean
+        default: false
+        required: true
+      SED_STUFF_PARAMS:
+        description: SED_STUFF_PARAMS
+        default: "build.py"
+        required: true
+      DEBUG_MODE:
+        description: DEBUG_MODE
+        default: "N"
+        required: true
+      SED_Win10GT:
+        description: SED_Win10GT (crash on win11 ?!)
+        type: boolean
+        default: false
+        required: true
+
+jobs:
+  build-for-windows:
+    name: ${{ matrix.job.target }} (${{ matrix.job.os }})
+    runs-on: ${{ matrix.job.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        job:
+#         - { target: i686-pc-windows-msvc        , os: windows-2022 }
+#         - { target: x86_64-pc-windows-gnu       , os: windows-2022 }
+          - { target: x86_64-pc-windows-msvc      , os: windows-2019 }
+          - { target: x86_64-pc-windows-msvc      , os: windows-2022 }
+    steps:
+      - name: Export GitHub Actions cache environment variables
+        uses: actions/github-script@v6
+        with:
+          script: |
+            core.exportVariable('ACTIONS_CACHE_URL',     process.env.ACTIONS_CACHE_URL     || '');
+            core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
+
+      - name: Checkout source code
+        uses: deep-soft/checkout@v3
+
+      - name: Set custom_TAG_NAME
+        shell: bash
+        run: |
+          if [[ "${{ inputs.custom_TAG_NAME }}" != "" ]]; then
+            echo "TAG_NAME=${{ inputs.custom_TAG_NAME }}" >> $GITHUB_ENV;
+          fi
+
+## -- read from toml - begin
+      - name: Read toml package.version
+        uses: deep-soft/toml-action@v1.0.2
+        id: read_toml_version
+        with:
+          file: 'Cargo.toml'
+          field: 'package.version'
+
+      - name: Set env.PROG_VERSION
+        shell: bash
+        run: |
+          echo "PROG_VERSION = ${{ env.PROG_VERSION }}"
+
+          echo "set PROG_VERSION with value from Cargo.toml"
+          _version_=${{ steps.read_toml_version.outputs.value }}
+          prog_version="v"$_version_
+
+          echo "PROG_VERSION = $prog_version"
+          echo "TAG_VERSION=${{ env.PROG_NAME }}-$prog_version"
+
+          echo "set env.PROG_VERSION with value from Cargo.toml"
+          echo "PROG_VERSION=$prog_version" >> $GITHUB_ENV
+          echo "VERSION=$_version_" >> $GITHUB_ENV
+          echo "TAG_VERSION=${{ env.PROG_NAME }}-$prog_version" >> $GITHUB_ENV
+
+      - name: Print env.PROG_VERSION
+        shell: bash
+        run: |
+          echo "show new value for env.PROG_VERSION"
+          echo "PROG_VERSION = ${{ env.PROG_VERSION }}"
+          echo "TAG_VERSION  = ${{ env.TAG_VERSION  }}"
+
+## -- read from toml - end
+
+# - get ref set build begin
+      - name: Get ref, set build version
+        shell: bash
+        run: |
+          _ref_all_=$(git log -1 --format='%H')
+          # _ref_=$(echo ${_ref_all_::7})
+          _date_=$(date +%Y%m%d-%H%m)
+          _ref_org_=${{ env.TAG_REF }}
+          _ref_len_="${#_ref_org_}"
+          _ref_=$(echo ${_ref_all_::$_ref_len_})
+          echo "TAG_REF=$_ref_" >> $GITHUB_ENV
+          _build_=${{ env.TAG_BUILD }}-$_date_-$_ref_
+          echo "TAG_BUILD=$_build_" >> $GITHUB_ENV
+          echo "WORK_DIR=$(pwd)" >> $GITHUB_ENV
+          echo "TAG_DATE=$_date_" >> $GITHUB_ENV
+
+      - name: Print ref, build version
+        shell: bash
+        run: |
+          echo "REF: ${{ env.TAG_REF }}
+          echo "BLD: ${{ env.TAG_BUILD }}
+          echo "${{ env.TAG_NAME }}-${{ env.TAG_BUILD }}" > _tag_name_.txt
+
+      - name: Create Create source archive
+        continue-on-error: true
+        uses: deep-soft/zip-release@v2
+        with:
+          type: 'tar.xz'
+          filename: "${{ env.PROG_NAME }}-src-${{ env.VERSION }}-${{ matrix.job.target }}-${{ matrix.job.extra-build-features }}-${{ env.GUI }}-${{ matrix.job.os }}"
+          directory: '.'
+          exclusions: ''
+          recursive_exclusions: ''
+          path: '.'
+          env_variable: ASSET_SRC
+        # archive name is ${{ env.ZIP_RELEASE_ARCHIVE }}
+
+      - name: Prepare for patch 1
+        continue-on-error: false
+        shell: bash
+        run: |
+          echo "$RDSK_PCH_SH_PRE" | base64 --decode > ./RDSK_PCH_SH_PRE.sh
+          echo "$RDSK_PCH_SH" | base64 --decode > ./RDSK_PCH_SH.sh
+          echo "$RDSK_PCH_HL" | base64 --decode > ./RDSK_PTCH_HL.txt
+          echo prepatch 1 run
+          bash ./RDSK_PCH_SH_PRE.sh
+          echo Done prepatch 1
+          if [ "${{ env.DEBUG_LS }}" = "yes" ]; then
+            ls -l
+            pwd
+          fi
+
+      - name: Apply patch 1
+        # continue-on-error: true
+        shell: bash
+        env: 
+          SED_EXE: ${{ env.SED_EXE }}
+        run: |
+          echo patch 1 run_1
+          bash ./RDSK_PCH_SH.sh
+          echo patch 1 run_2
+          bash ./RDSK_PCH_SH.sh
+          echo patch 1 run_3
+          bash ./RDSK_PCH_SH.sh
+          echo Done patch 1
+          #cat ./libs/hbb_common/src/config.rs
+
+      - name: Prepare for patch 2
+        continue-on-error: true
+        shell: bash
+        run: |
+          echo "$RDSK_PCH_SH2" | base64 --decode > ./RDSK_PCH_SH2.sh
+          if [ "${{ env.DEBUG_LS }}" = "yes" ]; then
+            ls -l
+            pwd
+          fi
+
+      - name: Apply patch 2
+        # continue-on-error: true
+        shell: bash
+        run: |
+          echo patch 2
+          bash ./RDSK_PCH_SH2.sh
+          echo Done patch 2
+          if [ "${{ env.DEBUG_LS }}" = "yes" ]; then
+            ls -l
+            pwd
+          fi
+
+      - name: Apply patch 3
+        # continue-on-error: true
+        shell: bash
+        run: |
+          echo patch 3
+          ./packfolder-windows.exe src/ui/ src/archived.rc -binary
+          echo Done patch 3
+          if [ "${{ env.DEBUG_LS }}" = "yes" ]; then
+            ls -l src
+            pwd
+          fi
+
+      - name: Apply patch 4
+        # continue-on-error: true
+        shell: bash
+        run: |
+          echo patch 4
+          echo "$RDSK_PCH_SH4" | base64 --decode > ./RDSK_PCH_SH2.sh
+          bash ./RDSK_PCH_SH2.sh
+          echo Done patch 4
+          if [ "${{ env.DEBUG_LS }}" = "yes" ]; then
+            ls -l
+            pwd
+          fi
+
+      - name: Add version information for self-extract
+        continue-on-error: true
+        shell: bash
+        run: |
+          # sed -i 's|}|    embed_resource::compile("../../flutter/windows/runner/Runner.rc", embed_resource::NONE);\n}|' ./libs/portable/build.rs
+          # sed -i 's|embed_resource::compile("icon.rc", embed_resource::NONE);|embed_resource::compile("../../flutter/windows/runner/Runner.rc", embed_resource::NONE);|' ./libs/portable/build.rs;
+          # sed -i 's|"icon.rc"|"../../flutter/windows/runner/Runner.rc"|' ./libs/portable/build.rs;
+          # sed -i 's|embed_resource::compile("icon.rc", embed_resource::NONE);|println!("cargo:rustc-link-lib=dylib:+verbatim=../../flutter/build/windows/runner/rustdesk.dir/Release/Runner.res");|' ./libs/portable/build.rs;
+          # sed -i 's|embed_resource::compile("icon.rc", embed_resource::NONE);|println!("cargo:rustc-link-lib=dylib:+verbatim=./flutter/build/windows/runner/rustdesk.dir/Release/Runner.res");|' ./libs/portable/build.rs;
+          sed -i 's|embed_resource::compile("icon.rc", embed_resource::NONE);|println!("cargo:rustc-link-lib=dylib:+verbatim=./Runner.res");|' ./libs/portable/build.rs;
+
+      - name: print build.rs
+        continue-on-error: true
+        shell: bash
+        run: |
+          cat ./libs/portable/build.rs
+
+      - name: Search runner.res
+        continue-on-error: true
+        shell: bash
+        run: |
+          runner_res=$(find . -name "Runner.res")
+          if [ "$runner_res" != "" ]; then
+            echo "0: Runner.res: $runner_res"
+            cp $runner_res ./Runner.res
+            cp $runner_res ./libs/portable/Runner.res
+          fi
+          runner_rc=$(find . -name "Runner.rc")
+          if [ "$runner_rc" != "" ]; then
+            echo "0: Runner.rc: $runner_rc"
+            cp $runner_rc ./Runner.rc
+            cp $runner_rc ./libs/portable/Runner.rc
+          fi
+
+      - name: change year in Copyright, 2022 to 2023
+        continue-on-error: true
+        shell: bash
+        run: |
+          sed -i 's|Copyright (C) 2022 com.carriez.|Copyright (C) 2023 com.carriez.|' ./flutter/windows/runner/Runner.rc;
+          # cat ./flutter/windows/runner/Runner.rc
+
+      - name: Cleanup after patch
+        continue-on-error: true
+        shell: bash
+        run: |
+          echo "$RDSK_PCH_SH_CLN" | base64 --decode > ./RDSK_PCH_SH_CLN.sh
+          bash ./RDSK_PCH_SH_CLN.sh
+
+      - name: sed-stuff-auto
+        continue-on-error: true
+        shell: bash
+        env:
+          DEBUG_MODE_1: ${{ inputs.DEBUG_MODE }}
+          DEBUG_MODE_2: ${{ inputs.DEBUG_MODE }}
+        run: |
+          if [[ -f bins/sed-stuff-auto.txt ]]; then
+            bash bins/sed-stuff.sh "bins/sed-stuff-auto.txt" "${{ inputs.SED_STUFF_PARAMS }}"
+          fi
+
+      - name: sed-stuff
+        if: ${{ inputs.SED_STUFF }}
+        continue-on-error: true
+        shell: bash
+        env:
+          DEBUG_MODE_1: ${{ inputs.DEBUG_MODE }}
+          DEBUG_MODE_2: ${{ inputs.DEBUG_MODE }}
+        run: |
+          bash bins/sed-stuff.sh "_" "${{ inputs.SED_STUFF_PARAMS }}"
+
+# is_windows_version_or_greater(10
+      - name: sed is_windows_version_or_greater(10
+        if: ${{ inputs.SED_Win10GT }}
+        continue-on-error: true
+        shell: bash
+        run: |
+          echo "grep 1"
+          grep -R "is_windows_version_or_greater" src/*
+          echo "sed 1"
+          sed -ibak "s!is_windows_version_or_greater(10!is_windows_version_or_greater(12!" "src/virtual_display_manager.rs";
+          echo "sed 2"
+          sed -ibak "s!is_windows_version_or_greater(10!is_windows_version_or_greater(12!" "src/privacy_mode/win_exclude_from_capture.rs";
+          echo "grep 2"
+          grep -R "is_windows_version_or_greater" src/*
+
+      - name: Create Create source archive 1
+        continue-on-error: true
+        uses: deep-soft/zip-release@v2
+        with:
+          type: 'tar.xz'
+          filename: "${{ env.PROG_NAME }}-src1-${{ env.VERSION }}-${{ matrix.job.target }}-${{ matrix.job.extra-build-features }}-${{ env.GUI }}-${{ matrix.job.os }}"
+          directory: '.'
+          exclusions: 'sciter.dll RDSK_PCH_SH_PRE.sh'
+          recursive_exclusions: ''
+          path: '.'
+          env_variable: ASSET_SRC1
+        # archive name is ${{ env.ZIP_RELEASE_ARCHIVE }}
+
+      - name: Publish src archives
+        continue-on-error: true
+        uses: deep-soft/action-gh-release@v1
+        with:
+          draft: true
+          tag_name: ${{ env.TAG_NAME }}
+          files: |
+            ${{ env.ASSET_SRC }}
+            ${{ env.ASSET_SRC1 }}
+
+      - name: Install LLVM and Clang
+        uses: deep-soft/install-llvm-action@v1
+        with:
+          version: ${{ env.LLVM_VERSION }}
+
+      - name: Install flutter
+        uses: deep-soft/flutter-action@v2
+        with:
+          channel: "stable"
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+
+      - name: flutter no telemetry
+        run: |
+          flutter --disable-telemetry
+
+#       - name: Replace engine with rustdesk custom flutter engine
+#         run: |
+#           flutter doctor -v
+#           flutter precache --windows
+#           Invoke-WebRequest -Uri https://github.com/Kingtous/engine/releases/download/v3.7.0-rustdesk/windows-x64-release-flutter.zip -OutFile windows-x64-flutter-release.zip
+#           Expand-Archive windows-x64-flutter-release.zip -DestinationPath engine
+#           mv -Force engine/*  C:/hostedtoolcache/windows/flutter/stable-${{ env.FLUTTER_VERSION }}-x64/bin/cache/artifacts/engine/windows-x64-release/
+
+      - name: Replace engine with rustdesk custom flutter engine
+        run: |
+          flutter doctor -v
+          flutter precache --windows
+          Invoke-WebRequest -Uri https://github.com/fufesou/flutter-engine/releases/download/bugfix-crash-windows-angle-context-frameBuffer/windows-x64-release.zip -OutFile windows-x64-flutter-release.zip
+          Expand-Archive windows-x64-flutter-release.zip -DestinationPath .
+          mv -Force windows-x64-release/*  C:/hostedtoolcache/windows/flutter/stable-${{ env.FLUTTER_VERSION }}-x64/bin/cache/artifacts/engine/windows-x64-release/
+
+      - name: Install Rust toolchain
+        uses: deep-soft/rust-toolchain@master
+        with:
+          toolchain: stable
+          #  Rustup toolchain specifier e.g. stable, nightly, 1.42.0
+          #  the default is to match the @rev as described above. When passing an explicit toolchain as an input instead of @rev, you'll want to use "rust-toolchain@master" as the revision of the action.
+          targets: ${{ matrix.job.target }}
+          #  Comma-separated string of additional targets
+          components: ''
+          #  Comma-separated string of additional components to install e.g. clippy, rustfmt
+
+      - uses: deep-soft/rust-cache@v2
+        with:
+          prefix-key: ${{ matrix.job.os }}
+
+      - name: Install flutter rust bridge deps
+        run: |
+          git config --global core.longpaths true
+          cargo install flutter_rust_bridge_codegen --version ${{ env.FLUTTER_RUST_BRIDGE_VERSION }} --features "uuid"
+          Push-Location flutter ; flutter pub get ; Pop-Location
+          ~/.cargo/bin/flutter_rust_bridge_codegen --rust-input ./src/flutter_ffi.rs --dart-output ./flutter/lib/generated_bridge.dart
+
+      - name: Setup vcpkg with Github Actions binary cache
+        uses: deep-soft/run-vcpkg@v11
+        with:
+          vcpkgDirectory: C:\vcpkg
+          vcpkgGitCommitId: ${{ env.VCPKG_COMMIT_ID }}
+
+      - name: Install vcpkg dependencies
+        shell: bash
+        run: |
+          # $VCPKG_ROOT/vcpkg install libvpx:x64-windows-static libyuv:x64-windows-static opus:x64-windows-static aom:x64-windows-static
+          $VCPKG_ROOT/vcpkg install --triplet x64-windows-static --x-install-root="$VCPKG_ROOT/installed"
+
+###
+      - name: Create vcpkg-installed archive
+        if: ${{ inputs.vpkg_installed }}
+        continue-on-error: true
+        uses: deep-soft/zip-release@v2
+        with:
+          type: 'tar.xz'
+          filename: "vcpkg-installed-${{ env.VERSION }}-${{ matrix.job.target }}-${{ env.GUI }}-${{ matrix.job.os }}"
+          directory: '.'
+          exclusions: ''
+          recursive_exclusions: ''
+          path: '.'
+          env_variable: ASSET_VCPKG
+        # archive name is ${{ env.ZIP_RELEASE_ARCHIVE }}
+
+      - name: Publish vcpkg-installed archive
+        if: ${{ inputs.vpkg_installed }}
+        continue-on-error: true
+        uses: deep-soft/action-gh-release@v1
+        with:
+          draft: true
+          tag_name: vcpkg-installed-${{ env.VERSION }}-${{ matrix.job.target }}-${{ env.GUI }}
+          files: |
+            ${{ env.ASSET_VCPKG }}
+
+      - name: Install brotli
+        shell: bash
+        run: |
+          pip uninstall brotli
+          pip install brotli
+
+      - name: Build rustdesk
+        continue-on-error: false
+        shell: bash
+        run: |
+          if [[ ${{ inputs.IDD_driver }} ]]; then
+            python3 build.py --portable --hwcodec --flutter --feature IddDriver
+            echo "BUILD: python3 build.py --portable --hwcodec --flutter --feature IddDriver"
+          else
+            python3 build.py --portable --hwcodec --flutter
+            echo "BUILD: python3 build.py --portable --hwcodec --flutter"
+          fi
+
+      - name: Sign rustdesk files
+        uses: deep-soft/code-sign-action@v8
+        with:
+          certificate: '${{ secrets.WINDOWS_PFX_BASE64 }}'
+          password: '${{ secrets.WINDOWS_PFX_PASSWORD }}'
+          certificatesha1: '${{ secrets.WINDOWS_PFX_SHA1_THUMBPRINT }}'
+          # certificatename: '${{ secrets.CERTNAME }}'
+          folder: './flutter/build/windows/runner/Release/'
+          recursive: true
+
+      - name: Replace RustDeskIddDriver and WindowInjection
+        if: ${{ inputs.Replace_IDD_driver_WindowInjection }}
+        continue-on-error: true
+        shell: bash
+        run: |
+          if [[ -f bins/RustDeskIddDriver-Release-x64-Windows10.zip ]]; then
+            echo "folder: ./flutter/build/windows/runner/Release/"
+            ls -la ./flutter/build/windows/runner/Release/
+            echo "Replace RustDeskIddDriver"
+            cp bins/RustDeskIddDriver-Release-x64-Windows10.zip ./flutter/build/windows/runner/Release/
+            pushd ./flutter/build/windows/runner/Release/
+            7z x -y RustDeskIddDriver-Release-x64-Windows10.zip
+            rm RustDeskIddDriver-Release-x64-Windows10.zip
+            popd
+            echo "folder: ./flutter/build/windows/runner/Release/"
+            ls -la ./flutter/build/windows/runner/Release/
+          fi
+          if [[ -f bins/WindowInjection.dll ]]; then
+            echo "folder: ./flutter/build/windows/runner/Release/"
+            ls -la ./flutter/build/windows/runner/Release/
+            echo "Replace WindowInjection.dll"
+            cp bins/WindowInjection.dll ./flutter/build/windows/runner/Release/WindowInjection.dll
+            echo "folder: ./flutter/build/windows/runner/Release/"
+            ls -la ./flutter/build/windows/runner/Release/
+          fi
+
+      - name: Search runner.res
+        # Windows: find Runner.res (compiled from ./flutter/windows/runner/Runner.rc), copy to ./Runner.res
+        # Runner.rc does not contain actual version, but Runner.res does
+        continue-on-error: true
+        shell: bash
+        run: |
+          runner_res=$(find . -name "Runner.res");
+          if [ "$runner_res" == "" ]; then
+            echo "Runner.res: not found";
+          else
+            echo "Runner.res: $runner_res";
+            cp $runner_res ./libs/portable/Runner.res;
+            echo "list ./libs/portable/Runner.res";
+            ls -l ./libs/portable/Runner.res;
+          fi
+
+      - name: Build self-extracted executable
+        continue-on-error: false
+        shell: bash
+        run: |
+          pushd ./libs/portable
+          python3 ./generate.py -f ../../flutter/build/windows/runner/Release/ -o . -e ../../flutter/build/windows/runner/Release/rustdesk.exe
+          popd
+          mkdir -p ./SignOutput
+          mv ./target/release/rustdesk-portable-packer.exe ./SignOutput/${{ env.PROG_NAME }}-${{ env.VERSION }}-${{ matrix.job.target }}-${{ matrix.job.os }}.exe
+
+      # - name: Rename rustdesk
+      #   shell: bash
+      #   run: |
+      #     for name in rustdesk*??-install.exe; do
+      #         mv "$name" ./SignOutput/"${name%%-install.exe}-${{ matrix.job.target }}.exe"
+      #     done
+
+      - name: Sign rustdesk self-extracted file
+        continue-on-error: false
+        uses: deep-soft/code-sign-action@v8
+        with:
+          certificate: '${{ secrets.WINDOWS_PFX_BASE64 }}'
+          password: '${{ secrets.WINDOWS_PFX_PASSWORD }}'
+          certificatesha1: '${{ secrets.WINDOWS_PFX_SHA1_THUMBPRINT }}'
+          # certificatename: '${{ secrets.WINDOWS_PFX_NAME }}'
+          folder: './SignOutput'
+          recursive: false
+
+      - name: SHA256 for self-extracted file
+        uses: deep-soft/sha-checksums@v1
+        with:
+          type: 'sha256'
+          filename: '${{ env.PROG_NAME }}-${{ env.VERSION }}-${{ matrix.job.target }}-${{ matrix.job.os }}.exe.sha256'
+          directory: './SignOutput'
+          path: '${{ env.PROG_NAME }}-${{ env.VERSION }}-${{ matrix.job.target }}-${{ matrix.job.os }}.exe'
+          ignore_git: true
+          # output env.SHA_SUMS
+
+      - name: Create Create source archive 2
+        if: ${{ inputs.archive_SRC2 }}
+        continue-on-error: true
+        uses: deep-soft/zip-release@v2
+        with:
+          type: 'tar.xz'
+          filename: "${{ env.PROG_NAME }}-src2-${{ env.VERSION }}-${{ matrix.job.target }}-${{ matrix.job.extra-build-features }}-${{ env.GUI }}-${{ matrix.job.os }}"
+          directory: '.'
+          exclusions: 'sciter.dll RDSK_PCH_SH_PRE.sh target/*'
+          recursive_exclusions: ''
+          path: '.'
+          env_variable: ASSET_SRC2
+        # archive name is ${{ env.ZIP_RELEASE_ARCHIVE }}
+
+      - name: Publish Release
+        continue-on-error: true
+        uses: deep-soft/action-gh-release@v1
+        with:
+          draft: true
+          tag_name: ${{ env.TAG_NAME }}
+          ##./SignOutput/${{ env.PROG_NAME }}-*.exe
+          files: |
+            ./SignOutput/${{ env.PROG_NAME }}-${{ env.VERSION }}-${{ matrix.job.target }}-${{ matrix.job.os }}.exe
+            ./SignOutput/${{ env.PROG_NAME }}-${{ env.VERSION }}-${{ matrix.job.target }}-${{ matrix.job.os }}.exe.sha256
+            ${{ env.ASSET_SRC }}
+            ${{ env.ASSET_SRC1 }}
+            ${{ env.ASSET_SRC2 }}
+
+      - name: Publish version build - Release
+        continue-on-error: false
+        uses: deep-soft/action-gh-release@v1
+        with:
+          draft: true
+          tag_name: ${{ env.TAG_VERSION }}${{ env.TAG_BUILD }}
+          files: |
+            ./SignOutput/${{ env.PROG_NAME }}-*.exe
+            ./SignOutput/${{ env.PROG_NAME }}-*.exe.sha256
+
+# zip release begin
+      - name: Create Archive ALL
+        if:  ${{ inputs.archive_ALL}}
+        uses: deep-soft/zip-release@v2
+        with:
+          type: 'zip'
+          filename: '${{ env.TAG_VERSION }}${{ env.TAG_BUILD }}-ALL'
+          directory: '.'
+          path: '.'
+          exclusions: '*.git* /*node_modules/* .editorconfig'
+          # archive name is ${{ env.ZIP_RELEASE_ARCHIVE }}
+
+      - name: Publish Archive ALL
+        if:  ${{ inputs.archive_ALL}}
+        continue-on-error: true
+        uses: deep-soft/action-gh-release@v1
+        with:
+          draft: true
+          tag_name: ${{ env.TAG_VERSION }}${{ env.TAG_BUILD }}-ALL
+          files: |
+              ${{ env.ZIP_RELEASE_ARCHIVE }}
+# zip release end
