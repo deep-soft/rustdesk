@@ -113,7 +113,7 @@ jobs:
 #         - { target: i686-pc-windows-msvc        , os: windows-2022 }
 #         - { target: x86_64-pc-windows-gnu       , os: windows-2022 }
           - { target: x86_64-pc-windows-msvc      , os: windows-2019 }
-          - { target: x86_64-pc-windows-msvc      , os: windows-2022 }
+#          - { target: x86_64-pc-windows-msvc      , os: windows-2022 }
     steps:
       - name: Export GitHub Actions cache environment variables
         uses: actions/github-script@v6
