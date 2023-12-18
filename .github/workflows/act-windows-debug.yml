@@ -491,6 +491,7 @@ jobs:
         continue-on-error: false
         shell: bash
         run: |
+          export CARGO_PROFILE_RELEASE_DEBUG="true"
           if [[ ${{ inputs.IDD_driver }} ]]; then
             python3 build-debug.py --portable --hwcodec --flutter --feature IddDriver
             echo "BUILD: python3 build-debug.py --portable --hwcodec --flutter --feature IddDriver"
