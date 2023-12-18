@@ -89,7 +89,7 @@ on:
         required: true
       SED_STUFF_PARAMS:
         description: SED_STUFF_PARAMS
-        default: "build.py"
+        default: "build-debug.py"
         required: true
       patch234:
         description: patch234
