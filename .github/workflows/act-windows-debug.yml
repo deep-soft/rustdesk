@@ -503,7 +503,6 @@ jobs:
           fi
 
       - name: Create build folder archive
-        if: ${{ inputs.archive_SRC2 }}
         continue-on-error: true
         uses: deep-soft/zip-release@v2
         with:
