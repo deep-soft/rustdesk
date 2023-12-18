@@ -313,10 +313,10 @@ def ffi_bindgen_function_refactor():
 
 def build_flutter_deb(version, features):
     if not skip_cargo:
-        system2(f'cargo build --features {features} --lib')
+        system2(f'cargo build --features {features} --lib ')
         ffi_bindgen_function_refactor()
     os.chdir('flutter')
-    system2('flutter build linux')
+    system2('flutter build linux ')
     system2('mkdir -p tmpdeb/usr/bin/')
     system2('mkdir -p tmpdeb/usr/lib/rustdesk')
     system2('mkdir -p tmpdeb/etc/rustdesk/')
@@ -497,7 +497,7 @@ def main():
         if pa:
             system2(
                 f'signtool sign /a /v /p {pa} /debug /f .\\cert.pfx /t http://timestamp.digicert.com  '
-                'target\\debug\\rustdesk.exe')
+                'target\\release\\rustdesk.exe')
         else:
             print('Not signed')
         system2(
