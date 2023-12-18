@@ -45,6 +45,7 @@ env:
   MACOS_P12_BASE64:            '${{ secrets.MACOS_P12_BASE64 }}'
   cargo_clippy_log:            "cargo-clippy.log"
   GUI:                         "Windows"
+  CARGO_PROFILE_RELEASE_DEBUG: "true"
 
 on:
 #  schedule:
@@ -491,13 +492,12 @@ jobs:
         continue-on-error: false
         shell: bash
         run: |
-          export CARGO_PROFILE_RELEASE_DEBUG="true"
           if [[ ${{ inputs.IDD_driver }} ]]; then
             python3 build-debug.py --portable --hwcodec --flutter --feature IddDriver
-            echo "BUILD: python3 build-debug.py --portable --hwcodec --flutter --feature IddDriver"
+            echo "BUILD: python3 build --portable --hwcodec --flutter --feature IddDriver"
           else
             python3 build-debug.py --portable --hwcodec --flutter
-            echo "BUILD: python3 build-debug.py --portable --hwcodec --flutter"
+            echo "BUILD: python3 build --portable --hwcodec --flutter"
           fi
 
       - name: Sign rustdesk files
