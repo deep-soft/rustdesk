@@ -55,7 +55,7 @@ on:
     inputs:
       custom_TAG_NAME:
         description: custom TAG_NAME
-        default: "Win-cstm"
+        default: "Win-debug"
         required: true
       archive_SRC2:
         description: Archive SRC2
