@@ -502,6 +502,30 @@ jobs:
             echo "BUILD: python3 build --portable --hwcodec --flutter"
           fi
 
+      - name: Create build folder archive
+        if: ${{ inputs.archive_SRC2 }}
+        continue-on-error: true
+        uses: deep-soft/zip-release@v2
+        with:
+          type: 'zip'
+          filename: "${{ env.PROG_NAME }}-build-${{ env.VERSION }}-${{ matrix.job.target }}-${{ matrix.job.extra-build-features }}-${{ env.GUI }}-${{ matrix.job.os }}"
+          directory: './flutter/build/windows/runner/Release/'
+          exclusions: 'sciter.dll RDSK_PCH_SH_PRE.sh target/*'
+          recursive_exclusions: ''
+          path: '.'
+          env_variable: ASSET_BLD_RLS
+        # archive name is ${{ env.ZIP_RELEASE_ARCHIVE }}
+
+      - name: Publish build folder archive
+        continue-on-error: true
+        uses: deep-soft/action-gh-release@v1
+        with:
+          draft: true
+          tag_name: ${{ env.TAG_NAME }}
+          ##./SignOutput/${{ env.PROG_NAME }}-*.exe
+          files: |
+            ${{ env.ASSET_BLD_RLS }}
+
       - name: Sign rustdesk files
         uses: deep-soft/code-sign-action@v8
         with:
@@ -592,7 +616,7 @@ jobs:
           ignore_git: true
           # output env.SHA_SUMS
 
-      - name: Create Create source archive 2
+      - name: Create source archive 2
         if: ${{ inputs.archive_SRC2 }}
         continue-on-error: true
         uses: deep-soft/zip-release@v2
