@@ -140,6 +140,17 @@ jobs:
           file: 'Cargo.toml'
           field: 'package.version'
 
+      - name: Write toml - lto and strip
+        shell: bash
+        run: |
+          sed -ibak "s!lto = true!lto = \"fat\"!" 'Cargo.toml'
+          sed -ibak "s!strip = true!strip = false!" 'Cargo.toml'
+
+      - name: Print cargo.toml
+        shell: bash
+        run: |
+          cat cargo.toml
+
       - name: Set env.PROG_VERSION
         shell: bash
         run: |
@@ -508,10 +519,10 @@ jobs:
         with:
           type: 'zip'
           filename: "${{ env.PROG_NAME }}-build-${{ env.VERSION }}-${{ matrix.job.target }}-${{ matrix.job.extra-build-features }}-${{ env.GUI }}-${{ matrix.job.os }}"
-          directory: './flutter/build/windows/runner/Release/'
+          directory: './flutter/build/windows/runner/'
           exclusions: 'sciter.dll RDSK_PCH_SH_PRE.sh target/*'
           recursive_exclusions: ''
-          path: '.'
+          path: 'Release'
           env_variable: ASSET_BLD_RLS
         # archive name is ${{ env.ZIP_RELEASE_ARCHIVE }}
 
