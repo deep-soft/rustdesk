@@ -313,10 +313,10 @@ def ffi_bindgen_function_refactor():
 
 def build_flutter_deb(version, features):
     if not skip_cargo:
-        system2(f'cargo build --features {features} --lib --debug')
+        system2(f'cargo build --features {features} --lib')
         ffi_bindgen_function_refactor()
     os.chdir('flutter')
-    system2('flutter build linux --debug')
+    system2('flutter build linux')
     system2('mkdir -p tmpdeb/usr/bin/')
     system2('mkdir -p tmpdeb/usr/lib/rustdesk')
     system2('mkdir -p tmpdeb/etc/rustdesk/')
@@ -405,12 +405,12 @@ def build_flutter_dmg(version, features):
     if not skip_cargo:
         # set minimum osx build target, now is 10.14, which is the same as the flutter xcode project
         system2(
-            f'MACOSX_DEPLOYMENT_TARGET=10.14 cargo build --features {features} --lib --debug')
+            f'MACOSX_DEPLOYMENT_TARGET=10.14 cargo build --features {features} --lib ')
     # copy dylib
     system2(
         "cp target/debug/liblibrustdesk.dylib target/debug/librustdesk.dylib")
     os.chdir('flutter')
-    system2('flutter build macos --debug')
+    system2('flutter build macos ')
     system2(
         "create-dmg --volname \"RustDesk Installer\" --window-pos 200 120 --window-size 800 400 --icon-size 100 --app-drop-link 600 185 --icon RustDesk.app 200 190 --hide-extension RustDesk.app rustdesk.dmg ./build/macos/Build/Products/Debug/RustDesk.app")
     os.rename("rustdesk.dmg", f"../rustdesk-{version}.dmg")
@@ -419,10 +419,10 @@ def build_flutter_dmg(version, features):
 
 def build_flutter_arch_manjaro(version, features):
     if not skip_cargo:
-        system2(f'cargo build --features {features} --lib --debug')
+        system2(f'cargo build --features {features} --lib ')
     ffi_bindgen_function_refactor()
     os.chdir('flutter')
-    system2('flutter build linux --debug')
+    system2('flutter build linux ')
     system2(f'strip {flutter_build_dir}/lib/librustdesk.so')
     os.chdir('../res')
     system2('HBB=`pwd`/.. FLUTTER=1 makepkg -f')
@@ -430,12 +430,12 @@ def build_flutter_arch_manjaro(version, features):
 
 def build_flutter_windows(version, features):
     if not skip_cargo:
-        system2(f'cargo build --features {features} --lib --debug')
+        system2(f'cargo build --features {features} --lib ')
         if not os.path.exists("target/debug/librustdesk.dll"):
             print("cargo build failed, please check rust source code.")
             exit(-1)
     os.chdir('flutter')
-    system2('flutter build windows --debug')
+    system2('flutter build windows ')
     os.chdir('..')
     shutil.copy2('target/debug/deps/dylib_virtual_display.dll',
                  flutter_build_dir_2)
@@ -484,13 +484,13 @@ def main():
     if windows:
         # build virtual display dynamic library
         os.chdir('libs/virtual_display/dylib')
-        system2('cargo build --debug')
+        system2('cargo build ')
         os.chdir('../../..')
 
         if flutter:
             build_flutter_windows(version, features)
             return
-        system2('cargo build --debug --features ' + features)
+        system2('cargo build  --features ' + features)
         # system2('upx.exe target/debug/rustdesk.exe')
         system2('mv target/debug/rustdesk.exe target/debug/RustDesk.exe')
         pa = os.environ.get('P')
@@ -513,7 +513,7 @@ def main():
         if flutter:
             build_flutter_arch_manjaro(version, features)
         else:
-            system2('cargo build --debug --features ' + features)
+            system2('cargo build  --features ' + features)
             system2('git checkout src/ui/common.tis')
             system2('strip target/debug/rustdesk')
             system2('ln -s res/pacman_install && ln -s res/PKGBUILD')
@@ -522,7 +522,7 @@ def main():
             version, version))
         # pacman -U ./rustdesk.pkg.tar.zst
     elif os.path.isfile('/usr/bin/yum'):
-        system2('cargo build --debug --features ' + features)
+        system2('cargo build  --features ' + features)
         system2('strip target/debug/rustdesk')
         system2(
             "sed -i 's/Version:    .*/Version:    %s/g' res/rpm.spec" % version)
@@ -532,7 +532,7 @@ def main():
                 version, version))
         # yum localinstall rustdesk.rpm
     elif os.path.isfile('/usr/bin/zypper'):
-        system2('cargo build --debug --features ' + features)
+        system2('cargo build  --features ' + features)
         system2('strip target/debug/rustdesk')
         system2(
             "sed -i 's/Version:    .*/Version:    %s/g' res/rpm-suse.spec" % version)
@@ -551,7 +551,7 @@ def main():
                 #     'mv target/debug/bundle/deb/rustdesk*.deb ./flutter/rustdesk.deb')
                 build_flutter_deb(version, features)
         else:
-            system2('cargo bundle --debug --features ' + features)
+            system2('cargo bundle  --features ' + features)
             if osx:
                 system2(
                     'strip target/debug/bundle/osx/RustDesk.app/Contents/MacOS/rustdesk')
