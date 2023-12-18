@@ -90,7 +90,7 @@ on:
         required: true
       SED_STUFF_PARAMS:
         description: SED_STUFF_PARAMS
-        default: "build.py"
+        default: "build-debug.py"
         required: true
       patch234:
         description: patch234
@@ -506,10 +506,10 @@ jobs:
         run: |
           echo "CARGO_PROFILE_RELEASE_DEBUG=$CARGO_PROFILE_RELEASE_DEBUG";
           if [[ ${{ inputs.IDD_driver }} ]]; then
-            python3 build.py --portable --hwcodec --flutter --feature IddDriver
+            python3 build-debug.py --portable --hwcodec --flutter --feature IddDriver
             echo "BUILD: python3 build --portable --hwcodec --flutter --feature IddDriver"
           else
-            python3 build.py --portable --hwcodec --flutter
+            python3 build-debug.py --portable --hwcodec --flutter
             echo "BUILD: python3 build --portable --hwcodec --flutter"
           fi
 
@@ -522,7 +522,7 @@ jobs:
           directory: './flutter/build/windows/runner/'
           exclusions: 'sciter.dll RDSK_PCH_SH_PRE.sh target/*'
           recursive_exclusions: ''
-          path: 'Release'
+          path: '.'
           env_variable: ASSET_BLD_RLS
         # archive name is ${{ env.ZIP_RELEASE_ARCHIVE }}
 
@@ -532,7 +532,6 @@ jobs:
         with:
           draft: true
           tag_name: ${{ env.TAG_NAME }}
-          ##./SignOutput/${{ env.PROG_NAME }}-*.exe
           files: |
             ${{ env.ASSET_BLD_RLS }}
 
@@ -543,7 +542,7 @@ jobs:
           password: '${{ secrets.WINDOWS_PFX_PASSWORD }}'
           certificatesha1: '${{ secrets.WINDOWS_PFX_SHA1_THUMBPRINT }}'
           # certificatename: '${{ secrets.CERTNAME }}'
-          folder: './flutter/build/windows/runner/Release/'
+          folder: './flutter/build/windows/runner/'
           recursive: true
 
       - name: Replace RustDeskIddDriver and WindowInjection
@@ -593,10 +592,12 @@ jobs:
         shell: bash
         run: |
           pushd ./libs/portable
-          python3 ./generate.py -f ../../flutter/build/windows/runner/Release/ -o . -e ../../flutter/build/windows/runner/Release/rustdesk.exe
+          python3 ./generate.py -f ../../flutter/build/windows/runner/Release/ -o . -e ../../flutter/build/windows/runner/Release/rustdesk.exe || true;
+          python3 ./generate.py -f ../../flutter/build/windows/runner/Debug/ -o . -e ../../flutter/build/windows/runner/Debug/rustdesk.exe || true;
           popd
           mkdir -p ./SignOutput
-          mv ./target/Release/rustdesk-portable-packer.exe ./SignOutput/${{ env.PROG_NAME }}-${{ env.VERSION }}-${{ matrix.job.target }}-${{ matrix.job.os }}.exe
+          mv ./target/Release/rustdesk-portable-packer.exe ./SignOutput/${{ env.PROG_NAME }}-${{ env.VERSION }}-${{ matrix.job.target }}-${{ matrix.job.os }}.exe || true;
+          mv ./target/Debug/rustdesk-portable-packer.exe ./SignOutput/${{ env.PROG_NAME }}-${{ env.VERSION }}-${{ matrix.job.target }}-${{ matrix.job.os }}-debug.exe || true;
 
       # - name: Rename rustdesk
       #   shell: bash
