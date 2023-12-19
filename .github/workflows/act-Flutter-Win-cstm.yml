@@ -1,8 +1,8 @@
-# 2023-12-11 07:10
+# 2023-12-19 07:20
 # changed: Replace engine with rustdesk custom flutter engine
 # changed: Install Rust toolchain. uses: deep-soft/rust-toolchain@master
-# windows-2019, WindowInjection.dll, sed-stuff, sha256 for self-extract
-# is_windows_version_or_greater(10, 0, 19041, 0, 0)
+# windows-2019, sed-stuff, sha256 for self-extract
+# 
 name: act - Flutter - Win - cstm
 
 env:
@@ -72,11 +72,6 @@ on:
         type: boolean
         default: false
         required: true
-      IDD_driver:
-        description: feature IDD_driver
-        type: boolean
-        default: true
-        required: true
       Replace_IDD_driver_WindowInjection:
         description: Replace IDD_driver and WindowInjection
         type: boolean
@@ -94,11 +89,6 @@ on:
       DEBUG_MODE:
         description: DEBUG_MODE
         default: "N"
-        required: true
-      SED_Win10GT:
-        description: SED_Win10GT (crash on win11 ?!)
-        type: boolean
-        default: false
         required: true
 
 jobs:
@@ -347,21 +337,6 @@ jobs:
         run: |
           bash bins/sed-stuff.sh "_" "${{ inputs.SED_STUFF_PARAMS }}"
 
-# is_windows_version_or_greater(10
-      - name: sed is_windows_version_or_greater(10
-        if: ${{ inputs.SED_Win10GT }}
-        continue-on-error: true
-        shell: bash
-        run: |
-          echo "grep 1"
-          grep -R "is_windows_version_or_greater" src/*
-          echo "sed 1"
-          sed -ibak "s!is_windows_version_or_greater(10!is_windows_version_or_greater(12!" "src/virtual_display_manager.rs";
-          echo "sed 2"
-          sed -ibak "s!is_windows_version_or_greater(10!is_windows_version_or_greater(12!" "src/privacy_mode/win_exclude_from_capture.rs";
-          echo "grep 2"
-          grep -R "is_windows_version_or_greater" src/*
-
       - name: Create Create source archive 1
         continue-on-error: true
         uses: deep-soft/zip-release@v2
@@ -486,13 +461,8 @@ jobs:
         continue-on-error: false
         shell: bash
         run: |
-          if [[ ${{ inputs.IDD_driver }} ]]; then
-            python3 build.py --portable --hwcodec --flutter --feature IddDriver
-            echo "BUILD: python3 build.py --portable --hwcodec --flutter --feature IddDriver"
-          else
-            python3 build.py --portable --hwcodec --flutter
-            echo "BUILD: python3 build.py --portable --hwcodec --flutter"
-          fi
+          echo "BUILD: python3 build.py --portable --hwcodec --flutter --feature IddDriver"
+          python3 build.py --portable --hwcodec --flutter --feature IddDriver
 
       - name: Sign rustdesk files
         uses: deep-soft/code-sign-action@v8
