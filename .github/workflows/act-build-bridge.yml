@@ -62,12 +62,12 @@ jobs:
         job:
           - { target: x86_64-unknown-linux-gnu, os: ubuntu-20.04, extra-build-args: "",            }
     steps:
-      - name: Export GitHub Actions cache environment variables
-        uses: actions/github-script@v6
-        with:
-          script: |
-            core.exportVariable('ACTIONS_CACHE_URL',     process.env.ACTIONS_CACHE_URL     || '');
-            core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
+#      - name: Export GitHub Actions cache environment variables
+#        uses: actions/github-script@v6
+#        with:
+#          script: |
+#            core.exportVariable('ACTIONS_CACHE_URL',     process.env.ACTIONS_CACHE_URL     || '');
+#            core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
 
       - name: Checkout source code
         uses: deep-soft/checkout@v3
