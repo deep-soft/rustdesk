@@ -69,12 +69,12 @@ jobs:
           - { arch: x86_64, target: aarch64-linux-android  , os: ubuntu-20.04, extra-build-features: "", openssl-arch: android-arm64            }
           - { arch: armv7,  target: armv7-linux-androideabi, os: ubuntu-20.04, extra-build-features: "", openssl-arch: android-arm              }
     steps:
-      - name: Export GitHub Actions cache environment variables
-        uses: actions/github-script@v6
-        with:
-          script: |
-            core.exportVariable('ACTIONS_CACHE_URL',     process.env.ACTIONS_CACHE_URL     || '');
-            core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
+#      - name: Export GitHub Actions cache environment variables
+#        uses: actions/github-script@v6
+#        with:
+#          script: |
+#            core.exportVariable('ACTIONS_CACHE_URL',     process.env.ACTIONS_CACHE_URL     || '');
+#            core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
 
       - name: Install dependencies
         run: |
