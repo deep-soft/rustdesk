@@ -1,4 +1,4 @@
-# 2023-11-09 16:00
+# 2023-12-28 17:30
 # This yaml shares the build bridge steps with ci and nightly.
 #
 #
@@ -259,8 +259,8 @@ jobs:
         with:
           toolchain: stable
           target: ${{ matrix.job.target }}
-          override: true
-          profile: minimal # minimal component installation (ie, no documentation)
+          #override: true
+          #profile: minimal # minimal component installation (ie, no documentation)
 
       - uses: deep-soft/rust-cache@v2
         with:
