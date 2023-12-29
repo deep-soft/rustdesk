@@ -741,15 +741,13 @@ fn try_broadcast_display_changed(
     ) {
         log::info!("Display {} changed", display);
         if let Some(msg_out) = make_display_changed_msg(display_idx, Some(display)) {
-            // switch display may occur before the first video frame, add snapshot to ensure successful send
-            sp.snapshot(|sps| {
-                // so that new sub and old sub share the same encoder after switch
-                if sps.has_subscribes() {
-                    bail!("SWITCH");
-                }
+            let msg_out = Arc::new(msg_out);
+            sp.send_shared(msg_out.clone());
+            // switch display may occur before the first video frame, add snapshot to send to new subscribers
+            sp.snapshot(move |sps| {
+                sps.send_shared(msg_out.clone());
                 Ok(())
             })?;
-            sp.send(msg_out);
             bail!("SWITCH");
         }
     }
