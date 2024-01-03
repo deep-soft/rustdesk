@@ -1,4 +1,4 @@
-# 2023-12-19 07:20
+# 2024-01-02 10:00
 # changed: Replace engine with rustdesk custom flutter engine
 # changed: Install Rust toolchain. uses: deep-soft/rust-toolchain@master
 # windows-2019, sed-stuff, sha256 for self-extract
@@ -222,6 +222,7 @@ jobs:
           #cat ./libs/hbb_common/src/config.rs
 
       - name: Prepare for patch 2
+        if: env.GUI == 'sciter'
         continue-on-error: true
         shell: bash
         run: |
@@ -232,6 +233,7 @@ jobs:
           fi
 
       - name: Apply patch 2
+        if: env.GUI == 'sciter'
         # continue-on-error: true
         shell: bash
         run: |
@@ -244,6 +246,7 @@ jobs:
           fi
 
       - name: Apply patch 3
+        if: env.GUI == 'sciter'
         # continue-on-error: true
         shell: bash
         run: |
@@ -461,8 +464,8 @@ jobs:
         continue-on-error: false
         shell: bash
         run: |
-          echo "BUILD: python3 build.py --portable --hwcodec --flutter --feature IddDriver"
-          python3 build.py --portable --hwcodec --flutter --feature IddDriver
+          echo "BUILD: python3 build.py --portable --hwcodec --flutter --gpucodec --feature IddDriver"
+          python3 build.py --portable --hwcodec --flutter --gpucodec --feature IddDriver
 
       - name: Sign rustdesk files
         uses: deep-soft/code-sign-action@v8
