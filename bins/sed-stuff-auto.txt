@@ -8,7 +8,7 @@ F:build.py
 
 #9
 S:println!("Failed with error: {err}");
-R:println!("Failed with error: {}", res);
+R:println!("Failed with error");
 F:src/core_main.rs
 
 #EOF#
