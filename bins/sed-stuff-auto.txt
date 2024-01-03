@@ -6,4 +6,9 @@ S:print(f'{feat} download end. extract bein')
 R:print(f'{feat} download end. extract begin')\n                zipURL=feat_info['zip_url']\n                print(f'url:{zipURL}')
 F:build.py
 
+#9
+S:println!("Failed with error: {err}");
+R:println!("Failed with error: {res}");
+F:src/core_main.rs
+
 #EOF#
