@@ -1,8 +1,8 @@
-# 2024-01-02 10:00
+# 2024-01-08 23:40
 # changed: Replace engine with rustdesk custom flutter engine
 # changed: Install Rust toolchain. uses: deep-soft/rust-toolchain@master
 # windows-2019, sed-stuff, sha256 for self-extract
-# 
+# runner.rc, change ProductVersion
 name: act - Flutter - Win - cstm
 
 env:
@@ -288,6 +288,18 @@ jobs:
         run: |
           cat ./libs/portable/build.rs
 
+      - name: ProductVersion, add date
+        continue-on-error: true
+        shell: bash
+        run: |
+          sed -i 's|"ProductVersion", VERSION_AS_STRING |"ProductVersion", ${{ env.TAG_BUILD }} |' ./flutter/windows/runner/Runner.rc;
+          cat ./flutter/windows/runner/Runner.rc
+          # change year in Copyright, 2022 to 2023
+          # already done in code
+          # sed -i 's|Copyright (C) 2022 com.carriez.|Copyright (C) 2023 com.carriez.|' ./flutter/windows/runner/Runner.rc;
+          # cat ./flutter/windows/runner/Runner.rc
+
+
       - name: Search runner.res
         continue-on-error: true
         shell: bash
@@ -304,13 +316,6 @@ jobs:
             cp $runner_rc ./Runner.rc
             cp $runner_rc ./libs/portable/Runner.rc
           fi
-
-      - name: change year in Copyright, 2022 to 2023
-        continue-on-error: true
-        shell: bash
-        run: |
-          sed -i 's|Copyright (C) 2022 com.carriez.|Copyright (C) 2023 com.carriez.|' ./flutter/windows/runner/Runner.rc;
-          # cat ./flutter/windows/runner/Runner.rc
 
       - name: Cleanup after patch
         continue-on-error: true
