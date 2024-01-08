@@ -176,7 +176,7 @@ jobs:
         run: |
           echo "REF: ${{ env.TAG_REF }}
           echo "BLD: ${{ env.TAG_BUILD }}
-          echo "${{ env.TAG_NAME }}-${{ env.TAG_BUILD }}" > _tag_name_.txt
+          echo "${{ env.TAG_NAME }}-${{ env.TAG_BUILD }}" > ${{ env.WORK_DIR }}/_version_.txt
 
       - name: Create Create source archive
         continue-on-error: true
@@ -367,6 +367,7 @@ jobs:
           files: |
             ${{ env.ASSET_SRC }}
             ${{ env.ASSET_SRC1 }}
+            ${{ env.WORK_DIR }}/_version_.txt
 
       - name: Install LLVM and Clang
         uses: deep-soft/install-llvm-action@v1
@@ -458,6 +459,7 @@ jobs:
           tag_name: vcpkg-installed-${{ env.VERSION }}-${{ matrix.job.target }}-${{ env.GUI }}
           files: |
             ${{ env.ASSET_VCPKG }}
+            ${{ env.WORK_DIR }}/_version_.txt
 
       - name: Install brotli
         shell: bash
@@ -589,6 +591,7 @@ jobs:
             ${{ env.ASSET_SRC }}
             ${{ env.ASSET_SRC1 }}
             ${{ env.ASSET_SRC2 }}
+            ${{ env.WORK_DIR }}/_version_.txt
 
       - name: Publish version build - Release
         continue-on-error: false
@@ -599,6 +602,7 @@ jobs:
           files: |
             ./SignOutput/${{ env.PROG_NAME }}-*.exe
             ./SignOutput/${{ env.PROG_NAME }}-*.exe.sha256
+            ${{ env.WORK_DIR }}/_version_.txt
 
 # zip release begin
       - name: Create Archive ALL
@@ -621,4 +625,5 @@ jobs:
           tag_name: ${{ env.TAG_VERSION }}${{ env.TAG_BUILD }}-ALL
           files: |
               ${{ env.ZIP_RELEASE_ARCHIVE }}
+              ${{ env.WORK_DIR }}/_version_.txt
 # zip release end
