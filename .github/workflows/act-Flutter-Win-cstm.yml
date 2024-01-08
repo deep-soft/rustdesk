@@ -292,7 +292,7 @@ jobs:
         continue-on-error: true
         shell: bash
         run: |
-          sed -i 's|"ProductVersion", VERSION_AS_STRING |"ProductVersion", ${{ env.TAG_BUILD }} |' ./flutter/windows/runner/Runner.rc;
+          sed -i 's|"ProductVersion", VERSION_AS_STRING |"ProductVersion", "${{ env.TAG_BUILD }}" |' ./flutter/windows/runner/Runner.rc;
           cat ./flutter/windows/runner/Runner.rc
           # change year in Copyright, 2022 to 2023
           # already done in code
