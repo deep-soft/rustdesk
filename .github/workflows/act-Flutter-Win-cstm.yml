@@ -535,6 +535,7 @@ jobs:
           popd
           mkdir -p ./SignOutput
           mv ./target/release/rustdesk-portable-packer.exe ./SignOutput/${{ env.PROG_NAME }}-${{ env.VERSION }}-${{ matrix.job.target }}-${{ matrix.job.os }}.exe
+          cp ${{ env.WORK_DIR }}/_version_.txt ./SignOutput
 
       # - name: Rename rustdesk
       #   shell: bash
@@ -588,6 +589,7 @@ jobs:
           files: |
             ./SignOutput/${{ env.PROG_NAME }}-${{ env.VERSION }}-${{ matrix.job.target }}-${{ matrix.job.os }}.exe
             ./SignOutput/${{ env.PROG_NAME }}-${{ env.VERSION }}-${{ matrix.job.target }}-${{ matrix.job.os }}.exe.sha256
+            ./SignOutput/_version_.txt
             ${{ env.ASSET_SRC }}
             ${{ env.ASSET_SRC1 }}
             ${{ env.ASSET_SRC2 }}
@@ -602,6 +604,7 @@ jobs:
           files: |
             ./SignOutput/${{ env.PROG_NAME }}-*.exe
             ./SignOutput/${{ env.PROG_NAME }}-*.exe.sha256
+            ./SignOutput/_version_.txt
             ${{ env.WORK_DIR }}/_version_.txt
 
 # zip release begin
