@@ -105,14 +105,14 @@ jobs:
           - { target: x86_64-pc-windows-msvc      , os: windows-2022 }
     steps:
       - name: Export GitHub Actions cache environment variables
-        uses: actions/github-script@v6
+        uses: actions/github-script@v7
         with:
           script: |
             core.exportVariable('ACTIONS_CACHE_URL',     process.env.ACTIONS_CACHE_URL     || '');
             core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
 
       - name: Checkout source code
-        uses: deep-soft/checkout@v3
+        uses: deep-soft/checkout@v4
 
       - name: Set custom_TAG_NAME
         shell: bash
@@ -123,7 +123,7 @@ jobs:
 
 ## -- read from toml - begin
       - name: Read toml package.version
-        uses: deep-soft/toml-action@v1.0.2
+        uses: deep-soft/toml-action@v1.0.3
         id: read_toml_version
         with:
           file: 'Cargo.toml'
@@ -360,7 +360,7 @@ jobs:
 
       - name: Publish src archives
         continue-on-error: true
-        uses: deep-soft/action-gh-release@v1
+        uses: deep-soft/action-gh-release@v2.1
         with:
           draft: true
           tag_name: ${{ env.TAG_NAME }}
@@ -453,7 +453,7 @@ jobs:
       - name: Publish vcpkg-installed archive
         if: ${{ inputs.vpkg_installed }}
         continue-on-error: true
-        uses: deep-soft/action-gh-release@v1
+        uses: deep-soft/action-gh-release@v2.1
         with:
           draft: true
           tag_name: vcpkg-installed-${{ env.VERSION }}-${{ matrix.job.target }}-${{ env.GUI }}
@@ -475,7 +475,7 @@ jobs:
           python3 build.py --portable --hwcodec --flutter --gpucodec --feature IddDriver
 
       - name: Sign rustdesk files
-        uses: deep-soft/code-sign-action@v8
+        uses: deep-soft/code-sign-action@v9
         with:
           certificate: '${{ secrets.WINDOWS_PFX_BASE64 }}'
           password: '${{ secrets.WINDOWS_PFX_PASSWORD }}'
@@ -546,7 +546,7 @@ jobs:
 
       - name: Sign rustdesk self-extracted file
         continue-on-error: false
-        uses: deep-soft/code-sign-action@v8
+        uses: @v8
         with:
           certificate: '${{ secrets.WINDOWS_PFX_BASE64 }}'
           password: '${{ secrets.WINDOWS_PFX_PASSWORD }}'
@@ -581,7 +581,7 @@ jobs:
 
       - name: Publish Release
         continue-on-error: true
-        uses: deep-soft/action-gh-release@v1
+        uses: deep-soft/action-gh-release@v2.1
         with:
           draft: true
           tag_name: ${{ env.TAG_NAME }}
@@ -597,7 +597,7 @@ jobs:
 
       - name: Publish version build - Release
         continue-on-error: false
-        uses: deep-soft/action-gh-release@v1
+        uses: deep-soft/action-gh-release@v2.1
         with:
           draft: true
           tag_name: ${{ env.TAG_VERSION }}${{ env.TAG_BUILD }}
@@ -622,7 +622,7 @@ jobs:
       - name: Publish Archive ALL
         if:  ${{ inputs.archive_ALL}}
         continue-on-error: true
-        uses: deep-soft/action-gh-release@v1
+        uses: deep-soft/action-gh-release@v2.1
         with:
           draft: true
           tag_name: ${{ env.TAG_VERSION }}${{ env.TAG_BUILD }}-ALL
