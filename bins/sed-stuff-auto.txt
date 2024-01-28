@@ -6,4 +6,9 @@ S:print(f'{feat} download end. extract bein')
 R:print(f'{feat} download end. extract begin')\n                zipURL=feat_info['zip_url']\n                print(f'url:{zipURL}')
 F:build.py
 
+#9
+S:    if (Platform.isWindows) {
+R:    menuItems.add(_wolAction(peer.id));\n    if (Platform.isWindows) {
+F:flutter/lib/common/widgets/peer_card.dart
+
 #EOF#
