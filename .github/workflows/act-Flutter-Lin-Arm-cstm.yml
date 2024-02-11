@@ -25,7 +25,7 @@ env:
   RDSK_PCH_SH2:                '${{ secrets.RDSK_PCH_SH2 }}'
   RDSK_PCH_SH4:                '${{ secrets.RDSK_PCH_SH4 }}'
   RDSK_PCH_SH_CLN:             '${{ secrets.RDSK_PCH_SH_CLN }}'
-  RUST_VERSION:                "rust-1.70.0"
+  RUST_VERSION:                "rust-1.75.0"
   LLVM_VERSION:                "15.0.6"
   FLUTTER_VERSION:             "3.16.9"
   FLUTTER_RUST_BRIDGE_VERSION: "1.80.1"
