@@ -1,4 +1,5 @@
-# 2023-12-28 17:30
+# 2024-02-11 09:00
+# flutter 3.16.9
 # This yaml shares the build bridge steps with ci and nightly.
 #
 #
@@ -26,10 +27,10 @@ env:
   RDSK_PCH_SH_CLN:             '${{ secrets.RDSK_PCH_SH_CLN }}'
   RUST_VERSION:                "rust-1.70.0"
   LLVM_VERSION:                "15.0.6"
-  FLUTTER_VERSION:             "3.13.9"
+  FLUTTER_VERSION:             "3.16.9"
   FLUTTER_RUST_BRIDGE_VERSION: "1.80.1"
-  FLUTTER_ELINUX_VERSION:      "3.13.9"
-  FLUTTER_ELINUX_COMMIT_ID:    "f4d4205893c16b0aa9cb6ba46b9f32b639d3b057"
+  FLUTTER_ELINUX_VERSION:      "3.16.9"
+  FLUTTER_ELINUX_COMMIT_ID:    "c02bd16e1630f5bd690b85c5c2456ac1920e25af"
   # vcpkg version: 2023.10.19
   # for multiarch gcc compatibility
   VCPKG_COMMIT_ID:             "8eb57355a4ffb410a2e94c07b4dca2dffbee8e50"
