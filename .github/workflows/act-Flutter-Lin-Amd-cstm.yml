@@ -283,7 +283,7 @@ jobs:
           sed -i  "s/\[\"cdylib\", \"staticlib\", \"rlib\"\]/\[\"cdylib\"\]/g" Cargo.toml
 
       - name: Restore bridge files
-        uses: deep-soft/download-artifact@main
+        uses: deep-soft/download-artifact@v4
         with:
           name: bridge-artifact
           path: ./
@@ -567,7 +567,7 @@ jobs:
             ${{ env.ASSET_SRC1 }}
 
       - name: Restore bridge files
-        uses: deep-soft/download-artifact@main
+        uses: deep-soft/download-artifact@v4
         with:
           name: bridge-artifact
           path: ./
@@ -586,7 +586,7 @@ jobs:
           mkdir -p ./target/release/
 
       - name: Restore the rustdesk lib file
-        uses: deep-soft/download-artifact@main
+        uses: deep-soft/download-artifact@v4
         with:
           name: librustdesk-${{ matrix.job.arch }}-${{ matrix.job.extra-build-features }}.so
           path: ./target/release/
@@ -978,7 +978,7 @@ jobs:
           fi
 
       - name: Download Binary
-        uses: deep-soft/download-artifact@main
+        uses: deep-soft/download-artifact@v4
         with:
           name: rustdesk-${{ env.VERSION }}-${{ matrix.job.target }}-${{ matrix.job.os }}.deb
           path: .
