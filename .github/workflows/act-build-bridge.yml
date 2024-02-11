@@ -71,7 +71,7 @@ jobs:
 #            core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
 
       - name: Checkout source code
-        uses: deep-soft/checkout@v3
+        uses: deep-soft/checkout@v4
 
 ## -- read from toml - begin
       - name: Read toml package.version
@@ -295,7 +295,7 @@ jobs:
           ~/.cargo/bin/flutter_rust_bridge_codegen --rust-input ./src/flutter_ffi.rs --dart-output ./flutter/lib/generated_bridge.dart
 
       - name: Upload Artifact
-        uses: deep-soft/upload-artifact@v3
+        uses: deep-soft/upload-artifact@v4
         with:
           name: bridge-artifact
           path: |
