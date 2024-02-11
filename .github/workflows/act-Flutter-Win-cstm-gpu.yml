@@ -340,7 +340,7 @@ jobs:
 
       - name: flutter no telemetry
         run: |
-          flutter --disable-analytics
+          flutter --disable-telemetry
 
 #       - name: Replace engine with rustdesk custom flutter engine
 #         run: |
@@ -427,7 +427,7 @@ jobs:
           password: '${{ secrets.WINDOWS_PFX_PASSWORD }}'
           certificatesha1: '${{ secrets.WINDOWS_PFX_SHA1_THUMBPRINT }}'
           # certificatename: '${{ secrets.CERTNAME }}'
-          folder: './flutter/build/windows/runner/Release/'
+          folder: './flutter/build/windows/x64/runner/Release/'
           recursive: true
 
       - name: Search runner.res
@@ -451,7 +451,7 @@ jobs:
         shell: bash
         run: |
           pushd ./libs/portable
-          python3 ./generate.py -f ../../flutter/build/windows/runner/Release/ -o . -e ../../flutter/build/windows/runner/Release/rustdesk.exe
+          python3 ./generate.py -f ../../flutter/build/windows/x64/runner/Release/ -o . -e ../../flutter/build/windows/x64/runner/Release/rustdesk.exe
           popd
           mkdir -p ./SignOutput
           mv ./target/release/rustdesk-portable-packer.exe ./SignOutput/rustdesk-${{ env.VERSION }}-${{ matrix.job.target }}-${{ matrix.job.os }}.exe

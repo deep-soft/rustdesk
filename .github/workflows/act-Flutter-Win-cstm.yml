@@ -384,7 +384,7 @@ jobs:
 
       - name: flutter no telemetry
         run: |
-          flutter --disable-analytics
+          flutter --disable-telemetry
 
 #       - name: Replace engine with rustdesk custom flutter engine
 #         run: |
@@ -482,7 +482,7 @@ jobs:
           password: '${{ secrets.WINDOWS_PFX_PASSWORD }}'
           certificatesha1: '${{ secrets.WINDOWS_PFX_SHA1_THUMBPRINT }}'
           # certificatename: '${{ secrets.CERTNAME }}'
-          folder: './flutter/build/windows/runner/Release/'
+          folder: './flutter/build/windows/x64/runner/Release/'
           recursive: true
 
       - name: Replace RustDeskIddDriver and WindowInjection
@@ -491,24 +491,24 @@ jobs:
         shell: bash
         run: |
           if [[ -f bins/RustDeskIddDriver-Release-x64-Windows10.zip ]]; then
-            echo "folder: ./flutter/build/windows/runner/Release/"
-            ls -la ./flutter/build/windows/runner/Release/
+            echo "folder: ./flutter/build/windows/x64/runner/Release/"
+            ls -la ./flutter/build/windows/x64/runner/Release/
             echo "Replace RustDeskIddDriver"
-            cp bins/RustDeskIddDriver-Release-x64-Windows10.zip ./flutter/build/windows/runner/Release/
-            pushd ./flutter/build/windows/runner/Release/
+            cp bins/RustDeskIddDriver-Release-x64-Windows10.zip ./flutter/build/windows/x64/runner/Release/
+            pushd ./flutter/build/windows/x64/runner/Release/
             7z x -y RustDeskIddDriver-Release-x64-Windows10.zip
             rm RustDeskIddDriver-Release-x64-Windows10.zip
             popd
-            echo "folder: ./flutter/build/windows/runner/Release/"
-            ls -la ./flutter/build/windows/runner/Release/
+            echo "folder: ./flutter/build/windows/x64/runner/Release/"
+            ls -la ./flutter/build/windows/x64/runner/Release/
           fi
           if [[ -f bins/WindowInjection.dll ]]; then
-            echo "folder: ./flutter/build/windows/runner/Release/"
-            ls -la ./flutter/build/windows/runner/Release/
+            echo "folder: ./flutter/build/windows/x64/runner/Release/"
+            ls -la ./flutter/build/windows/x64/runner/Release/
             echo "Replace WindowInjection.dll"
-            cp bins/WindowInjection.dll ./flutter/build/windows/runner/Release/WindowInjection.dll
-            echo "folder: ./flutter/build/windows/runner/Release/"
-            ls -la ./flutter/build/windows/runner/Release/
+            cp bins/WindowInjection.dll ./flutter/build/windows/x64/runner/Release/WindowInjection.dll
+            echo "folder: ./flutter/build/windows/x64/runner/Release/"
+            ls -la ./flutter/build/windows/x64/runner/Release/
           fi
 
       - name: Search runner.res
@@ -532,7 +532,7 @@ jobs:
         shell: bash
         run: |
           pushd ./libs/portable
-          python3 ./generate.py -f ../../flutter/build/windows/runner/Release/ -o . -e ../../flutter/build/windows/runner/Release/rustdesk.exe
+          python3 ./generate.py -f ../../flutter/build/windows/x64/runner/Release/ -o . -e ../../flutter/build/windows/x64/runner/Release/rustdesk.exe
           popd
           mkdir -p ./SignOutput
           mv ./target/release/rustdesk-portable-packer.exe ./SignOutput/${{ env.PROG_NAME }}-${{ env.VERSION }}-${{ matrix.job.target }}-${{ matrix.job.os }}.exe
