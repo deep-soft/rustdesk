@@ -416,7 +416,7 @@ jobs:
 
       - name: flutter no telemetry
         run: |
-          flutter --disable-telemetry
+          flutter --disable-analytics
 
 #       - name: Replace engine with rustdesk custom flutter engine
 #         run: |
