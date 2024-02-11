@@ -70,7 +70,7 @@ jobs:
 
       - name: Cache Vcpkg
         id: cache-vcpkg
-        uses: deep-soft/cache@v3
+        uses: deep-soft/cache@v4
         with:
           path: /opt/artifacts
           key: vcpkg-${{ matrix.job.arch }}
@@ -150,7 +150,7 @@ jobs:
                 ;;
             esac
       - name: Upload artifacts
-        uses: deep-soft/upload-artifact@v3
+        uses: deep-soft/upload-artifact@v4
         with:
           name: vcpkg-artifact-${{ matrix.job.arch }}
           path: |
