@@ -92,7 +92,7 @@ jobs:
           sudo apt-get install -y nasm qemu-user-static yasm
 
       - name: Checkout source code
-        uses: deep-soft/checkout@v3
+        uses: deep-soft/checkout@v4
 
 ## -- read from toml - begin
       - name: Read toml package.version
@@ -387,7 +387,7 @@ jobs:
             esac
 
       - name: Upload Artifacts
-        uses: deep-soft/upload-artifact@v3
+        uses: deep-soft/upload-artifact@v4
         with:
           name: librustdesk-${{ matrix.job.arch }}-${{ matrix.job.extra-build-features }}.so
           path: target/release/liblibrustdesk.so
@@ -408,7 +408,7 @@ jobs:
 #         - { arch: x86_64, target: x86_64-unknown-linux-musl   , os: ubuntu-20.04, extra-build-features: ""         , use-cross: true }
     steps:
       - name: Checkout source code
-        uses: deep-soft/checkout@v3
+        uses: deep-soft/checkout@v4
 
 ## -- read from toml - begin
       - name: Read toml package.version
@@ -558,7 +558,7 @@ jobs:
 
       - name: Publish src archives
         continue-on-error: true
-        uses: deep-soft/action-gh-release@v1
+        uses: deep-soft/action-gh-release@v2.1
         with:
           draft: true
           tag_name: ${{ env.TAG_NAME }}
@@ -675,7 +675,7 @@ jobs:
 
       - name: Publish debian package
         if: ${{ matrix.job.extra-build-features == '' }}
-        uses: deep-soft/action-gh-release@v1
+        uses: deep-soft/action-gh-release@v2.1
         with:
           draft: true
           tag_name: ${{ env.TAG_NAME }}
@@ -686,7 +686,7 @@ jobs:
 
       - name: Publish version build - debian package
         if: ${{ matrix.job.extra-build-features == '' }}
-        uses: deep-soft/action-gh-release@v1
+        uses: deep-soft/action-gh-release@v2.1
         with:
           draft: true
           tag_name: ${{ env.TAG_VERSION }}${{ env.TAG_BUILD }}
@@ -694,7 +694,7 @@ jobs:
             rustdesk-${{ env.VERSION }}-${{ matrix.job.target }}-${{ matrix.job.os }}.deb
 
       - name: Upload Artifact
-        uses: deep-soft/upload-artifact@v3
+        uses: deep-soft/upload-artifact@v4
         if: ${{ contains(matrix.job.extra-build-features, 'flatpak') }}
         with:
           name: rustdesk-${{ env.VERSION }}-${{ matrix.job.target }}-${{ matrix.job.os }}.deb
@@ -745,7 +745,7 @@ jobs:
 
       - name: Publish archlinux package
         if: ${{ matrix.job.extra-build-features == '' }}
-        uses: deep-soft/action-gh-release@v1
+        uses: deep-soft/action-gh-release@v2.1
         with:
           draft: true
           tag_name: ${{ env.TAG_NAME }}
@@ -756,7 +756,7 @@ jobs:
 
       - name: Publish version build - archlinux package
         if: ${{ matrix.job.extra-build-features == '' }}
-        uses: deep-soft/action-gh-release@v1
+        uses: deep-soft/action-gh-release@v2.1
         with:
           draft: true
           tag_name: ${{ env.TAG_VERSION }}${{ env.TAG_BUILD }}
@@ -779,7 +779,7 @@ jobs:
 
       - name: Publish appimage package
         if: ${{ matrix.job.extra-build-features == 'appimage' }}
-        uses: deep-soft/action-gh-release@v1
+        uses: deep-soft/action-gh-release@v2.1
         with:
           draft: true
           tag_name: ${{ env.TAG_NAME }}
@@ -790,7 +790,7 @@ jobs:
 
       - name: Publish version build - appimage package
         if: ${{ matrix.job.extra-build-features == 'appimage' }}
-        uses: deep-soft/action-gh-release@v1
+        uses: deep-soft/action-gh-release@v2.1
         with:
           draft: true
           tag_name: ${{ env.TAG_VERSION }}${{ env.TAG_BUILD }}
@@ -799,7 +799,7 @@ jobs:
 
       - name: Publish fedora28/centos8 package
         if: ${{ matrix.job.extra-build-features == '' }}
-        uses: deep-soft/action-gh-release@v1
+        uses: deep-soft/action-gh-release@v2.1
         with:
           draft: true
           tag_name: ${{ env.TAG_NAME }}
@@ -810,7 +810,7 @@ jobs:
 
       - name: Publish version build - fedora28/centos8 package
         if: ${{ matrix.job.extra-build-features == '' }}
-        uses: deep-soft/action-gh-release@v1
+        uses: deep-soft/action-gh-release@v2.1
         with:
           draft: true
           tag_name: ${{ env.TAG_VERSION }}${{ env.TAG_BUILD }}
@@ -829,7 +829,7 @@ jobs:
           - { arch: x86_64, target: x86_64-unknown-linux-gnu, os: ubuntu-18.04 }
     steps:
       - name: Checkout source code
-        uses: deep-soft/checkout@v3
+        uses: deep-soft/checkout@v4
 
 ## -- read from toml - begin
       - name: Read toml package.version
@@ -1036,7 +1036,7 @@ jobs:
             flatpak build-bundle ./repo rustdesk-${{ env.VERSION }}-${{ matrix.job.arch }}.flatpak com.rustdesk.RustDesk
 
       - name: Publish flatpak package
-        uses: deep-soft/action-gh-release@v1
+        uses: deep-soft/action-gh-release@v2.1
         with:
           draft: true
           tag_name: ${{ env.TAG_NAME }}
@@ -1046,7 +1046,7 @@ jobs:
             ${{ env.ASSET_SRC1 }}
 
       - name: Publish version build - flatpak package
-        uses: deep-soft/action-gh-release@v1
+        uses: deep-soft/action-gh-release@v2.1
         with:
           draft: true
           tag_name: ${{ env.TAG_VERSION }}${{ env.TAG_BUILD }}
