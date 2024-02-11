@@ -67,11 +67,11 @@ jobs:
           - { target: x86_64-pc-windows-msvc      , os: windows-2022 }
     steps:
       - name: Checkout source code
-        uses: deep-soft/checkout@v3
+        uses: deep-soft/checkout@v4
 
 ## -- read from toml - begin
       - name: Read toml package.version
-        uses: deep-soft/toml-action@v1.0.2
+        uses: deep-soft/toml-action@v1.0.3
         id: read_toml_version
         with:
           file: 'Cargo.toml'
@@ -265,7 +265,7 @@ jobs:
 
       - name: Publish src archives
         continue-on-error: true
-        uses: deep-soft/action-gh-release@v1
+        uses: deep-soft/action-gh-release@v2.1
         with:
           draft: true
           tag_name: ${{ env.TAG_NAME }}
@@ -338,7 +338,7 @@ jobs:
 
       - name: Publish vcpkg-installed archive
         continue-on-error: true
-        uses: deep-soft/action-gh-release@v1
+        uses: deep-soft/action-gh-release@v2.1
         with:
           draft: true
           tag_name: vcpkg-installed-${{ env.VERSION }}-${{ matrix.job.target }}-${{ env.GUI }}
@@ -395,7 +395,7 @@ jobs:
 
       - name: Publish Release
         continue-on-error: true
-        uses: deep-soft/action-gh-release@v1
+        uses: deep-soft/action-gh-release@v2.1
         with:
           draft: true
           tag_name: ${{ env.TAG_NAME }}
@@ -406,7 +406,7 @@ jobs:
 
       - name: Publish version build - Release
         continue-on-error: false
-        uses: deep-soft/action-gh-release@v1
+        uses: deep-soft/action-gh-release@v2.1
         with:
           draft: true
           tag_name: ${{ env.TAG_VERSION }}${{ env.TAG_BUILD }}
@@ -422,7 +422,7 @@ jobs:
 
       - name: Publish clippy log
         continue-on-error: true
-        uses: deep-soft/action-gh-release@v1
+        uses: deep-soft/action-gh-release@v2.1
         with:
           draft: true
           tag_name: ${{ env.TAG_NAME }}
