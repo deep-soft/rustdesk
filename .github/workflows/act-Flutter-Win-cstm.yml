@@ -1,5 +1,5 @@
-# 2024-02-11 09:00
-# flutter 3.16.9
+# 2024-02-20 03:20
+# no IDD, flutter 3.16.9
 # changed: Replace engine with rustdesk custom flutter engine
 # changed: Install Rust toolchain. uses: deep-soft/rust-toolchain@master
 # windows-2019, sed-stuff, sha256 for self-extract
@@ -471,9 +471,11 @@ jobs:
       - name: Build rustdesk
         continue-on-error: false
         shell: bash
+        # echo "BUILD: python3 build.py --portable --hwcodec --flutter --gpucodec --feature IddDriver"
+        # python3 build.py --portable --hwcodec --flutter --gpucodec --feature IddDriver
         run: |
-          echo "BUILD: python3 build.py --portable --hwcodec --flutter --gpucodec --feature IddDriver"
-          python3 build.py --portable --hwcodec --flutter --gpucodec --feature IddDriver
+          echo "BUILD: python3 build.py --portable --hwcodec --flutter --gpucodec"
+          python3 build.py --portable --hwcodec --flutter --gpucodec
 
       - name: Sign rustdesk files
         uses: deep-soft/code-sign-action@v9
