@@ -106,7 +106,7 @@ jobs:
           - { target: x86_64-pc-windows-msvc      , os: windows-2022 }
     steps:
       - name: Export GitHub Actions cache environment variables
-        uses: actions/github-script@v7
+        uses: deep-soft/github-script@v7
         with:
           script: |
             core.exportVariable('ACTIONS_CACHE_URL',     process.env.ACTIONS_CACHE_URL     || '');
@@ -293,8 +293,8 @@ jobs:
         continue-on-error: true
         shell: bash
         run: |
-          sed -i 's|"FileVersion", VERSION_AS_STRING |"FileVersion", ${{ env.VERSION }}"${{ env.TAG_BUILD }}" |' ./flutter/windows/runner/Runner.rc;
-          sed -i 's|"ProductVersion", VERSION_AS_STRING |"ProductVersion", "${{ env.TAG_BUILD }}" |' ./flutter/windows/runner/Runner.rc;
+          sed -i 's|"FileVersion", VERSION_AS_STRING |"FileVersion", "${{ env.VERSION }}${{ env.TAG_BUILD }}" |' ./flutter/windows/runner/Runner.rc;
+          sed -i 's|"ProductVersion", VERSION_AS_STRING |"ProductVersion", "${{ env.VERSION }}${{ env.TAG_BUILD }}" |' ./flutter/windows/runner/Runner.rc;
           cat ./flutter/windows/runner/Runner.rc
           # change year in Copyright, 2022 to 2023
           # already done in code
