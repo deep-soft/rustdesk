@@ -163,6 +163,7 @@ jobs:
           _ref_all_=$(git log -1 --format='%H')
           # _ref_=$(echo ${_ref_all_::7})
           _date_=$(date +%Y%m%d-%H%m)
+          _date_YMD=$(date +%Y%m%d)
           _ref_org_=${{ env.TAG_REF }}
           _ref_len_="${#_ref_org_}"
           _ref_=$(echo ${_ref_all_::$_ref_len_})
@@ -171,6 +172,7 @@ jobs:
           echo "TAG_BUILD=$_build_" >> $GITHUB_ENV
           echo "WORK_DIR=$(pwd)" >> $GITHUB_ENV
           echo "TAG_DATE=$_date_" >> $GITHUB_ENV
+          echo "DATE_YMD=$_date_YMD" >> $GITHUB_ENV
 
       - name: Print ref, build version
         shell: bash
@@ -293,7 +295,7 @@ jobs:
         continue-on-error: true
         shell: bash
         run: |
-          sed -i 's|"FileVersion", VERSION_AS_STRING |"FileVersion", "${{ env.VERSION }}${{ env.TAG_BUILD }}" |' ./flutter/windows/runner/Runner.rc;
+          sed -i 's|"FileVersion", VERSION_AS_STRING |"FileVersion", "${{ env.VERSION }}.${{ env.DATE_YMD }}" |' ./flutter/windows/runner/Runner.rc;
           sed -i 's|"ProductVersion", VERSION_AS_STRING |"ProductVersion", "${{ env.VERSION }}${{ env.TAG_BUILD }}" |' ./flutter/windows/runner/Runner.rc;
           cat ./flutter/windows/runner/Runner.rc
           # change year in Copyright, 2022 to 2023
