@@ -626,7 +626,7 @@ jobs:
 # zip release begin
       - name: Create Archive ALL
         if:  ${{ inputs.archive_ALL}}
-        uses: deep-soft/zip-release@v2
+        uses: deep-soft/zip-release@v2.4
         with:
           type: '7z'
           filename: '${{ env.TAG_VERSION }}${{ env.TAG_BUILD }}-ALL'
