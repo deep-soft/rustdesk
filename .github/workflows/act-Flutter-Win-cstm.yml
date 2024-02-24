@@ -628,11 +628,13 @@ jobs:
         if:  ${{ inputs.archive_ALL}}
         uses: deep-soft/zip-release@v2
         with:
-          type: 'zip'
+          type: '7z'
           filename: '${{ env.TAG_VERSION }}${{ env.TAG_BUILD }}-ALL'
           directory: '.'
           path: '.'
           exclusions: '*.git* /*node_modules/* .editorconfig'
+          volume_size: '2g'
+          env_variable: 'ZIP_ARCHIVE_ALL'
           # archive name is ${{ env.ZIP_RELEASE_ARCHIVE }}
 
       - name: Publish Archive ALL
@@ -643,6 +645,6 @@ jobs:
           draft: true
           tag_name: ${{ env.TAG_VERSION }}${{ env.TAG_BUILD }}-ALL
           files: |
-              ${{ env.ZIP_RELEASE_ARCHIVE }}
+              ${{ env.ZIP_ARCHIVE_ALL }}
               ${{ env.WORK_DIR }}/_version_.txt
 # zip release end
