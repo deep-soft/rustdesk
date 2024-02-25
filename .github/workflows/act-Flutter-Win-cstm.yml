@@ -180,7 +180,7 @@ jobs:
         run: |
           set WORK_DIR_OS=%CD%
           echo WORK_DIR_OS=%WORK_DIR_OS%
-          echo WORK_DIR_OS=%WORK_DIR_OS% >> %GITHUB_ENV%
+          echo "WORK_DIR_OS=%WORK_DIR_OS%" >> %GITHUB_ENV%
 
       - name: Print ref, build version
         shell: bash
@@ -663,5 +663,5 @@ jobs:
           filelist: ${{ steps.zip_archive_all.outputs.volumes_list_name }}
           files: |
               ${{ env.ZIP_ARCHIVE_ALL }}
-              ${{ env.WORK_DIR_OS }}\_version_.txt
+              ${{ env._OS }}\_version_.txt
 # zip release end
