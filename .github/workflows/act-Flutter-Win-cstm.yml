@@ -647,7 +647,7 @@ jobs:
         uses: deep-soft/zip-release@v3
         with:
           type: '7z'
-          filename: '${{ env.TAG_VERSION }}${{ env.TAG_BUILD }}-ALL'
+          filename: '${{ env.TAG_VERSION }}${{ env.TAG_BUILD }}-${{ matrix.job.os }}-ALL'
           directory: '.'
           path: '.'
           exclusions: '*.git* /*node_modules/* .editorconfig'
