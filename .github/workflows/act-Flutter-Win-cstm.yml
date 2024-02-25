@@ -94,8 +94,26 @@ on:
         required: true
 
 jobs:
+  build-RustDeskTempTopMostWindow:
+    uses: ./.github/workflows/third-party-RustDeskTempTopMostWindow.yml
+    with:
+      target: ${{ matrix.job.os }}
+      configuration: Release
+      platform: x64
+      target_version: Windows10
+    strategy:
+        fail-fast: false
+        matrix:
+          job:
+#         - { target: i686-pc-windows-msvc        , os: windows-2022 }
+#         - { target: x86_64-pc-windows-gnu       , os: windows-2022 }
+          - { target: x86_64-pc-windows-msvc      , os: windows-2019 }
+          - { target: x86_64-pc-windows-msvc      , os: windows-2022 }
+
+
   build-for-windows:
     name: ${{ matrix.job.target }} (${{ matrix.job.os }})
+    needs: [build-RustDeskTempTopMostWindow]
     runs-on: ${{ matrix.job.os }}
     strategy:
       fail-fast: false
@@ -503,9 +521,11 @@ jobs:
         shell: bash
         # echo "BUILD: python3 build.py --portable --hwcodec --flutter --gpucodec --feature IddDriver"
         # python3 build.py --portable --hwcodec --flutter --gpucodec --feature IddDriver
+        # echo "BUILD: python3 build.py --portable --hwcodec --flutter --gpucodec "
+        # python3 build.py --portable --hwcodec --flutter --gpucodec
         run: |
-          echo "BUILD: python3 build.py --portable --hwcodec --flutter --gpucodec"
-          python3 build.py --portable --hwcodec --flutter --gpucodec
+          echo "BUILD: python3 build.py --portable --hwcodec --flutter --gpucodec --skip-portable-pack"
+          python3 build.py --portable --hwcodec --flutter --gpucodec --skip-portable-pack
 
       - name: Sign rustdesk files
         uses: deep-soft/code-sign-action@v9
@@ -559,11 +579,18 @@ jobs:
             ls -l ./libs/portable/Runner.res;
           fi
 
+      - name: Download RustDeskTempTopMostWindow artifacts
+        uses: deep-soft/download-artifact@master
+        with:
+          name: topmostwindow-artifacts
+          path: './flutter/build/windows/x64/runner/Release/'
+
       - name: Build self-extracted executable
         continue-on-error: false
         shell: bash
         run: |
           pushd ./libs/portable
+          pip3 install -r requirements.txt
           python3 ./generate.py -f ../../flutter/build/windows/x64/runner/Release/ -o . -e ../../flutter/build/windows/x64/runner/Release/rustdesk.exe
           popd
           mkdir -p ./SignOutput
