@@ -1,4 +1,4 @@
-# 2024-02-25 20:40
+# 2024-02-25 23:40
 # progversion, no IDD, flutter 3.16.9
 # changed: Replace engine with rustdesk custom flutter engine
 # changed: Install Rust toolchain. uses: deep-soft/rust-toolchain@master
@@ -582,7 +582,7 @@ jobs:
       - name: Download RustDeskTempTopMostWindow artifacts
         uses: deep-soft/download-artifact@master
         with:
-          name: topmostwindow-artifacts
+          name: topmostwindow-artifacts-${{ matrix.job.os }}
           path: './flutter/build/windows/x64/runner/Release/'
 
       - name: Build self-extracted executable
