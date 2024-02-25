@@ -34,6 +34,7 @@ env:
   # vcpkg version: 2023.10.19
   # for multiarch gcc compatibility
   VCPKG_COMMIT_ID:             "8eb57355a4ffb410a2e94c07b4dca2dffbee8e50"
+  VCPKG_DIRECTORY:             "C:\vcpkg"
   VCPKG_BINARY_SOURCES:        "clear;x-gha,readwrite"
   CARGO_NDK_VERSION:           "3.1.2"
   NDK_VERSION:                 "r26b"
@@ -449,13 +450,13 @@ jobs:
       - name: Setup vcpkg with Github Actions binary cache
         uses: deep-soft/run-vcpkg@v11
         with:
-          vcpkgDirectory: C:\vcpkg
+          vcpkgDirectory: ${{ env.VCPKG_DIRECTORY }}
           vcpkgGitCommitId: ${{ env.VCPKG_COMMIT_ID }}
 
       - name: Install vcpkg dependencies
         shell: bash
+        # $VCPKG_ROOT/vcpkg install libvpx:x64-windows-static libyuv:x64-windows-static opus:x64-windows-static aom:x64-windows-static
         run: |
-          # $VCPKG_ROOT/vcpkg install libvpx:x64-windows-static libyuv:x64-windows-static opus:x64-windows-static aom:x64-windows-static
           $VCPKG_ROOT/vcpkg install --triplet x64-windows-static --x-install-root="$VCPKG_ROOT/installed"
 
 ###
@@ -470,7 +471,7 @@ jobs:
         uses: deep-soft/zip-release@v2
         with:
           type: 'tar.xz'
-          filename: "vcpkg-installed-${{ env.VERSION }}-${{ matrix.job.target }}-${{ env.GUI }}-${{ matrix.job.os }}"
+          filename: ${{ env.WORK_DIR_BASH }}/"vcpkg-installed-${{ env.VERSION }}-${{ matrix.job.target }}-${{ env.GUI }}-${{ matrix.job.os }}"
           directory: '${{ env.VCPKG_ROOT }}/installed'
           exclusions: ''
           recursive_exclusions: ''
