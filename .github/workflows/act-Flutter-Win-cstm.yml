@@ -34,7 +34,7 @@ env:
   # vcpkg version: 2023.10.19
   # for multiarch gcc compatibility
   VCPKG_COMMIT_ID:             "8eb57355a4ffb410a2e94c07b4dca2dffbee8e50"
-  VCPKG_DIRECTORY:             "C:\vcpkg"
+  VCPKG_DIRECTORY:             "C:\\vcpkg"
   VCPKG_BINARY_SOURCES:        "clear;x-gha,readwrite"
   CARGO_NDK_VERSION:           "3.1.2"
   NDK_VERSION:                 "r26b"
@@ -178,7 +178,7 @@ jobs:
       - name: set WORK_DIR_OS
         shell: cmd
         run: |
-          set WORK_DIR_OS=%CD%
+          set "WORK_DIR_OS=%CD:\=/%
           echo WORK_DIR_OS=%WORK_DIR_OS%
           echo WORK_DIR_OS=%WORK_DIR_OS%>> %GITHUB_ENV%
           echo GITHUB_WORKSPACE=%GITHUB_WORKSPACE%
@@ -393,7 +393,7 @@ jobs:
           files: |
             ${{ env.ASSET_SRC }}
             ${{ env.ASSET_SRC1 }}
-            ${{ env.WORK_DIR_OS }}\_version_.txt
+            ${{ env.WORK_DIR_OS }}/_version_.txt
 
       - name: Install LLVM and Clang
         uses: deep-soft/install-llvm-action@v1
@@ -490,7 +490,7 @@ jobs:
           tag_name: vcpkg-installed-${{ env.VERSION }}-${{ matrix.job.target }}-${{ env.GUI }}
           files: |
             ${{ env.ASSET_VCPKG }}
-            ${{ env.WORK_DIR_OS }}\_version_.txt
+            ${{ env.WORK_DIR_OS }}/_version_.txt
 
       - name: Install brotli
         shell: bash
@@ -626,7 +626,7 @@ jobs:
             ${{ env.ASSET_SRC }}
             ${{ env.ASSET_SRC1 }}
             ${{ env.ASSET_SRC2 }}
-            ${{ env.WORK_DIR_OS }}\_version_.txt
+            ${{ env.WORK_DIR_OS }}/_version_.txt
 
       - name: Publish version build - Release
         continue-on-error: false
@@ -638,7 +638,7 @@ jobs:
             ./SignOutput/${{ env.PROG_NAME }}-*.exe
             ./SignOutput/${{ env.PROG_NAME }}-*.exe.sha256
             ./SignOutput/_version_.txt
-            ${{ env.WORK_DIR_OS }}\_version_.txt
+            ${{ env.WORK_DIR_OS }}/_version_.txt
 
 # zip release begin
       - name: Create Archive ALL
@@ -665,5 +665,5 @@ jobs:
           filelist: ${{ steps.zip_archive_all.outputs.volumes_list_name }}
           files: |
               ${{ env.ZIP_ARCHIVE_ALL }}
-              ${{ env._OS }}\_version_.txt
+              ${{ env._OS }}/_version_.txt
 # zip release end
