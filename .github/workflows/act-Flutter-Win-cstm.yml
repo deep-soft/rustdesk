@@ -1,4 +1,4 @@
-# 2024-02-22 23:30
+# 2024-02-25 20:40
 # progversion, no IDD, flutter 3.16.9
 # changed: Replace engine with rustdesk custom flutter engine
 # changed: Install Rust toolchain. uses: deep-soft/rust-toolchain@master
@@ -170,16 +170,25 @@ jobs:
           echo "TAG_REF=$_ref_" >> $GITHUB_ENV
           _build_=${{ env.TAG_BUILD }}-$_date_-$_ref_
           echo "TAG_BUILD=$_build_" >> $GITHUB_ENV
-          echo "WORK_DIR=$(pwd)" >> $GITHUB_ENV
+          echo "WORK_DIR_BASH=$(pwd)" >> $GITHUB_ENV
           echo "TAG_DATE=$_date_" >> $GITHUB_ENV
           echo "DATE_YMD=$_date_YMD" >> $GITHUB_ENV
+
+      - name: set WORK_DIR_OS
+        shell: cmd
+        run: |
+          set WORK_DIR_OS=%CD%
+          echo WORK_DIR_OS=%WORK_DIR_OS%
+          echo WORK_DIR_OS=%WORK_DIR_OS% >> %GITHUB_ENV%
 
       - name: Print ref, build version
         shell: bash
         run: |
           echo "REF: ${{ env.TAG_REF }}
           echo "BLD: ${{ env.TAG_BUILD }}
-          echo "${{ env.TAG_NAME }}-${{ env.TAG_BUILD }}" > ${{ env.WORK_DIR }}/_version_.txt
+          echo "${{ env.TAG_NAME }}-${{ env.TAG_BUILD }}" > ${{ env.WORK_DIR_BASH }}/_version_.txt
+          echo "WORK_DIR_BASH=${{ env.WORK_DIR_BASH }}"
+          echo "WORK_DIR_OS=${{ env.WORK_DIR_OS }}"
 
       - name: Create Create source archive
         continue-on-error: true
@@ -381,7 +390,7 @@ jobs:
           files: |
             ${{ env.ASSET_SRC }}
             ${{ env.ASSET_SRC1 }}
-            ${{ env.WORK_DIR }}/_version_.txt
+            ${{ env.WORK_DIR_OS }}\_version_.txt
 
       - name: Install LLVM and Clang
         uses: deep-soft/install-llvm-action@v1
@@ -453,11 +462,16 @@ jobs:
       - name: Create vcpkg-installed archive
         if: ${{ inputs.vpkg_installed }}
         continue-on-error: true
+#          filename: "vcpkg-installed-${{ env.VERSION }}-${{ matrix.job.target }}-${{ env.GUI }}-${{ matrix.job.os }}"
+#          directory: '.'
+#          exclusions: ''
+#          recursive_exclusions: ''
+#          path: '.'
         uses: deep-soft/zip-release@v2
         with:
           type: 'tar.xz'
           filename: "vcpkg-installed-${{ env.VERSION }}-${{ matrix.job.target }}-${{ env.GUI }}-${{ matrix.job.os }}"
-          directory: '.'
+          directory: '${{ env.VCPKG_ROOT }}/installed'
           exclusions: ''
           recursive_exclusions: ''
           path: '.'
@@ -473,7 +487,7 @@ jobs:
           tag_name: vcpkg-installed-${{ env.VERSION }}-${{ matrix.job.target }}-${{ env.GUI }}
           files: |
             ${{ env.ASSET_VCPKG }}
-            ${{ env.WORK_DIR }}/_version_.txt
+            ${{ env.WORK_DIR_OS }}\_version_.txt
 
       - name: Install brotli
         shell: bash
@@ -551,7 +565,7 @@ jobs:
           popd
           mkdir -p ./SignOutput
           mv ./target/release/rustdesk-portable-packer.exe ./SignOutput/${{ env.PROG_NAME }}-${{ env.VERSION }}-${{ matrix.job.target }}-${{ matrix.job.os }}.exe
-          cp ${{ env.WORK_DIR }}/_version_.txt ./SignOutput
+          cp ${{ env.WORK_DIR_BASH }}/_version_.txt ./SignOutput
 
       # - name: Rename rustdesk
       #   shell: bash
@@ -609,7 +623,7 @@ jobs:
             ${{ env.ASSET_SRC }}
             ${{ env.ASSET_SRC1 }}
             ${{ env.ASSET_SRC2 }}
-            ${{ env.WORK_DIR }}/_version_.txt
+            ${{ env.WORK_DIR_OS }}\_version_.txt
 
       - name: Publish version build - Release
         continue-on-error: false
@@ -621,7 +635,7 @@ jobs:
             ./SignOutput/${{ env.PROG_NAME }}-*.exe
             ./SignOutput/${{ env.PROG_NAME }}-*.exe.sha256
             ./SignOutput/_version_.txt
-            ${{ env.WORK_DIR }}/_version_.txt
+            ${{ env.WORK_DIR_OS }}\_version_.txt
 
 # zip release begin
       - name: Create Archive ALL
@@ -648,5 +662,5 @@ jobs:
           filelist: ${{ steps.zip_archive_all.outputs.volumes_list_name }}
           files: |
               ${{ env.ZIP_ARCHIVE_ALL }}
-              ${{ env.WORK_DIR }}/_version_.txt
+              ${{ env.WORK_DIR_OS }}\_version_.txt
 # zip release end
