@@ -625,8 +625,9 @@ jobs:
 
 # zip release begin
       - name: Create Archive ALL
+        id: zip_archive_all
         if:  ${{ inputs.archive_ALL}}
-        uses: deep-soft/zip-release@v2.3
+        uses: deep-soft/zip-release@v3
         with:
           type: '7z'
           filename: '${{ env.TAG_VERSION }}${{ env.TAG_BUILD }}-ALL'
@@ -644,6 +645,7 @@ jobs:
         with:
           draft: true
           tag_name: ${{ env.TAG_VERSION }}${{ env.TAG_BUILD }}-ALL
+          filelist: ${{ steps.zip_archive_all.outputs.volumes_list_name }}
           files: |
               ${{ env.ZIP_ARCHIVE_ALL }}
               ${{ env.WORK_DIR }}/_version_.txt
