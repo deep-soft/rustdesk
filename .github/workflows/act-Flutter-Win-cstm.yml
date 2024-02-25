@@ -465,7 +465,7 @@ jobs:
       - name: Create vcpkg-installed archive
         if: ${{ inputs.vpkg_installed }}
         continue-on-error: true
-#          filename: "vcpkg-installed-${{ env.VERSION }}-${{ matrix.job.target }}-${{ env.GUI }}-${{ matrix.job.os }}"
+#          filename: vcpkg-installed-${{ env.VERSION }}-${{ matrix.job.target }}-${{ env.GUI }}-${{ matrix.job.os }}
 #          directory: '.'
 #          exclusions: ''
 #          recursive_exclusions: ''
@@ -473,7 +473,7 @@ jobs:
         uses: deep-soft/zip-release@v2
         with:
           type: 'tar.xz'
-          filename: ${{ env.WORK_DIR_BASH }}/"vcpkg-installed-${{ env.VERSION }}-${{ matrix.job.target }}-${{ env.GUI }}-${{ matrix.job.os }}"
+          filename: '${{ env.WORK_DIR_BASH }}/vcpkg-installed-${{ env.VERSION }}-${{ matrix.job.target }}-${{ env.GUI }}-${{ matrix.job.os }}'
           directory: '${{ env.VCPKG_ROOT }}/installed'
           exclusions: ''
           recursive_exclusions: ''
@@ -665,5 +665,5 @@ jobs:
           filelist: ${{ steps.zip_archive_all.outputs.volumes_list_name }}
           files: |
               ${{ env.ZIP_ARCHIVE_ALL }}
-              ${{ env._OS }}/_version_.txt
+              ${{ env.WORK_DIR_OS }}/_version_.txt
 # zip release end
