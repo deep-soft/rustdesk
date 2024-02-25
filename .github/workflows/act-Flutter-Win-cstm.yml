@@ -180,7 +180,8 @@ jobs:
         run: |
           set WORK_DIR_OS=%CD%
           echo WORK_DIR_OS=%WORK_DIR_OS%
-          echo "WORK_DIR_OS=%WORK_DIR_OS%" >> %GITHUB_ENV%
+          echo WORK_DIR_OS=%WORK_DIR_OS%>> %GITHUB_ENV%
+          echo GITHUB_WORKSPACE=%GITHUB_WORKSPACE%
 
       - name: Print ref, build version
         shell: bash
@@ -190,6 +191,7 @@ jobs:
           echo "${{ env.TAG_NAME }}-${{ env.TAG_BUILD }}" > ${{ env.WORK_DIR_BASH }}/_version_.txt
           echo "WORK_DIR_BASH=${{ env.WORK_DIR_BASH }}"
           echo "WORK_DIR_OS=${{ env.WORK_DIR_OS }}"
+          echo GITHUB_WORKSPACE=$GITHUB_WORKSPACE
 
       - name: Create Create source archive
         continue-on-error: true
