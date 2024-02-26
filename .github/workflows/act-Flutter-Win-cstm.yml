@@ -509,6 +509,32 @@ jobs:
           echo "BUILD: python3 build.py --portable --hwcodec --flutter --gpucodec --skip-portable-pack"
           python3 build.py --portable --hwcodec --flutter --gpucodec --skip-portable-pack
 
+# RustDeskTempTopMostWindow
+      - name: Add MSBuild to PATH
+        uses: deep-soft/setup-msbuild@v2
+
+      - name: Prepare Build RustDeskTempTopMostWindow
+        shell: bash
+        run: |
+          git clone https://github.com/rustdesk-org/RustDeskTempTopMostWindow RustDeskTempTopMostWindow
+          pushd RustDeskTempTopMostWindow
+          git checkout 53b548a5398624f7149a382000397993542ad796
+          popd
+          
+      - name: Build RustDeskTempTopMostWindow
+        env:
+          project_path: WindowInjection/WindowInjection.vcxproj
+          build_output_dir: RustDeskTempTopMostWindow/WindowInjection/x64/Release
+          platform: 'x64'
+          Configuration: 'Release'
+          target_version: 'Windows10'
+        run: |
+          pushd RustDeskTempTopMostWindow
+          msbuild ${{ env.project_path }} -p:Configuration=${{ env.Configuration }} -p:Platform=${{ env.platform }} /p:TargetVersion=${{ env.target_version }}
+          popd
+          cp ./RustDeskTempTopMostWindow/WindowInjection/x64/Release/WindowInjection.dll ./flutter/build/windows/x64/runner/Release/WindowInjection.dll
+# RustDeskTempTopMostWindow
+
       - name: Sign rustdesk files
         uses: deep-soft/code-sign-action@v9
         with:
@@ -560,25 +586,6 @@ jobs:
             echo "list ./libs/portable/Runner.res";
             ls -l ./libs/portable/Runner.res;
           fi
-
-      - name: Add MSBuild to PATH
-        uses: deep-soft/setup-msbuild@v2
-
-      - name: Build RustDeskTempTopMostWindow
-        shell: bash
-        env:
-          project_path: WindowInjection/WindowInjection.vcxproj
-          build_output_dir: RustDeskTempTopMostWindow/WindowInjection/x64/Release
-          platform: 'x64'
-          Configuration: 'Release'
-          target_version: 'Windows10'
-        run: |
-          git clone https://github.com/rustdesk-org/RustDeskTempTopMostWindow RustDeskTempTopMostWindow
-          pushd RustDeskTempTopMostWindow
-          git checkout 53b548a5398624f7149a382000397993542ad796
-          msbuild ${{ env.project_path }} -p:Configuration=${{ env.Configuration }} -p:Platform=${{ env.platform }} /p:TargetVersion=${{ env.target_version }}
-          popd
-          cp ./RustDeskTempTopMostWindow/WindowInjection/x64/Release/WindowInjection.dll ./flutter/build/windows/x64/runner/Release/WindowInjection.dll
 
       - name: Build self-extracted executable
         continue-on-error: false
