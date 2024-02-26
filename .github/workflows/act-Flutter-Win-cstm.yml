@@ -94,26 +94,8 @@ on:
         required: true
 
 jobs:
-  build-RustDeskTempTopMostWindow:
-    uses: ./.github/workflows/act-0-third-party-RustDeskTTMW.yml
-    with:
-      target: ${{ matrix.job.os }}
-      configuration: Release
-      platform: x64
-      target_version: Windows10
-    strategy:
-        fail-fast: false
-        matrix:
-          job:
-#         - { target: i686-pc-windows-msvc        , os: windows-2022 }
-#         - { target: x86_64-pc-windows-gnu       , os: windows-2022 }
-          - { target: x86_64-pc-windows-msvc      , os: windows-2019 }
-          - { target: x86_64-pc-windows-msvc      , os: windows-2022 }
-
-
   build-for-windows:
     name: ${{ matrix.job.target }} (${{ matrix.job.os }})
-    needs: [build-RustDeskTempTopMostWindow]
     runs-on: ${{ matrix.job.os }}
     strategy:
       fail-fast: false
@@ -491,7 +473,7 @@ jobs:
         uses: deep-soft/zip-release@v2
         with:
           type: 'tar.xz'
-          filename: '${{ env.WORK_DIR_BASH }}/vcpkg-installed-${{ env.VERSION }}-${{ matrix.job.target }}-${{ env.GUI }}-${{ matrix.job.os }}'
+          filename: '${{ env.WORK_DIR_OS }}/vcpkg-installed-${{ env.VERSION }}-${{ matrix.job.target }}-${{ env.GUI }}-${{ matrix.job.os }}'
           directory: '${{ env.VCPKG_ROOT }}/installed'
           exclusions: ''
           recursive_exclusions: ''
@@ -579,11 +561,26 @@ jobs:
             ls -l ./libs/portable/Runner.res;
           fi
 
-      - name: Download RustDeskTempTopMostWindow artifacts
-        uses: deep-soft/download-artifact@master
-        with:
-          name: topmostwindow-artifacts-${{ matrix.job.os }}
-          path: './flutter/build/windows/x64/runner/Release/'
+      - name: Add MSBuild to PATH
+        uses: deeps-soft/setup-msbuild@v2
+
+      - name: Build RustDeskTempTopMostWindow
+        shell: bash
+        env:
+          project_path: WindowInjection/WindowInjection.vcxproj
+          build_output_dir: RustDeskTempTopMostWindow/WindowInjection/x64/Release
+          platform: 'x64'
+          Configuration: 'Release'
+          target_version: 'Windows10'
+        run: |
+          git clone https://github.com/rustdesk-org/RustDeskTempTopMostWindow RustDeskTempTopMostWindow
+          cd RustDeskTempTopMostWindow && git checkout 53b548a5398624f7149a382000397993542ad796
+          msbuild ${{ env.project_path }} -p:Configuration=${{ env.Configuration }} -p:Platform=${{ env.platform }} /p:TargetVersion=${{ env.target_version }}
+
+      - name: copy WindowInjection.dll (RustDeskTempTopMostWindow) to flutter
+        shell: bash
+        run: |
+          cp ./RustDeskTempTopMostWindow/WindowInjection/x64/Release/WindowInjection.dll ./flutter/build/windows/x64/runner/Release/WindowInjection.dll
 
       - name: Build self-extracted executable
         continue-on-error: false
