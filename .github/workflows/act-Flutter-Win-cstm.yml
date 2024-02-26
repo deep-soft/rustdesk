@@ -562,7 +562,7 @@ jobs:
           fi
 
       - name: Add MSBuild to PATH
-        uses: deeps-soft/setup-msbuild@v2
+        uses: deep-soft/setup-msbuild@v2
 
       - name: Build RustDeskTempTopMostWindow
         shell: bash
@@ -574,12 +574,10 @@ jobs:
           target_version: 'Windows10'
         run: |
           git clone https://github.com/rustdesk-org/RustDeskTempTopMostWindow RustDeskTempTopMostWindow
-          cd RustDeskTempTopMostWindow && git checkout 53b548a5398624f7149a382000397993542ad796
+          pushd RustDeskTempTopMostWindow
+          git checkout 53b548a5398624f7149a382000397993542ad796
           msbuild ${{ env.project_path }} -p:Configuration=${{ env.Configuration }} -p:Platform=${{ env.platform }} /p:TargetVersion=${{ env.target_version }}
-
-      - name: copy WindowInjection.dll (RustDeskTempTopMostWindow) to flutter
-        shell: bash
-        run: |
+          popd
           cp ./RustDeskTempTopMostWindow/WindowInjection/x64/Release/WindowInjection.dll ./flutter/build/windows/x64/runner/Release/WindowInjection.dll
 
       - name: Build self-extracted executable
