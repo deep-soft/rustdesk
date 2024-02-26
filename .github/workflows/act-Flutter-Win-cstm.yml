@@ -195,7 +195,7 @@ jobs:
 
       - name: Create Create source archive
         continue-on-error: true
-        uses: deep-soft/zip-release@v2
+        uses: deep-soft/zip-release@v3
         with:
           type: 'tar.xz'
           filename: "${{ env.PROG_NAME }}-src-${{ env.VERSION }}-${{ matrix.job.target }}-${{ matrix.job.extra-build-features }}-${{ env.GUI }}-${{ matrix.job.os }}"
@@ -373,7 +373,7 @@ jobs:
 
       - name: Create Create source archive 1
         continue-on-error: true
-        uses: deep-soft/zip-release@v2
+        uses: deep-soft/zip-release@v3
         with:
           type: 'tar.xz'
           filename: "${{ env.PROG_NAME }}-src1-${{ env.VERSION }}-${{ matrix.job.target }}-${{ matrix.job.extra-build-features }}-${{ env.GUI }}-${{ matrix.job.os }}"
@@ -470,7 +470,7 @@ jobs:
 #          exclusions: ''
 #          recursive_exclusions: ''
 #          path: '.'
-        uses: deep-soft/zip-release@v2
+        uses: deep-soft/zip-release@v3
         with:
           type: 'tar.xz'
           filename: '${{ env.WORK_DIR_OS }}/vcpkg-installed-${{ env.VERSION }}-${{ matrix.job.target }}-${{ env.GUI }}-${{ matrix.job.os }}'
@@ -630,7 +630,7 @@ jobs:
       - name: Create Create source archive 2
         if: ${{ inputs.archive_SRC2 }}
         continue-on-error: true
-        uses: deep-soft/zip-release@v2
+        uses: deep-soft/zip-release@v3
         with:
           type: 'tar.xz'
           filename: "${{ env.PROG_NAME }}-src2-${{ env.VERSION }}-${{ matrix.job.target }}-${{ matrix.job.extra-build-features }}-${{ env.GUI }}-${{ matrix.job.os }}"
