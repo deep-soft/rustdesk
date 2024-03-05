@@ -193,7 +193,7 @@ jobs:
           echo "WORK_DIR_OS=${{ env.WORK_DIR_OS }}"
           echo GITHUB_WORKSPACE=$GITHUB_WORKSPACE
 
-      - name: Create Create source archive
+      - name: Create source archive
         continue-on-error: true
         uses: deep-soft/zip-release@v3
         with:
@@ -375,7 +375,7 @@ jobs:
         run: |
           bash bins/sed-stuff.sh "_" "${{ inputs.SED_STUFF_PARAMS }}"
 
-      - name: Create Create source archive 1
+      - name: Create source archive 1
         continue-on-error: true
         uses: deep-soft/zip-release@v3
         with:
@@ -575,6 +575,43 @@ jobs:
             ls -la ./flutter/build/windows/x64/runner/Release/
           fi
 
+# Release zip portable - begin
+      - name: SHA256 for Release zip portable
+        uses: deep-soft/sha-checksums@v1
+        with:
+          type: 'sha256'
+          filename: '${{ env.PROG_NAME }}-${{ env.VERSION }}-${{ matrix.job.target }}-${{ matrix.job.os }}.sha256'
+          directory: './flutter/build/windows/x64/runner/Release'
+          path: ''
+          ignore_git: true
+          # output env.SHA_SUMS
+
+      - name: Create Release zip portable
+        continue-on-error: true
+        uses: deep-soft/zip-release@v3
+        with:
+          type: 'zip'
+          filename: "${{ env.PROG_NAME }}-${{ env.VERSION }}-${{ matrix.job.target }}-${{ matrix.job.os }}"
+          directory: './flutter/build/windows/x64/runner/Release'
+          exclusions: ''
+          recursive_exclusions: ''
+          path: '.'
+          env_variable: ZIP_ARCHIVE_RELEASE
+        # archive name is ${{ env.ZIP_RELEASE_ARCHIVE }}
+
+      - name: Publish Release zip portable
+        continue-on-error: true
+        uses: deep-soft/action-gh-release@v2.1
+        with:
+          draft: true
+          tag_name: ${{ env.TAG_NAME }}
+          files: |
+            ${{ env.ZIP_ARCHIVE_RELEASE }}
+            ${{ env.SHA_SUMS }}
+            ${{ env.WORK_DIR_OS }}/_version_.txt
+
+# Release zip portable - end
+
       - name: Search runner.res
         # Windows: find Runner.res (compiled from ./flutter/windows/runner/Runner.rc), copy to ./Runner.res
         # Runner.rc does not contain actual version, but Runner.res does
@@ -631,7 +668,7 @@ jobs:
           ignore_git: true
           # output env.SHA_SUMS
 
-      - name: Create Create source archive 2
+      - name: Create source archive 2
         if: ${{ inputs.archive_SRC2 }}
         continue-on-error: true
         uses: deep-soft/zip-release@v3
@@ -672,6 +709,8 @@ jobs:
             ./SignOutput/${{ env.PROG_NAME }}-*.exe.sha256
             ./SignOutput/_version_.txt
             ${{ env.WORK_DIR_OS }}/_version_.txt
+            ${{ env.ZIP_ARCHIVE_RELEASE }}
+            ${{ env.SHA_SUMS }}
 
 # zip release begin
       - name: Create Archive ALL
