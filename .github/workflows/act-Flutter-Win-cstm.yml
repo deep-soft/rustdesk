@@ -295,13 +295,18 @@ jobs:
           # sed -i 's|"icon.rc"|"../../flutter/windows/runner/Runner.rc"|' ./libs/portable/build.rs;
           # sed -i 's|embed_resource::compile("icon.rc", embed_resource::NONE);|println!("cargo:rustc-link-lib=dylib:+verbatim=../../flutter/build/windows/runner/rustdesk.dir/Release/Runner.res");|' ./libs/portable/build.rs;
           # sed -i 's|embed_resource::compile("icon.rc", embed_resource::NONE);|println!("cargo:rustc-link-lib=dylib:+verbatim=./flutter/build/windows/runner/rustdesk.dir/Release/Runner.res");|' ./libs/portable/build.rs;
-          sed -i 's|embed_resource::compile("icon.rc", embed_resource::NONE);|println!("cargo:rustc-link-lib=dylib:+verbatim=./Runner.res");|' ./libs/portable/build.rs;
+          #sed -i 's|embed_resource::compile("icon.rc", embed_resource::NONE);|println!("cargo:rustc-link-lib=dylib:+verbatim=./Runner.res");|' ./libs/portable/build.rs;
+          sed -i 's|ProductName = "rustdesk"|ProductName = "rustdesk"\nFileVersion = "${{ env.VERSION }}.${{ env.DATE_YMD }}"\nProductVersion = "${{ env.VERSION }}${{ env.TAG_BUILD }}"|' ./libs/portable/Cargo.toml;
+          
 
-      - name: print build.rs
+      - name: print build.rs Cargo.toml
         continue-on-error: true
         shell: bash
         run: |
-          cat ./libs/portable/build.rs
+          echo "cat ./libs/portable/build.rs"
+          cat ./libs/portable/build.rs;
+          echo "cat ./libs/portable/Cargo.toml"
+          cat ./libs/portable/Cargo.toml;
 
       - name: ProductVersion, add date
         continue-on-error: true
