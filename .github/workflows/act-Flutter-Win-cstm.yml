@@ -25,7 +25,7 @@ env:
   RDSK_PCH_SH2:                '${{ secrets.RDSK_PCH_SH2 }}'
   RDSK_PCH_SH4:                '${{ secrets.RDSK_PCH_SH4 }}'
   RDSK_PCH_SH_CLN:             '${{ secrets.RDSK_PCH_SH_CLN }}'
-  RUST_VERSION:                "rust-1.70.0"
+  RUST_VERSION:                "rust-1.76.0"
   LLVM_VERSION:                "15.0.6"
   FLUTTER_VERSION:             "3.16.9"
   FLUTTER_RUST_BRIDGE_VERSION: "1.80.1"
@@ -286,7 +286,7 @@ jobs:
             pwd
           fi
 
-      - name: Add version information for self-extract
+      - name: Add version information for winres
         continue-on-error: true
         shell: bash
         run: |
@@ -295,46 +295,49 @@ jobs:
           # sed -i 's|"icon.rc"|"../../flutter/windows/runner/Runner.rc"|' ./libs/portable/build.rs;
           # sed -i 's|embed_resource::compile("icon.rc", embed_resource::NONE);|println!("cargo:rustc-link-lib=dylib:+verbatim=../../flutter/build/windows/runner/rustdesk.dir/Release/Runner.res");|' ./libs/portable/build.rs;
           # sed -i 's|embed_resource::compile("icon.rc", embed_resource::NONE);|println!("cargo:rustc-link-lib=dylib:+verbatim=./flutter/build/windows/runner/rustdesk.dir/Release/Runner.res");|' ./libs/portable/build.rs;
-          #sed -i 's|embed_resource::compile("icon.rc", embed_resource::NONE);|println!("cargo:rustc-link-lib=dylib:+verbatim=./Runner.res");|' ./libs/portable/build.rs;
-          sed -i 's|ProductName = "rustdesk"|ProductName = "rustdesk"\nFileVersion = "${{ env.VERSION }}.${{ env.DATE_YMD }}"\nProductVersion = "${{ env.VERSION }}${{ env.TAG_BUILD }}"|' ./libs/portable/Cargo.toml;
-          
+          # sed -i 's|embed_resource::compile("icon.rc", embed_resource::NONE);|println!("cargo:rustc-link-lib=dylib:+verbatim=./Runner.res");|' ./libs/portable/build.rs;
+          # sed -i 's|ProductName = "rustdesk"|ProductName = "rustdesk"\nFileVersion = "${{ env.VERSION }}.${{ env.DATE_YMD }}"\nProductVersion = "${{ env.VERSION }}${{ env.TAG_BUILD }}"|' ./libs/portable/Cargo.toml;
+          sed -i 's|[package.metadata.winres]|[package.metadata.winres]\nFileVersion = "${{ env.VERSION }}.${{ env.DATE_YMD }}"\nProductVersion = "${{ env.VERSION }}${{ env.TAG_BUILD }}"|' ./Cargo.toml;
+          sed -i 's|[package.metadata.winres]|[package.metadata.winres]\nFileVersion = "${{ env.VERSION }}.${{ env.DATE_YMD }}"\nProductVersion = "${{ env.VERSION }}${{ env.TAG_BUILD }}"|' ./libs/portable/Cargo.toml;
 
-      - name: print build.rs Cargo.toml
+      - name: print Cargo.toml
         continue-on-error: true
         shell: bash
         run: |
-          echo "cat ./libs/portable/build.rs"
-          cat ./libs/portable/build.rs;
-          echo "cat ./libs/portable/Cargo.toml"
+          echo " ==> cat ./Cargo.toml"
+          cat ./Cargo.toml;
+          echo " ==> cat ./libs/portable/Cargo.toml"
           cat ./libs/portable/Cargo.toml;
+          # echo " ==> cat ./libs/portable/build.rs"
+          # cat ./libs/portable/build.rs;
 
-      - name: ProductVersion, add date
-        continue-on-error: true
-        shell: bash
-        run: |
-          sed -i 's|"FileVersion", VERSION_AS_STRING |"FileVersion", "${{ env.VERSION }}.${{ env.DATE_YMD }}" |' ./flutter/windows/runner/Runner.rc;
-          sed -i 's|"ProductVersion", VERSION_AS_STRING |"ProductVersion", "${{ env.VERSION }}${{ env.TAG_BUILD }}" |' ./flutter/windows/runner/Runner.rc;
-          cat ./flutter/windows/runner/Runner.rc
-          # change year in Copyright, 2023 to 2024
-          sed -i 's|Copyright (C) 2023 com.carriez.|Copyright (C) 2024 com.carriez.|' ./flutter/windows/runner/Runner.rc;
-          cat ./flutter/windows/runner/Runner.rc
+#      - name: ProductVersion, add date
+#        continue-on-error: true
+#        shell: bash
+#        run: |
+#          sed -i 's|"FileVersion", VERSION_AS_STRING |"FileVersion", "${{ env.VERSION }}.${{ env.DATE_YMD }}" |' ./flutter/windows/runner/Runner.rc;
+#          sed -i 's|"ProductVersion", VERSION_AS_STRING |"ProductVersion", "${{ env.VERSION }}${{ env.TAG_BUILD }}" |' ./flutter/windows/runner/Runner.rc;
+#          cat ./flutter/windows/runner/Runner.rc
+#          # change year in Copyright, 2023 to 2024
+#          sed -i 's|Copyright (C) 2023 com.carriez.|Copyright (C) 2024 com.carriez.|' ./flutter/windows/runner/Runner.rc;
+#          cat ./flutter/windows/runner/Runner.rc
 
-      - name: Search runner.res
-        continue-on-error: true
-        shell: bash
-        run: |
-          runner_res=$(find . -name "Runner.res")
-          if [ "$runner_res" != "" ]; then
-            echo "0: Runner.res: $runner_res"
-            cp $runner_res ./Runner.res
-            cp $runner_res ./libs/portable/Runner.res
-          fi
-          runner_rc=$(find . -name "Runner.rc")
-          if [ "$runner_rc" != "" ]; then
-            echo "0: Runner.rc: $runner_rc"
-            cp $runner_rc ./Runner.rc
-            cp $runner_rc ./libs/portable/Runner.rc
-          fi
+#      - name: Search runner.res
+#        continue-on-error: true
+#        shell: bash
+#        run: |
+#          runner_res=$(find . -name "Runner.res")
+#          if [ "$runner_res" != "" ]; then
+#            echo "0: Runner.res: $runner_res"
+#            cp $runner_res ./Runner.res
+#            cp $runner_res ./libs/portable/Runner.res
+#          fi
+#          runner_rc=$(find . -name "Runner.rc")
+#          if [ "$runner_rc" != "" ]; then
+#            echo "0: Runner.rc: $runner_rc"
+#            cp $runner_rc ./Runner.rc
+#            cp $runner_rc ./libs/portable/Runner.rc
+#          fi
 
       - name: Cleanup after patch
         continue-on-error: true
@@ -580,7 +583,7 @@ jobs:
         uses: deep-soft/sha-checksums@v1
         with:
           type: 'sha256'
-          filename: '${{ env.PROG_NAME }}-${{ env.VERSION }}-${{ matrix.job.target }}-${{ matrix.job.os }}.sha256'
+          filename: '${{ env.WORK_DIR_OS }}/${{ env.PROG_NAME }}-${{ env.VERSION }}-${{ matrix.job.target }}-${{ matrix.job.os }}.sha256'
           directory: './flutter/build/windows/x64/runner/Release'
           path: ''
           ignore_git: true
@@ -591,7 +594,7 @@ jobs:
         uses: deep-soft/zip-release@v3
         with:
           type: 'zip'
-          filename: "${{ env.PROG_NAME }}-${{ env.VERSION }}-${{ matrix.job.target }}-${{ matrix.job.os }}"
+          filename: "${{ env.WORK_DIR_OS }}/${{ env.PROG_NAME }}-${{ env.VERSION }}-${{ matrix.job.target }}-${{ matrix.job.os }}"
           directory: './flutter/build/windows/x64/runner/Release'
           exclusions: ''
           recursive_exclusions: ''
@@ -609,24 +612,23 @@ jobs:
             ${{ env.ZIP_ARCHIVE_RELEASE }}
             ${{ env.SHA_SUMS }}
             ${{ env.WORK_DIR_OS }}/_version_.txt
-
 # Release zip portable - end
 
-      - name: Search runner.res
-        # Windows: find Runner.res (compiled from ./flutter/windows/runner/Runner.rc), copy to ./Runner.res
-        # Runner.rc does not contain actual version, but Runner.res does
-        continue-on-error: true
-        shell: bash
-        run: |
-          runner_res=$(find . -name "Runner.res");
-          if [ "$runner_res" == "" ]; then
-            echo "Runner.res: not found";
-          else
-            echo "Runner.res: $runner_res";
-            cp $runner_res ./libs/portable/Runner.res;
-            echo "list ./libs/portable/Runner.res";
-            ls -l ./libs/portable/Runner.res;
-          fi
+ #     - name: Search runner.res
+ #       # Windows: find Runner.res (compiled from ./flutter/windows/runner/Runner.rc), copy to ./Runner.res
+ #       # Runner.rc does not contain actual version, but Runner.res does
+ #       continue-on-error: true
+ #       shell: bash
+ #       run: |
+ #         runner_res=$(find . -name "Runner.res");
+ #         if [ "$runner_res" == "" ]; then
+ #           echo "Runner.res: not found";
+ #         else
+ #           echo "Runner.res: $runner_res";
+ #           cp $runner_res ./libs/portable/Runner.res;
+ #           echo "list ./libs/portable/Runner.res";
+ #           ls -l ./libs/portable/Runner.res;
+ #         fi
 
       - name: Build self-extracted executable
         continue-on-error: false
@@ -662,7 +664,7 @@ jobs:
         uses: deep-soft/sha-checksums@v1
         with:
           type: 'sha256'
-          filename: '${{ env.PROG_NAME }}-${{ env.VERSION }}-${{ matrix.job.target }}-${{ matrix.job.os }}.exe.sha256'
+          filename: '${{ env.WORK_DIR_OS }}/${{ env.PROG_NAME }}-${{ env.VERSION }}-${{ matrix.job.target }}-${{ matrix.job.os }}.exe.sha256'
           directory: './SignOutput'
           path: '${{ env.PROG_NAME }}-${{ env.VERSION }}-${{ matrix.job.target }}-${{ matrix.job.os }}.exe'
           ignore_git: true
