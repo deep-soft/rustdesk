@@ -59,6 +59,11 @@ on:
         description: custom TAG_NAME
         default: "Win-cstm"
         required: true
+      search_delete_runner_rc:
+        description: search and delete runner.rc runner.res
+        type: boolean
+        default: false
+        required: true
       archive_SRC2:
         description: Archive SRC2
         type: boolean
@@ -87,11 +92,6 @@ on:
       SED_STUFF_PARAMS:
         description: SED_STUFF_PARAMS
         default: "build.py"
-        required: true
-      search_delete_runner_rc:
-        description: search and delete runner.rc runner.res
-        type: boolean
-        default: false
         required: true
 #      DEBUG_MODE:
 #        description: DEBUG_MODE
@@ -358,7 +358,11 @@ jobs:
           if [ "$runner_rc" != "" ]; then
             echo "0: Runner.rc: $runner_rc"
             rm $runner_rc || true;
+            runner_rc_cmake=$(grep "Runner.rc" ./flutter/windows/runner/CMakeLists.txt);
+            echo "runner_rc_cmake=$runner_rc_cmake";
             sed -i '/\"Runner.rc\"/d' ./flutter/windows/runner/CMakeLists.txt;
+            runner_rc_cmake=$(grep "Runner.rc" ./flutter/windows/runner/CMakeLists.txt);
+            echo "runner_rc_cmake=$runner_rc_cmake";
           fi
 
       - name: Cleanup after patch
