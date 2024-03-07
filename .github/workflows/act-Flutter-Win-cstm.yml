@@ -358,7 +358,7 @@ jobs:
           if [ "$runner_rc" != "" ]; then
             echo "0: Runner.rc: $runner_rc"
             rm $runner_rc || true;
-            sed -i '|\"Runner.rc\"|d' ./flutter/windows/runner/CMakeLists.txt;
+            sed -i '/\"Runner.rc\"/d' ./flutter/windows/runner/CMakeLists.txt;
           fi
 
       - name: Cleanup after patch
