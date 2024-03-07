@@ -325,26 +325,26 @@ jobs:
         run: |
           sed -i 's|"FileVersion", VERSION_AS_STRING |"FileVersion", "${{ env.VERSION }}.${{ env.DATE_YMD }}" |' ./flutter/windows/runner/Runner.rc;
           sed -i 's|"ProductVersion", VERSION_AS_STRING |"ProductVersion", "${{ env.VERSION }}${{ env.TAG_BUILD }}" |' ./flutter/windows/runner/Runner.rc;
-          cat ./flutter/windows/runner/Runner.rc
+          cat ./flutter/windows/runner/Runner.rc;
           # change year in Copyright, 2023 to 2024
           # sed -i 's|Copyright (C) 2023 com.carriez.|Copyright (C) 2024 com.carriez.|' ./flutter/windows/runner/Runner.rc;
-          # cat ./flutter/windows/runner/Runner.rc
+          # cat ./flutter/windows/runner/Runner.rc;
 
       - name: Search runner.res
         continue-on-error: true
         shell: bash
         run: |
-          runner_res=$(find . -name "Runner.res")
+          runner_res=$(find . -name "Runner.res");
           if [ "$runner_res" != "" ]; then
-            echo "0: Runner.res: $runner_res"
-            cp $runner_res ./Runner.res
-            cp $runner_res ./libs/portable/Runner.res
+            echo "0: Runner.res: $runner_res";
+            cp $runner_res ./Runner.res;
+            cp $runner_res ./libs/portable/Runner.res;
           fi
-          runner_rc=$(find . -name "Runner.rc")
+          runner_rc=$(find . -name "Runner.rc");
           if [ "$runner_rc" != "" ]; then
-            echo "0: Runner.rc: $runner_rc"
-            cp $runner_rc ./Runner.rc
-            cp $runner_rc ./libs/portable/Runner.rc
+            echo "0: Runner.rc: $runner_rc";
+            cp $runner_rc ./Runner.rc;
+            cp $runner_rc ./libs/portable/Runner.rc;
           fi
 
       - name: Search and delete runner.rc runner.res
@@ -354,17 +354,17 @@ jobs:
         run: |
           runner_res=$(find . -name "Runner.res")
           if [ "$runner_res" != "" ]; then
-            echo "0: Runner.res: $runner_res"
+            echo "0: Runner.res: $runner_res";
             rm $runner_res || true;
           fi
           runner_rc=$(find . -name "Runner.rc")
           if [ "$runner_rc" != "" ]; then
             echo "0: Runner.rc: $runner_rc"
             rm $runner_rc || true;
-            runner_rc_cmake=$(grep "Runner.rc" ./flutter/windows/runner/CMakeLists.txt);
+            runner_rc_cmake=$(grep "Runner.rc" ./flutter/windows/runner/CMakeLists.txt || true);
             echo "runner_rc_cmake=$runner_rc_cmake";
             sed -i '/\"Runner.rc\"/d' ./flutter/windows/runner/CMakeLists.txt;
-            runner_rc_cmake=$(grep "Runner.rc" ./flutter/windows/runner/CMakeLists.txt);
+            runner_rc_cmake=$(grep "Runner.rc" ./flutter/windows/runner/CMakeLists.txt || true);
             echo "runner_rc_cmake=$runner_rc_cmake";
           fi
 
@@ -373,7 +373,7 @@ jobs:
         shell: bash
         run: |
           echo "$RDSK_PCH_SH_CLN" | base64 --decode > ./RDSK_PCH_SH_CLN.sh
-          bash ./RDSK_PCH_SH_CLN.sh
+          bash ./RDSK_PCH_SH_CLN.sh;
 
       - name: patch src/lang.rs
         continue-on-error: true
@@ -542,8 +542,8 @@ jobs:
         # echo "BUILD: python3 build.py --portable --hwcodec --flutter --gpucodec "
         # python3 build.py --portable --hwcodec --flutter --gpucodec
         run: |
-          echo "BUILD: python3 build.py --portable --hwcodec --flutter --gpucodec --skip-portable-pack"
-          python3 build.py --portable --hwcodec --flutter --gpucodec --skip-portable-pack
+          echo "BUILD: python3 build.py --portable --hwcodec --flutter --gpucodec --skip-portable-pack";
+          python3 build.py --portable --hwcodec --flutter --gpucodec --skip-portable-pack;
 
 # RustDeskTempTopMostWindow
       - name: Add MSBuild to PATH
@@ -587,24 +587,24 @@ jobs:
         shell: bash
         run: |
           if [[ -f bins/RustDeskIddDriver-Release-x64-Windows10.zip ]]; then
-            echo "folder: ./flutter/build/windows/x64/runner/Release/"
-            ls -la ./flutter/build/windows/x64/runner/Release/
-            echo "Replace RustDeskIddDriver"
-            cp bins/RustDeskIddDriver-Release-x64-Windows10.zip ./flutter/build/windows/x64/runner/Release/
-            pushd ./flutter/build/windows/x64/runner/Release/
-            7z x -y RustDeskIddDriver-Release-x64-Windows10.zip
-            rm RustDeskIddDriver-Release-x64-Windows10.zip
-            popd
-            echo "folder: ./flutter/build/windows/x64/runner/Release/"
-            ls -la ./flutter/build/windows/x64/runner/Release/
+            echo "folder: ./flutter/build/windows/x64/runner/Release/";
+            ls -la ./flutter/build/windows/x64/runner/Release/;
+            echo "Replace RustDeskIddDriver";
+            cp bins/RustDeskIddDriver-Release-x64-Windows10.zip ./flutter/build/windows/x64/runner/Release/;
+            pushd ./flutter/build/windows/x64/runner/Release/;
+            7z x -y RustDeskIddDriver-Release-x64-Windows10.zip;
+            rm RustDeskIddDriver-Release-x64-Windows10.zip;
+            popd;
+            echo "folder: ./flutter/build/windows/x64/runner/Release/";
+            ls -la ./flutter/build/windows/x64/runner/Release/;
           fi
           if [[ -f bins/WindowInjection.dll ]]; then
-            echo "folder: ./flutter/build/windows/x64/runner/Release/"
-            ls -la ./flutter/build/windows/x64/runner/Release/
-            echo "Replace WindowInjection.dll"
-            cp bins/WindowInjection.dll ./flutter/build/windows/x64/runner/Release/WindowInjection.dll
-            echo "folder: ./flutter/build/windows/x64/runner/Release/"
-            ls -la ./flutter/build/windows/x64/runner/Release/
+            echo "folder: ./flutter/build/windows/x64/runner/Release/";
+            ls -la ./flutter/build/windows/x64/runner/Release/;
+            echo "Replace WindowInjection.dll";
+            cp bins/WindowInjection.dll ./flutter/build/windows/x64/runner/Release/WindowInjection.dll;
+            echo "folder: ./flutter/build/windows/x64/runner/Release/";
+            ls -la ./flutter/build/windows/x64/runner/Release/;
           fi
 
 # Release zip portable - begin
@@ -663,13 +663,13 @@ jobs:
         continue-on-error: false
         shell: bash
         run: |
-          pushd ./libs/portable
-          pip3 install -r requirements.txt
-          python3 ./generate.py -f ../../flutter/build/windows/x64/runner/Release/ -o . -e ../../flutter/build/windows/x64/runner/Release/rustdesk.exe
-          popd
-          mkdir -p ./SignOutput
-          mv ./target/release/rustdesk-portable-packer.exe ./SignOutput/${{ env.PROG_NAME }}-${{ env.VERSION }}-${{ matrix.job.target }}-${{ matrix.job.os }}.exe
-          cp ${{ env.WORK_DIR_BASH }}/_version_.txt ./SignOutput
+          pushd ./libs/portable;
+          pip3 install -r requirements.txt;
+          python3 ./generate.py -f ../../flutter/build/windows/x64/runner/Release/ -o . -e ../../flutter/build/windows/x64/runner/Release/rustdesk.exe;
+          popd;
+          mkdir -p ./SignOutput;
+          mv ./target/release/rustdesk-portable-packer.exe ./SignOutput/${{ env.PROG_NAME }}-${{ env.VERSION }}-${{ matrix.job.target }}-${{ matrix.job.os }}.exe;
+          cp ${{ env.WORK_DIR_BASH }}/_version_.txt ./SignOutput;
 
       # - name: Rename rustdesk
       #   shell: bash
