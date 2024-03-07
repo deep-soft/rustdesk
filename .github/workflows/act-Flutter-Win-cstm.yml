@@ -88,10 +88,14 @@ on:
         description: SED_STUFF_PARAMS
         default: "build.py"
         required: true
-      DEBUG_MODE:
-        description: DEBUG_MODE
-        default: "N"
+      search_delete_runner_rc:
+        description: search and delete runner.rc runner.res
+        default: false
         required: true
+#      DEBUG_MODE:
+#        description: DEBUG_MODE
+#        default: "N"
+#        required: true
 
 jobs:
   build-for-windows:
@@ -340,7 +344,7 @@ jobs:
 #          fi
 
       - name: Search and delete runner.rc runner.res
-        if: ${{ inputs.search_delete_runner_rc
+        if: ${{ inputs.search_delete_runner_rc }}
         continue-on-error: true
         shell: bash
         run: |
