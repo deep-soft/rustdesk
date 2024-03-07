@@ -316,33 +316,33 @@ jobs:
           # echo " ==> cat ./libs/portable/build.rs"
           # cat ./libs/portable/build.rs;
 
-#      - name: ProductVersion, add date
-#        continue-on-error: true
-#        shell: bash
-#        run: |
-#          sed -i 's|"FileVersion", VERSION_AS_STRING |"FileVersion", "${{ env.VERSION }}.${{ env.DATE_YMD }}" |' ./flutter/windows/runner/Runner.rc;
-#          sed -i 's|"ProductVersion", VERSION_AS_STRING |"ProductVersion", "${{ env.VERSION }}${{ env.TAG_BUILD }}" |' ./flutter/windows/runner/Runner.rc;
-#          cat ./flutter/windows/runner/Runner.rc
-#          # change year in Copyright, 2023 to 2024
-#          sed -i 's|Copyright (C) 2023 com.carriez.|Copyright (C) 2024 com.carriez.|' ./flutter/windows/runner/Runner.rc;
-#          cat ./flutter/windows/runner/Runner.rc
+      - name: ProductVersion, add date
+        continue-on-error: true
+        shell: bash
+        run: |
+          sed -i 's|"FileVersion", VERSION_AS_STRING |"FileVersion", "${{ env.VERSION }}.${{ env.DATE_YMD }}" |' ./flutter/windows/runner/Runner.rc;
+          sed -i 's|"ProductVersion", VERSION_AS_STRING |"ProductVersion", "${{ env.VERSION }}${{ env.TAG_BUILD }}" |' ./flutter/windows/runner/Runner.rc;
+          cat ./flutter/windows/runner/Runner.rc
+          # change year in Copyright, 2023 to 2024
+          # sed -i 's|Copyright (C) 2023 com.carriez.|Copyright (C) 2024 com.carriez.|' ./flutter/windows/runner/Runner.rc;
+          # cat ./flutter/windows/runner/Runner.rc
 
-#      - name: Search runner.res
-#        continue-on-error: true
-#        shell: bash
-#        run: |
-#          runner_res=$(find . -name "Runner.res")
-#          if [ "$runner_res" != "" ]; then
-#            echo "0: Runner.res: $runner_res"
-#            cp $runner_res ./Runner.res
-#            cp $runner_res ./libs/portable/Runner.res
-#          fi
-#          runner_rc=$(find . -name "Runner.rc")
-#          if [ "$runner_rc" != "" ]; then
-#            echo "0: Runner.rc: $runner_rc"
-#            cp $runner_rc ./Runner.rc
-#            cp $runner_rc ./libs/portable/Runner.rc
-#          fi
+      - name: Search runner.res
+        continue-on-error: true
+        shell: bash
+        run: |
+          runner_res=$(find . -name "Runner.res")
+          if [ "$runner_res" != "" ]; then
+            echo "0: Runner.res: $runner_res"
+            cp $runner_res ./Runner.res
+            cp $runner_res ./libs/portable/Runner.res
+          fi
+          runner_rc=$(find . -name "Runner.rc")
+          if [ "$runner_rc" != "" ]; then
+            echo "0: Runner.rc: $runner_rc"
+            cp $runner_rc ./Runner.rc
+            cp $runner_rc ./libs/portable/Runner.rc
+          fi
 
       - name: Search and delete runner.rc runner.res
         if: ${{ inputs.search_delete_runner_rc }}
