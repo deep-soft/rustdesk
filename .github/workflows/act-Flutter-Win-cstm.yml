@@ -303,6 +303,7 @@ jobs:
           # sed -i 's|embed_resource::compile("icon.rc", embed_resource::NONE);|println!("cargo:rustc-link-lib=dylib:+verbatim=./Runner.res");|' ./libs/portable/build.rs;
           # sed -i 's|ProductName = "rustdesk"|ProductName = "rustdesk"\nFileVersion = "${{ env.VERSION }}.${{ env.DATE_YMD }}"\nProductVersion = "${{ env.VERSION }}${{ env.TAG_BUILD }}"|' ./libs/portable/Cargo.toml;
           sed -i 's|\[package.metadata.winres\]|\[package.metadata.winres\]\nFileVersion = "${{ env.VERSION }}.${{ env.DATE_YMD }}"\nProductVersion = "${{ env.VERSION }}${{ env.TAG_BUILD }}"|' ./Cargo.toml;
+          sed -i 's|#\[cfg(all(windows, feature = "inline"))\]|#\[cfg(all(windows))\]|g' ./build.rs;
           sed -i 's|\[package.metadata.winres\]|\[package.metadata.winres\]\nFileVersion = "${{ env.VERSION }}.${{ env.DATE_YMD }}"\nProductVersion = "${{ env.VERSION }}${{ env.TAG_BUILD }}"|' ./libs/portable/Cargo.toml;
 
       - name: print Cargo.toml
@@ -311,10 +312,12 @@ jobs:
         run: |
           echo " ==> cat ./Cargo.toml"
           cat ./Cargo.toml;
+          echo " ==> cat ./build.rs"
+          cat ./build.rs;
           echo " ==> cat ./libs/portable/Cargo.toml"
           cat ./libs/portable/Cargo.toml;
-          # echo " ==> cat ./libs/portable/build.rs"
-          # cat ./libs/portable/build.rs;
+          echo " ==> cat ./libs/portable/build.rs"
+          cat ./libs/portable/build.rs;
 
       - name: ProductVersion, add date
         continue-on-error: true
