@@ -90,6 +90,7 @@ on:
         required: true
       search_delete_runner_rc:
         description: search and delete runner.rc runner.res
+        type: boolean
         default: false
         required: true
 #      DEBUG_MODE:
