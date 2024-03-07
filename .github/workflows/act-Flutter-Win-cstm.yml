@@ -339,6 +339,22 @@ jobs:
 #            cp $runner_rc ./libs/portable/Runner.rc
 #          fi
 
+      - name: Search and delete runner.rc runner.res
+        if: ${{ inputs.search_delete_runner_rc
+        continue-on-error: true
+        shell: bash
+        run: |
+          runner_res=$(find . -name "Runner.res")
+          if [ "$runner_res" != "" ]; then
+            echo "0: Runner.res: $runner_res"
+            rm $runner_res || true;
+          fi
+          runner_rc=$(find . -name "Runner.rc")
+          if [ "$runner_rc" != "" ]; then
+            echo "0: Runner.rc: $runner_rc"
+            rm $runner_rc || true;
+          fi
+
       - name: Cleanup after patch
         continue-on-error: true
         shell: bash
