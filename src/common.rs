@@ -865,7 +865,16 @@ pub fn username() -> String {
 #[inline]
 pub fn hostname() -> String {
     #[cfg(not(any(target_os = "android", target_os = "ios")))]
-    return whoami::hostname();
+    {
+        #[allow(unused_mut)]
+        let mut name = whoami::hostname();
+        // some time, there is .local, some time not, so remove it for osx
+        #[cfg(target_os = "macos")]
+        if name.ends_with(".local") {
+            name = name.trim_end_matches(".local").to_owned();
+        }
+        name
+    }
     #[cfg(any(target_os = "android", target_os = "ios"))]
     return DEVICE_NAME.lock().unwrap().clone();
 }
@@ -1468,6 +1477,11 @@ impl ClipboardContext {
 }
 
 pub fn load_custom_client() {
+    #[cfg(debug_assertions)]
+    if let Ok(data) = std::fs::read_to_string("./custom.txt") {
+        read_custom_client(data.trim());
+        return;
+    }
     let Ok(cmd) = std::env::current_exe() else {
         return;
     };
@@ -1479,7 +1493,7 @@ pub fn load_custom_client() {
             log::error!("Failed to read custom client config");
             return;
         };
-        read_custom_client(&data);
+        read_custom_client(&data.trim());
     }
 }
 
@@ -1503,7 +1517,13 @@ pub fn read_custom_client(config: &str) {
         log::error!("Failed to parse custom client config");
         return;
     };
-    if let Some(default_settings) = data.remove("default_settings") {
+
+    if let Some(app_name) = data.remove("app-name") {
+        if let Some(app_name) = app_name.as_str() {
+            *config::APP_NAME.write().unwrap() = app_name.to_owned();
+        }
+    }
+    if let Some(default_settings) = data.remove("default-settings") {
         if let Some(default_settings) = default_settings.as_object() {
             for (k, v) in default_settings {
                 let Some(v) = v.as_str() else {
@@ -1528,7 +1548,7 @@ pub fn read_custom_client(config: &str) {
             }
         }
     }
-    if let Some(overwrite_settings) = data.remove("overwrite_settings") {
+    if let Some(overwrite_settings) = data.remove("override-settings") {
         if let Some(overwrite_settings) = overwrite_settings.as_object() {
             for (k, v) in overwrite_settings {
                 let Some(v) = v.as_str() else {
