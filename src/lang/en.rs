@@ -2,7 +2,7 @@ lazy_static::lazy_static! {
 pub static ref T: std::collections::HashMap<&'static str, &'static str> =
     [
         ("desk_tip", "Your desktop can be accessed with this ID and password."),
-        ("outgoing_only_desk_tip", "This is a customized edition.\nYou can connect other devices, but other devices cannot connect to your device."),
+        ("outgoing_only_desk_tip", "This is a customized edition.\nYou can connect to other devices, but other devices cannot connect to your device."),
         ("connecting_status", "Connecting to the RustDesk network..."),
         ("not_ready_status", "Not ready. Please check your connection"),
         ("ID/Relay Server", "ID/Relay server"),
@@ -214,5 +214,6 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("enable-2fa-desc", "Please set up your authenticator now. You can use an authenticator app such as Authy, Microsoft or Google Authenticator on your phone or desktop.\n\nScan the QR code with your app and enter the code that your app shows to enable two-factor authentication."),
         ("wrong-2fa-code", "Can't verify the code. Check that code and local time settings are correct"),
         ("enter-2fa-title", "Two-factor authentication"),
+        ("powered_by_me", "Powered by RustDesk"),
     ].iter().cloned().collect();
 }
