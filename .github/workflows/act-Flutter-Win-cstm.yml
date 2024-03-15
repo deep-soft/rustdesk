@@ -1,4 +1,4 @@
-# 2024-03-03 04:00
+# 2024-03-15 16:00
 # progversion, no IDD, flutter 3.16.9
 # changed: Replace engine with rustdesk custom flutter engine
 # changed: Install Rust toolchain. uses: deep-soft/rust-toolchain@master
@@ -109,7 +109,7 @@ jobs:
 #         - { target: i686-pc-windows-msvc        , os: windows-2022 }
 #         - { target: x86_64-pc-windows-gnu       , os: windows-2022 }
           - { target: x86_64-pc-windows-msvc      , os: windows-2019 }
-          - { target: x86_64-pc-windows-msvc      , os: windows-2022 }
+#          - { target: x86_64-pc-windows-msvc      , os: windows-2022 }
     steps:
       - name: Export GitHub Actions cache environment variables
         uses: deep-soft/github-script@v7
