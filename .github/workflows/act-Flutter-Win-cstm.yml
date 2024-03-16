@@ -661,12 +661,13 @@ jobs:
 
       - name: Build self-extracted executable
         continue-on-error: false
-        # python3 ./generate.py -f ../../flutter/build/windows/x64/runner/Release/ -o . -e ../../flutter/build/windows/x64/runner/Release/rustdesk.exe;
+        # v1 ok: python3 ./generate.py -f ../../flutter/build/windows/x64/runner/Release/ -o . -e ../../flutter/build/windows/x64/runner/Release/rustdesk.exe;
+        # v2 failed: python3 ./generate.py -f ../../rustdesk/ -o . -e ../../rustdesk/rustdesk.exe;
         shell: bash
         run: |
           pushd ./libs/portable;
           pip3 install -r requirements.txt;
-          python3 ./generate.py -f ../../rustdesk/ -o . -e ../../rustdesk/rustdesk.exe;
+          python3 ./generate.py -f ../../flutter/build/windows/x64/runner/Release/ -o . -e ../../flutter/build/windows/x64/runner/Release/rustdesk.exe;
           popd;
           mkdir -p ./SignOutput;
           mv ./target/release/rustdesk-portable-packer.exe ./SignOutput/${{ env.PROG_NAME }}-${{ env.VERSION }}-${{ matrix.job.target }}-${{ matrix.job.os }}.exe;
