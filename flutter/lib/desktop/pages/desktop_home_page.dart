@@ -52,7 +52,7 @@ class _DesktopHomePageState extends State<DesktopHomePage>
   Timer? _updateTimer;
   bool isCardClosed = false;
 
-  RxBool _editHover = false.obs;
+  final RxBool _editHover = false.obs;
 
   final GlobalKey _childKey = GlobalKey();
 
@@ -75,11 +75,50 @@ class _DesktopHomePageState extends State<DesktopHomePage>
     );
   }
 
+  Widget buildPresetPasswordWarning() {
+    return FutureBuilder<bool>(
+      future: bind.isPresetPassword(),
+      builder: (BuildContext context, AsyncSnapshot<bool> snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return CircularProgressIndicator(); // Show a loading spinner while waiting for the Future to complete
+        } else if (snapshot.hasError) {
+          return Text(
+              'Error: ${snapshot.error}'); // Show an error message if the Future completed with an error
+        } else if (snapshot.hasData && snapshot.data == true) {
+          return Container(
+            color: Colors.yellow,
+            child: Column(
+              children: [
+                Align(
+                    child: Text(
+                  translate("Security Alert"),
+                  style: TextStyle(
+                    color: Colors.red,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                )).paddingOnly(bottom: 8),
+                Text(
+                  translate("preset_password_warning"),
+                  style: TextStyle(color: Colors.red),
+                )
+              ],
+            ).paddingAll(8),
+          ); // Show a warning message if the Future completed with true
+        } else {
+          return SizedBox
+              .shrink(); // Show nothing if the Future completed with false or null
+        }
+      },
+    );
+  }
+
   Widget buildLeftPane(BuildContext context) {
     final isIncomingOnly = bind.isIncomingOnly();
     final isOutgoingOnly = bind.isOutgoingOnly();
     final logo = loadLogo();
     final children = <Widget>[
+      if (!isOutgoingOnly) buildPresetPasswordWarning(),
       if (bind.isCustomClient())
         Align(
           alignment: Alignment.center,
@@ -129,6 +168,7 @@ class _DesktopHomePageState extends State<DesktopHomePage>
     ];
     if (isIncomingOnly) {
       children.addAll([
+        Divider(),
         OnlineStatusWidget(
           onSvcStatusChanged: () {
             if (_isInHomePage()) {
@@ -530,6 +570,21 @@ class _DesktopHomePageState extends State<DesktopHomePage>
           children: LinuxCards,
         );
       }
+    }
+    if (bind.isIncomingOnly()) {
+      return Align(
+        alignment: Alignment.centerRight,
+        child: OutlinedButton(
+          onPressed: () {
+            SystemNavigator.pop(); // Close the application
+            // https://github.com/flutter/flutter/issues/66631
+            if (Platform.isWindows) {
+              exit(0);
+            }
+          },
+          child: Text(translate('Quit')),
+        ),
+      ).marginAll(14);
     }
     return Container();
   }
