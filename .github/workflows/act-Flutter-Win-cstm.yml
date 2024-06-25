@@ -353,7 +353,7 @@ jobs:
         shell: bash
         run: |
           #sed -i 's|"FileVersion", VERSION_AS_STRING |"FileVersion", "${{ env.VERSION }}.${{ env.DATE_YMD }}" |' ./flutter/windows/runner/Runner.rc;
-          sed -i 's|"FileVersion", VERSION_AS_STRING |"FileVersion", "${{ env.VERSION_COMMA" |" ./flutter/windows/runner/Runner.rc;
+          sed -i 's|"FileVersion", VERSION_AS_STRING |"FileVersion", "${{ env.VERSION_COMMA }}" |' ./flutter/windows/runner/Runner.rc;
           sed -i 's|"ProductVersion", VERSION_AS_STRING |"ProductVersion", "${{ env.VERSION }}${{ env.TAG_BUILD }}" |' ./flutter/windows/runner/Runner.rc;
           cat ./flutter/windows/runner/Runner.rc;
           # change year in Copyright, 2023 to 2024
