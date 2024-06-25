@@ -604,6 +604,14 @@ jobs:
           cp ./RustDeskTempTopMostWindow/WindowInjection/x64/Release/WindowInjection.dll ./flutter/build/windows/x64/runner/Release/WindowInjection.dll
 # RustDeskTempTopMostWindow
 
+      - name: Add usbmmidd_v2.zip
+        continue-on-error: true
+        run: |
+          Invoke-WebRequest -Uri https://github.com/rustdesk-org/rdev/releases/download/usbmmidd_v2/usbmmidd_v2.zip -OutFile usbmmidd_v2.zip
+          Expand-Archive usbmmidd_v2.zip -DestinationPath .
+          Remove-Item -Path usbmmidd_v2\Win32 -Recurse
+          mv -Force .\usbmmidd_v2 .\flutter\build\windows\x64\runner\Release
+
       - name: Sign rustdesk files
         uses: deep-soft/code-sign-action@v9
         with:
@@ -705,14 +713,6 @@ jobs:
           mkdir -p ./SignOutput;
           mv ./target/release/rustdesk-portable-packer.exe ./SignOutput/${{ env.PROG_NAME }}-${{ env.VERSION }}-${{ matrix.job.target }}-${{ matrix.job.os }}.exe;
           cp ${{ env.WORK_DIR_BASH }}/_version_.txt ./SignOutput;
-
-      - name: Add usbmmidd_v2.zip
-        continue-on-error: true
-        run: |
-          Invoke-WebRequest -Uri https://github.com/rustdesk-org/rdev/releases/download/usbmmidd_v2/usbmmidd_v2.zip -OutFile usbmmidd_v2.zip
-          Expand-Archive usbmmidd_v2.zip -DestinationPath .
-          Remove-Item -Path usbmmidd_v2\Win32 -Recurse
-          mv -Force .\usbmmidd_v2 ./SignOutput
 
       # - name: Rename rustdesk
       #   shell: bash
