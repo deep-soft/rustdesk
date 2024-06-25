@@ -1,0 +1,84 @@
+# 2023-11-16 22:20
+# changed: Replace engine with rustdesk custom flutter engine
+# changed: Install Rust toolchain. uses: deep-soft/rust-toolchain@master
+# windows-2019
+# WindowInjection.dll, sed-stuff
+name: 0-test-seds
+
+env:
+  TAG_NAME:                    "Win-cstm"
+  TAG_VERSION:                 "rdsk-v1.2.1"
+  TAG_BUILD:                   "-b"
+  TAG_REF:                     "0000000"
+  PROG_NAME:                   "rdsk"
+  PROG_VERSION:                "v1.0.0"
+  VERSION:                     "1.0.0"
+  DEBUG_LS:                    "yes"
+  # To make a custom build with your own servers set the below secret values
+  RS_PUB_KEY:                  '${{ secrets.RS_PUB_KEY }}'
+  RENDEZVOUS_SERVER:           '${{ secrets.RENDEZVOUS_SERVER }}'
+  API_SERVER:                  '${{ secrets.API_SERVER }}'
+  RDSK_PCH_SH_PRE:             '${{ secrets.RDSK_PCH_SH_PRE }}'
+  RDSK_PCH_SH:                 '${{ secrets.RDSK_PCH_SH }}'
+  RDSK_PCH_HL:                 '${{ secrets.RDSK_PCH_HL }}'
+  RDSK_PCH_SH2:                '${{ secrets.RDSK_PCH_SH2 }}'
+  RDSK_PCH_SH4:                '${{ secrets.RDSK_PCH_SH4 }}'
+  RDSK_PCH_SH_CLN:             '${{ secrets.RDSK_PCH_SH_CLN }}'
+  RUST_VERSION:                "rust-1.70.0"
+  LLVM_VERSION:                "15.0.6"
+  FLUTTER_VERSION:             "3.13.9"
+  FLUTTER_RUST_BRIDGE_VERSION: "1.80.1"
+  FLUTTER_ELINUX_VERSION:      "3.13.9"
+  FLUTTER_ELINUX_COMMIT_ID:    "f4d4205893c16b0aa9cb6ba46b9f32b639d3b057"
+  # vcpkg version: 2023.10.19
+  # for multiarch gcc compatibility
+  VCPKG_COMMIT_ID:             "8eb57355a4ffb410a2e94c07b4dca2dffbee8e50"
+  VCPKG_BINARY_SOURCES:        "clear;x-gha,readwrite"
+  CARGO_NDK_VERSION:           "3.1.2"
+  NDK_VERSION:                 "r26b"
+  #signing keys env variable checks
+  ANDROID_SIGNING_KEY:         '${{ secrets.ANDROID_SIGNING_KEY }}'
+  #  signingKeyBase64:         '${{ secrets.ANDROID_SIGNING_KEY }}'
+  #  alias:                    '${{ secrets.ANDROID_ALIAS }}'
+  #  keyStorePassword:         '${{ secrets.ANDROID_KEY_STORE_PASSWORD }}'
+  #  keyPassword:              '${{ secrets.ANDROID_KEY_PASSWORD }}'
+  MACOS_P12_BASE64:            '${{ secrets.MACOS_P12_BASE64 }}'
+  cargo_clippy_log:            "cargo-clippy.log"
+  GUI:                         "Windows"
+
+on:
+#  schedule:
+#    # schedule build every night
+#    - cron: "0 0 * * *"
+  workflow_call:
+  workflow_dispatch:
+    inputs:
+      archive_ALL:
+        description: Archive ALL
+        type: boolean
+        default: false
+        required: true
+
+jobs:
+  build-for-windows:
+    name: ${{ matrix.job.target }} (${{ matrix.job.os }})
+    runs-on: ${{ matrix.job.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        job:
+#         - { target: i686-pc-windows-msvc        , os: windows-2022 }
+#         - { target: x86_64-pc-windows-gnu       , os: windows-2022 }
+#         - { target: x86_64-pc-windows-msvc      , os: windows-2019 }
+          - { target: x86_64-pc-windows-msvc      , os: windows-2022 }
+    steps:
+      - name: Checkout source code
+        uses: deep-soft/checkout@v4
+
+      - name: sed-stuff
+        continue-on-error: true
+        shell: bash
+        run: |
+          pwd
+          bash bins/sed-stuff.sh
+          ls -la
