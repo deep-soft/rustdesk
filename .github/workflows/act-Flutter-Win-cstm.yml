@@ -502,7 +502,7 @@ jobs:
           #  the default is to match the @rev as described above. When passing an explicit toolchain as an input instead of @rev, you'll want to use "rust-toolchain@master" as the revision of the action.
           targets: ${{ matrix.job.target }}
           #  Comma-separated string of additional targets
-          components: ''
+          components: "rustfmt"
           #  Comma-separated string of additional components to install e.g. clippy, rustfmt
 
       - uses: deep-soft/rust-cache@v2
