@@ -573,8 +573,10 @@ jobs:
         # echo "BUILD: python3 build.py --portable --hwcodec --flutter --gpucodec "
         # python3 build.py --portable --hwcodec --flutter --gpucodec
         run: |
-          echo "BUILD: python3 build.py --portable --hwcodec --flutter --gpucodec --skip-portable-pack";
-          python3 build.py --portable --hwcodec --flutter --gpucodec --skip-portable-pack;
+          # echo "BUILD: python3 build.py --portable --hwcodec --flutter --gpucodec --skip-portable-pack";
+          # python3 build.py --portable --hwcodec --flutter --gpucodec --skip-portable-pack;
+          echo "python3 build.py --portable --hwcodec --flutter --vram --skip-portable-pack";
+          python3 build.py --portable --hwcodec --flutter --vram --skip-portable-pack;
 
 # RustDeskTempTopMostWindow
       - name: Add MSBuild to PATH
