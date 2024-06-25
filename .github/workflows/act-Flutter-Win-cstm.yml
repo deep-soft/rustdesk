@@ -1,4 +1,4 @@
-# 2024-03-15 16:00
+# 2024-06-25 20:00
 # progversion, no IDD, flutter 3.16.9
 # changed: Replace engine with rustdesk custom flutter engine
 # changed: Install Rust toolchain. uses: deep-soft/rust-toolchain@master
@@ -27,17 +27,21 @@ env:
   RDSK_PCH_SH_CLN:             '${{ secrets.RDSK_PCH_SH_CLN }}'
   RUST_VERSION:                "rust-1.76.0"
   LLVM_VERSION:                "15.0.6"
-  FLUTTER_VERSION:             "3.16.9"
+#  FLUTTER_VERSION:             "3.16.9"
+  FLUTTER_VERSION:             "3.19.6"
   FLUTTER_RUST_BRIDGE_VERSION: "1.80.1"
   FLUTTER_ELINUX_VERSION:      "3.16.9"
   FLUTTER_ELINUX_COMMIT_ID:    "c02bd16e1630f5bd690b85c5c2456ac1920e25af"
   # vcpkg version: 2023.10.19
   # for multiarch gcc compatibility
-  VCPKG_COMMIT_ID:             "8eb57355a4ffb410a2e94c07b4dca2dffbee8e50"
+  # VCPKG_COMMIT_ID:             "8eb57355a4ffb410a2e94c07b4dca2dffbee8e50"
+  # vcpkg version: 2024.03.25
+  VCPKG_COMMIT_ID:             "a34c873a9717a888f58dc05268dea15592c2f0ff"
   VCPKG_DIRECTORY:             "C:\\vcpkg"
   VCPKG_BINARY_SOURCES:        "clear;x-gha,readwrite"
   CARGO_NDK_VERSION:           "3.1.2"
-  NDK_VERSION:                 "r26b"
+  # NDK_VERSION:                 "r26b"
+  NDK_VERSION:                 "r26d"
   #signing keys env variable checks
   ANDROID_SIGNING_KEY:         '${{ secrets.ANDROID_SIGNING_KEY }}'
   #  signingKeyBase64:         '${{ secrets.ANDROID_SIGNING_KEY }}'
@@ -170,15 +174,29 @@ jobs:
           # _ref_=$(echo ${_ref_all_::7})
           _date_=$(date +%Y%m%d-%H%M)
           _date_YMD=$(date +%Y%m%d)
+          _date_YYMD=$(date +%y%m%d)
+          _date_y1MD=${_date_YYMD:1}
           _ref_org_=${{ env.TAG_REF }}
           _ref_len_="${#_ref_org_}"
           _ref_=$(echo ${_ref_all_::$_ref_len_})
-          echo "TAG_REF=$_ref_" >> $GITHUB_ENV
-          _build_=${{ env.TAG_BUILD }}-$_date_-$_ref_
+          # echo "TAG_REF=$_ref_" >> $GITHUB_ENV
+          TAG_REF=$_ref_
+          _build_=$TAG_BUILD-$_date_-$_ref_
+          
           echo "TAG_BUILD=$_build_" >> $GITHUB_ENV
           echo "WORK_DIR_BASH=$(pwd)" >> $GITHUB_ENV
           echo "TAG_DATE=$_date_" >> $GITHUB_ENV
           echo "DATE_YMD=$_date_YMD" >> $GITHUB_ENV
+          echo "DATE_YYMD=$_date_YYMD" >> $GITHUB_ENV
+
+          VERSION=$(grep -e "^version = " Cargo.toml  | awk -F '"' '{print $2}');
+          ##VERSION_COMMA=$(echo $VERSION.$DATE_YYMD | tr "." ",")
+          VERSION_COMMA=$(echo $VERSION.$_date_y1MD | tr "." ",")
+          echo $DATE_YMD;
+          echo $DATE_YYMD;
+          echo $VERSION;
+          echo $VERSION_COMMA;
+
 
       - name: set WORK_DIR_OS
         shell: cmd
