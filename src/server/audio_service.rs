@@ -68,6 +68,8 @@ mod pa_impl {
         );
         #[cfg(target_os = "linux")]
         let zero_audio_frame: Vec<f32> = vec![0.; AUDIO_DATA_SIZE_U8 / 4];
+        #[cfg(target_os = "android")]
+        let mut android_data = vec![];
         while sp.ok() && !RESTARTING.load(Ordering::SeqCst) {
             sp.snapshot(|sps| {
                 sps.send(create_format_msg(crate::platform::PA_SAMPLE_RATE, 2));
@@ -88,9 +90,12 @@ mod pa_impl {
                 send_f32(data, &mut encoder, &sp);
             }
             #[cfg(target_os = "android")]
-            if let Some(data) = scrap::android::ffi::get_audio_raw() {
+            if scrap::android::ffi::get_audio_raw(&mut android_data, &mut vec![]).is_some() {
                 let data = unsafe {
-                    std::slice::from_raw_parts::<f32>(data.as_ptr() as _, data.len() / 4)
+                    std::slice::from_raw_parts::<f32>(
+                        android_data.as_ptr() as _,
+                        android_data.len() / 4,
+                    )
                 };
                 send_f32(data, &mut encoder, &sp);
             } else {
@@ -103,6 +108,7 @@ mod pa_impl {
 
 #[cfg(not(any(target_os = "linux", target_os = "android")))]
 mod cpal_impl {
+    use self::service::{Reset, ServiceSwap};
     use super::*;
     use cpal::{
         traits::{DeviceTrait, HostTrait, StreamTrait},
@@ -125,7 +131,23 @@ mod cpal_impl {
         }
     }
 
-    pub fn run(sp: EmptyExtraFieldService, state: &mut State) -> ResultType<()> {
+    fn run_restart(sp: EmptyExtraFieldService, state: &mut State) -> ResultType<()> {
+        state.reset();
+        sp.snapshot(|_sps: ServiceSwap<_>| Ok(()))?;
+        match &state.stream {
+            None => {
+                state.stream = Some(play(&sp)?);
+            }
+            _ => {}
+        }
+        if let Some((_, format)) = &state.stream {
+            sp.send_shared(format.clone());
+        }
+        RESTARTING.store(false, Ordering::SeqCst);
+        Ok(())
+    }
+
+    fn run_serv_snapshot(sp: EmptyExtraFieldService, state: &mut State) -> ResultType<()> {
         sp.snapshot(|sps| {
             match &state.stream {
                 None => {
@@ -139,6 +161,14 @@ mod cpal_impl {
             Ok(())
         })?;
         Ok(())
+    }
+
+    pub fn run(sp: EmptyExtraFieldService, state: &mut State) -> ResultType<()> {
+        if !RESTARTING.load(Ordering::SeqCst) {
+            run_serv_snapshot(sp, state)
+        } else {
+            run_restart(sp, state)
+        }
     }
 
     fn send(
@@ -280,7 +310,10 @@ mod cpal_impl {
         let mut encoder = Encoder::new(sample_rate, encode_channel, LowDelay)?;
         // https://www.opus-codec.org/docs/html_api/group__opusencoder.html#gace941e4ef26ed844879fde342ffbe546
         // https://chromium.googlesource.com/chromium/deps/opus/+/1.1.1/include/opus.h
-        let frame_size = sample_rate as usize / 100; // 10 ms
+        // Do not set `frame_size = sample_rate as usize / 100;`
+        // Because we find `sample_rate as usize / 100` will cause encoder error in `encoder.encode_vec_float()` sometimes.
+        // https://github.com/xiph/opus/blob/2554a89e02c7fc30a980b4f7e635ceae1ecba5d6/src/opus_encoder.c#L725
+        let frame_size = sample_rate_0 as usize / 100; // 10 ms
         let encode_len = frame_size * encode_channel as usize;
         let rechannel_len = encode_len * device_channel as usize / encode_channel as usize;
         INPUT_BUFFER.lock().unwrap().clear();

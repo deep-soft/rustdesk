@@ -1,10 +1,10 @@
 // original cm window in Sciter version.
 
 import 'dart:async';
-import 'dart:io';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_hbb/common/widgets/audio_input.dart';
 import 'package:flutter_hbb/consts.dart';
 import 'package:flutter_hbb/desktop/widgets/tabbar_widget.dart';
 import 'package:flutter_hbb/models/chat_model.dart';
@@ -52,7 +52,7 @@ class _DesktopServerPageState extends State<DesktopServerPage>
   @override
   void onWindowClose() {
     Future.wait([gFFI.serverModel.closeAll(), gFFI.close()]).then((_) {
-      if (Platform.isMacOS) {
+      if (isMacOS) {
         RdPlatformChannel.instance.terminate();
       } else {
         windowManager.setPreventClose(false);
@@ -77,14 +77,20 @@ class _DesktopServerPageState extends State<DesktopServerPage>
         ChangeNotifierProvider.value(value: gFFI.chatModel),
       ],
       child: Consumer<ServerModel>(
-        builder: (context, serverModel, child) => Container(
-          decoration: BoxDecoration(
-              border: Border.all(color: MyTheme.color(context).border!)),
-          child: Scaffold(
+        builder: (context, serverModel, child) {
+          final body = Scaffold(
             backgroundColor: Theme.of(context).scaffoldBackgroundColor,
             body: ConnectionManager(),
-          ),
-        ),
+          );
+          return isLinux
+              ? buildVirtualWindowFrame(context, body)
+              : Container(
+                  decoration: BoxDecoration(
+                      border:
+                          Border.all(color: MyTheme.color(context).border!)),
+                  child: body,
+                );
+        },
       ),
     );
   }
@@ -158,7 +164,7 @@ class ConnectionManagerState extends State<ConnectionManager> {
               controller: serverModel.tabController,
               selectedBorderColor: MyTheme.accent,
               maxLabelWidth: 100,
-              tail: buildScrollJumper(),
+              tail: null, //buildScrollJumper(),
               selectedTabBackgroundColor:
                   Theme.of(context).hintColor.withOpacity(0),
               tabBuilder: (key, icon, label, themeConf) {
@@ -283,9 +289,9 @@ class ConnectionManagerState extends State<ConnectionManager> {
       windowManager.close();
       return true;
     } else {
-      final opt = "enable-confirm-closing-tabs";
       final bool res;
-      if (!option2bool(opt, bind.mainGetLocalOption(key: opt))) {
+      if (!option2bool(kOptionEnableConfirmClosingTabs,
+          bind.mainGetLocalOption(key: kOptionEnableConfirmClosingTabs))) {
         res = true;
       } else {
         res = await closeConfirmDialog();
@@ -651,7 +657,7 @@ class _PrivilegeBoardState extends State<_PrivilegeBoard> {
                   translate('Enable recording session'),
                 ),
                 // only windows support block input
-                if (Platform.isWindows)
+                if (isWindows)
                   buildPermissionIcon(
                     client.blockInput,
                     Icons.block,
@@ -702,17 +708,86 @@ class _CmControlPanel extends StatelessWidget {
       children: [
         Offstage(
           offstage: !client.inVoiceCall,
-          child: buildButton(
-            context,
-            color: Colors.red,
-            onClick: () => closeVoiceCall(),
-            icon: Icon(
-              Icons.call_end_rounded,
-              color: Colors.white,
-              size: 14,
-            ),
-            text: "Stop voice call",
-            textColor: Colors.white,
+          child: Row(
+            children: [
+              Expanded(
+                child: buildButton(context,
+                    color: MyTheme.accent,
+                    onClick: null, onTapDown: (details) async {
+                  final devicesInfo = await AudioInput.getDevicesInfo();
+                  List<String> devices = devicesInfo['devices'] as List<String>;
+                  if (devices.isEmpty) {
+                    msgBox(
+                      gFFI.sessionId,
+                      'custom-nocancel-info',
+                      'Prompt',
+                      'no_audio_input_device_tip',
+                      '',
+                      gFFI.dialogManager,
+                    );
+                    return;
+                  }
+
+                  String currentDevice = devicesInfo['current'] as String;
+                  final x = details.globalPosition.dx;
+                  final y = details.globalPosition.dy;
+                  final position = RelativeRect.fromLTRB(x, y, x, y);
+                  showMenu(
+                    context: context,
+                    position: position,
+                    items: devices
+                        .map((d) => PopupMenuItem<String>(
+                              value: d,
+                              height: 18,
+                              padding: EdgeInsets.zero,
+                              onTap: () => AudioInput.setDevice(d),
+                              child: IgnorePointer(
+                                  child: RadioMenuButton(
+                                value: d,
+                                groupValue: currentDevice,
+                                onChanged: (v) {
+                                  if (v != null) AudioInput.setDevice(v);
+                                },
+                                child: Container(
+                                  child: Text(
+                                    d,
+                                    overflow: TextOverflow.ellipsis,
+                                    maxLines: 1,
+                                  ),
+                                  constraints: BoxConstraints(
+                                      maxWidth:
+                                          kConnectionManagerWindowSizeClosedChat
+                                                  .width -
+                                              80),
+                                ),
+                              )),
+                            ))
+                        .toList(),
+                  );
+                },
+                    icon: Icon(
+                      Icons.call_rounded,
+                      color: Colors.white,
+                      size: 14,
+                    ),
+                    text: "Audio input",
+                    textColor: Colors.white),
+              ),
+              Expanded(
+                child: buildButton(
+                  context,
+                  color: Colors.red,
+                  onClick: () => closeVoiceCall(),
+                  icon: Icon(
+                    Icons.call_end_rounded,
+                    color: Colors.white,
+                    size: 14,
+                  ),
+                  text: "Stop voice call",
+                  textColor: Colors.white,
+                ),
+              )
+            ],
           ),
         ),
         Offstage(
@@ -873,12 +948,14 @@ class _CmControlPanel extends StatelessWidget {
 
   Widget buildButton(BuildContext context,
       {required Color? color,
-      required Function() onClick,
-      Icon? icon,
+      GestureTapCallback? onClick,
+      Widget? icon,
       BoxBorder? border,
       required String text,
       required Color? textColor,
-      String? tooltip}) {
+      String? tooltip,
+      GestureTapDownCallback? onTapDown}) {
+    assert(!(onClick == null && onTapDown == null));
     Widget textWidget;
     if (icon != null) {
       textWidget = Text(
@@ -902,7 +979,16 @@ class _CmControlPanel extends StatelessWidget {
           color: color, borderRadius: borderRadius, border: border),
       child: InkWell(
         borderRadius: borderRadius,
-        onTap: () => checkClickTime(client.id, onClick),
+        onTap: () {
+          if (onClick == null) return;
+          checkClickTime(client.id, onClick);
+        },
+        onTapDown: (details) {
+          if (onTapDown == null) return;
+          checkClickTime(client.id, () {
+            onTapDown.call(details);
+          });
+        },
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [

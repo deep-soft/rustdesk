@@ -53,7 +53,7 @@ class _ConnectionPageState extends State<ConnectionPage> {
   @override
   void initState() {
     super.initState();
-    _uniLinksSubscription = listenUniLinks();
+    if (!isWeb) _uniLinksSubscription = listenUniLinks();
     if (_idController.text.isEmpty) {
       () async {
         final lastRemoteId = await bind.mainGetLastRemoteId();
@@ -65,10 +65,12 @@ class _ConnectionPageState extends State<ConnectionPage> {
       }();
     }
     if (isAndroid) {
-      Timer(const Duration(seconds: 1), () async {
-        _updateUrl = await bind.mainGetSoftwareUpdateUrl();
-        if (_updateUrl.isNotEmpty) setState(() {});
-      });
+      if (!bind.isCustomClient()) {
+        Timer(const Duration(seconds: 1), () async {
+          _updateUrl = await bind.mainGetSoftwareUpdateUrl();
+          if (_updateUrl.isNotEmpty) setState(() {});
+        });
+      }
     }
 
     _idController.addListener(() {
@@ -84,7 +86,7 @@ class _ConnectionPageState extends State<ConnectionPage> {
       slivers: [
         SliverList(
             delegate: SliverChildListDelegate([
-          _buildUpdateUI(),
+          if (!bind.isCustomClient()) _buildUpdateUI(),
           _buildRemoteIDTextField(),
         ])),
         SliverFillRemaining(
@@ -166,6 +168,7 @@ class _ConnectionPageState extends State<ConnectionPage> {
                           platform: '',
                           tags: [],
                           hash: '',
+                          password: '',
                           forceAlwaysRelay: false,
                           rdpPort: '',
                           rdpUsername: '',

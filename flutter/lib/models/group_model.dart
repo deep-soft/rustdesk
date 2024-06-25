@@ -7,7 +7,7 @@ import 'package:flutter_hbb/models/peer_model.dart';
 import 'package:flutter_hbb/models/platform_model.dart';
 import 'package:get/get.dart';
 import 'dart:convert';
-import 'package:http/http.dart' as http;
+import '../utils/http_service.dart' as http;
 
 class GroupModel {
   final RxBool groupLoading = false.obs;
@@ -26,6 +26,7 @@ class GroupModel {
   GroupModel(this.parent);
 
   Future<void> pull({force = true, quiet = false}) async {
+    if (bind.isDisableGroupPanel()) return;
     if (!gFFI.userModel.isLogin || groupLoading.value) return;
     if (!force && initialized) return;
     if (!quiet) {

@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_hbb/common.dart';
 import 'package:flutter_hbb/consts.dart';
@@ -19,7 +17,8 @@ class DesktopTabPage extends StatefulWidget {
   @override
   State<DesktopTabPage> createState() => _DesktopTabPageState();
 
-  static void onAddSetting({int initialPage = 0}) {
+  static void onAddSetting(
+      {SettingsTabKey initialPage = SettingsTabKey.general}) {
     try {
       DesktopTabController tabController = Get.find();
       tabController.add(TabInfo(
@@ -29,7 +28,7 @@ class DesktopTabPage extends StatefulWidget {
           unselectedIcon: Icons.build_outlined,
           page: DesktopSettingPage(
             key: const ValueKey(kTabLabelSettingPage),
-            initialPage: initialPage,
+            initialTabkey: initialPage,
           )));
     } catch (e) {
       debugPrintStack(label: '$e');
@@ -37,12 +36,24 @@ class DesktopTabPage extends StatefulWidget {
   }
 }
 
-class _DesktopTabPageState extends State<DesktopTabPage> {
+class _DesktopTabPageState extends State<DesktopTabPage>
+    with WidgetsBindingObserver {
   final tabController = DesktopTabController(tabType: DesktopTabType.main);
+
+  final RxBool _block = false.obs;
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    if (state == AppLifecycleState.resumed) {
+      shouldBeBlocked(_block, canBeBlocked);
+    } else if (state == AppLifecycleState.inactive) {}
+  }
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     Get.put<DesktopTabController>(tabController);
     RemoteCountState.init();
     tabController.add(TabInfo(
@@ -58,10 +69,10 @@ class _DesktopTabPageState extends State<DesktopTabPage> {
       tabController.onSelected = (key) {
         if (key == kTabLabelHomePage) {
           windowManager.setSize(getIncomingOnlyHomeSize());
-          windowManager.setResizable(false);
+          setResizable(false);
         } else {
           windowManager.setSize(getIncomingOnlySettingsSize());
-          windowManager.setResizable(true);
+          setResizable(true);
         }
       };
     }
@@ -69,8 +80,10 @@ class _DesktopTabPageState extends State<DesktopTabPage> {
 
   @override
   void dispose() {
-    super.dispose();
+    WidgetsBinding.instance.removeObserver(this);
     Get.delete<DesktopTabController>();
+
+    super.dispose();
   }
 
   @override
@@ -90,12 +103,17 @@ class _DesktopTabPageState extends State<DesktopTabPage> {
                 ),
               ),
             )));
-    return Platform.isMacOS || kUseCompatibleUiMode
-        ? tabWidget
+    widget() => MouseRegion(
+        onEnter: (_) async {
+          await shouldBeBlocked(_block, canBeBlocked);
+        },
+        child: FocusScope(child: tabWidget, canRequestFocus: !_block.value));
+    return isMacOS || kUseCompatibleUiMode
+        ? Obx(() => widget())
         : Obx(
             () => DragToResizeArea(
               resizeEdgeSize: stateGlobal.resizeEdgeSize.value,
-              child: tabWidget,
+              child: widget(),
             ),
           );
   }

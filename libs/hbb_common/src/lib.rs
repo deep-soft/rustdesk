@@ -16,14 +16,13 @@ use std::{
 };
 pub use tokio;
 pub use tokio_util;
+pub mod proxy;
 pub mod socket_client;
 pub mod tcp;
 pub mod udp;
 pub use env_logger;
 pub use log;
 pub mod bytes_codec;
-#[cfg(feature = "quic")]
-pub mod quic;
 pub use anyhow::{self, bail};
 pub use futures_util;
 pub mod config;
@@ -42,17 +41,18 @@ pub use chrono;
 pub use directories_next;
 pub use libc;
 pub mod keyboard;
+pub use base64;
 #[cfg(not(any(target_os = "android", target_os = "ios")))]
 pub use dlopen;
 #[cfg(not(any(target_os = "android", target_os = "ios")))]
 pub use machine_uid;
+pub use serde_derive;
+pub use serde_json;
 pub use sysinfo;
+pub use thiserror;
 pub use toml;
 pub use uuid;
 
-#[cfg(feature = "quic")]
-pub type Stream = quic::Connection;
-#[cfg(not(feature = "quic"))]
 pub type Stream = tcp::FramedStream;
 pub type SessionID = uuid::Uuid;
 
@@ -384,7 +384,7 @@ pub fn init_log(_is_async: bool, _name: &str) -> Option<flexi_logger::LoggerHand
                     .rotate(
                         Criterion::Age(Age::Day),
                         Naming::Timestamps,
-                        Cleanup::KeepLogFiles(6),
+                        Cleanup::KeepLogFiles(31),
                     )
                     .start()
                     .ok();

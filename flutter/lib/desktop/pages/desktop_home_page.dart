@@ -69,44 +69,6 @@ class _DesktopHomePageState extends State<DesktopHomePage>
     );
   }
 
-  Widget buildPresetPasswordWarning() {
-    return FutureBuilder<bool>(
-      future: bind.isPresetPassword(),
-      builder: (BuildContext context, AsyncSnapshot<bool> snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return CircularProgressIndicator(); // Show a loading spinner while waiting for the Future to complete
-        } else if (snapshot.hasError) {
-          return Text(
-              'Error: ${snapshot.error}'); // Show an error message if the Future completed with an error
-        } else if (snapshot.hasData && snapshot.data == true) {
-          return Container(
-            color: Colors.yellow,
-            child: Column(
-              children: [
-                Align(
-                    child: Text(
-                  translate("Security Alert"),
-                  style: TextStyle(
-                    color: Colors.red,
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                )).paddingOnly(bottom: 8),
-                Text(
-                  translate("preset_password_warning"),
-                  style: TextStyle(color: Colors.red),
-                )
-              ],
-            ).paddingAll(8),
-          ); // Show a warning message if the Future completed with true
-        } else {
-          return SizedBox
-              .shrink(); // Show nothing if the Future completed with false or null
-        }
-      },
-    );
-  }
-
   Widget buildLeftPane(BuildContext context) {
     final isIncomingOnly = bind.isIncomingOnly();
     final isOutgoingOnly = bind.isOutgoingOnly();
@@ -115,22 +77,7 @@ class _DesktopHomePageState extends State<DesktopHomePage>
       if (bind.isCustomClient())
         Align(
           alignment: Alignment.center,
-          child: MouseRegion(
-            cursor: SystemMouseCursors.click,
-            child: GestureDetector(
-              onTap: () {
-                launchUrl(Uri.parse('https://rustdesk.com'));
-              },
-              child: Opacity(
-                  opacity: 0.5,
-                  child: Text(
-                    translate("powered_by_me"),
-                    overflow: TextOverflow.clip,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        fontSize: 9, decoration: TextDecoration.underline),
-                  )),
-            ),
-          ).marginOnly(top: 6),
+          child: loadPowered(context),
         ),
       Align(
         alignment: Alignment.center,
@@ -206,7 +153,13 @@ class _DesktopHomePageState extends State<DesktopHomePage>
                           size: 22,
                         ),
                       ),
-                      onTap: () => DesktopSettingPage.switch2page(0),
+                      onTap: () => {
+                        if (DesktopSettingPage.tabKeys.isNotEmpty)
+                          {
+                            DesktopSettingPage.switch2page(
+                                DesktopSettingPage.tabKeys[0])
+                          }
+                      },
                       onHover: (value) => _editHover.value = value,
                     ),
                   ),
@@ -298,19 +251,20 @@ class _DesktopHomePageState extends State<DesktopHomePage>
     RxBool hover = false.obs;
     return InkWell(
       onTap: DesktopTabPage.onAddSetting,
-      child: Obx(
-        () => CircleAvatar(
-          radius: 15,
-          backgroundColor: hover.value
-              ? Theme.of(context).scaffoldBackgroundColor
-              : Theme.of(context).colorScheme.background,
-          child: Tooltip(
-              message: translate('Settings'),
-              child: Icon(
-                Icons.more_vert_outlined,
-                size: 20,
-                color: hover.value ? textColor : textColor?.withOpacity(0.5),
-              )),
+      child: Tooltip(
+        message: translate('Settings'),
+        child: Obx(
+          () => CircleAvatar(
+            radius: 15,
+            backgroundColor: hover.value
+                ? Theme.of(context).scaffoldBackgroundColor
+                : Theme.of(context).colorScheme.background,
+            child: Icon(
+              Icons.more_vert_outlined,
+              size: 20,
+              color: hover.value ? textColor : textColor?.withOpacity(0.5),
+            ),
+          ),
         ),
       ),
       onHover: (value) => hover.value = value,
@@ -371,33 +325,36 @@ class _DesktopHomePageState extends State<DesktopHomePage>
                       ),
                       AnimatedRotationWidget(
                         onPressed: () => bind.mainUpdateTemporaryPassword(),
-                        child: Obx(() => RotatedBox(
-                            quarterTurns: 2,
-                            child: Tooltip(
-                                message: translate('Refresh Password'),
-                                child: Icon(
-                                  Icons.refresh,
-                                  color: refreshHover.value
-                                      ? textColor
-                                      : Color(0xFFDDDDDD),
-                                  size: 22,
-                                )))),
+                        child: Tooltip(
+                          message: translate('Refresh Password'),
+                          child: Obx(() => RotatedBox(
+                              quarterTurns: 2,
+                              child: Icon(
+                                Icons.refresh,
+                                color: refreshHover.value
+                                    ? textColor
+                                    : Color(0xFFDDDDDD),
+                                size: 22,
+                              ))),
+                        ),
                         onHover: (value) => refreshHover.value = value,
                       ).marginOnly(right: 8, top: 4),
                       if (!bind.isDisableSettings())
                         InkWell(
-                          child: Obx(
-                            () => Tooltip(
-                                message: translate('Change Password'),
-                                child: Icon(
-                                  Icons.edit,
-                                  color: editHover.value
-                                      ? textColor
-                                      : Color(0xFFDDDDDD),
-                                  size: 22,
-                                )).marginOnly(right: 8, top: 4),
+                          child: Tooltip(
+                            message: translate('Change Password'),
+                            child: Obx(
+                              () => Icon(
+                                Icons.edit,
+                                color: editHover.value
+                                    ? textColor
+                                    : Color(0xFFDDDDDD),
+                                size: 22,
+                              ).marginOnly(right: 8, top: 4),
+                            ),
                           ),
-                          onTap: () => DesktopSettingPage.switch2page(0),
+                          onTap: () => DesktopSettingPage.switch2page(
+                              SettingsTabKey.safety),
                           onHover: (value) => editHover.value = value,
                         ),
                     ],
@@ -469,7 +426,7 @@ class _DesktopHomePageState extends State<DesktopHomePage>
       return buildInstallCard("", systemError, "", () {});
     }
 
-    if (Platform.isWindows && !bind.isDisableInstallation()) {
+    if (isWindows && !bind.isDisableInstallation()) {
       if (!bind.mainIsInstalled()) {
         return buildInstallCard(
             "", bind.isOutgoingOnly() ? "" : "install_tip", "Install",
@@ -485,7 +442,7 @@ class _DesktopHomePageState extends State<DesktopHomePage>
           bind.mainUpdateMe();
         });
       }
-    } else if (Platform.isMacOS) {
+    } else if (isMacOS) {
       if (!(bind.isOutgoingOnly() ||
           bind.mainIsCanScreenRecording(prompt: false))) {
         return buildInstallCard("Permissions", "config_screen", "Configure",
@@ -521,7 +478,7 @@ class _DesktopHomePageState extends State<DesktopHomePage>
       //     watchIsCanRecordAudio = true;
       //   });
       // }
-    } else if (Platform.isLinux) {
+    } else if (isLinux) {
       if (bind.isOutgoingOnly()) {
         return Container();
       }
@@ -570,7 +527,7 @@ class _DesktopHomePageState extends State<DesktopHomePage>
           onPressed: () {
             SystemNavigator.pop(); // Close the application
             // https://github.com/flutter/flutter/issues/66631
-            if (Platform.isWindows) {
+            if (isWindows) {
               exit(0);
             }
           },
@@ -701,10 +658,12 @@ class _DesktopHomePageState extends State<DesktopHomePage>
   @override
   void initState() {
     super.initState();
-    Timer(const Duration(seconds: 1), () async {
-      updateUrl = await bind.mainGetSoftwareUpdateUrl();
-      if (updateUrl.isNotEmpty) setState(() {});
-    });
+    if (!bind.isCustomClient()) {
+      Timer(const Duration(seconds: 1), () async {
+        updateUrl = await bind.mainGetSoftwareUpdateUrl();
+        if (updateUrl.isNotEmpty) setState(() {});
+      });
+    }
     _updateTimer = periodic_immediate(const Duration(seconds: 1), () async {
       await gFFI.serverModel.fetchID();
       final error = await bind.mainGetError();
@@ -712,7 +671,7 @@ class _DesktopHomePageState extends State<DesktopHomePage>
         systemError = error;
         setState(() {});
       }
-      final v = await bind.mainGetOption(key: "stop-service") == "Y";
+      final v = await mainGetBoolOption(kOptionStopService);
       if (v != svcStopped.value) {
         svcStopped.value = v;
         setState(() {});
@@ -740,7 +699,7 @@ class _DesktopHomePageState extends State<DesktopHomePage>
         }
       }
       if (watchIsCanRecordAudio) {
-        if (Platform.isMacOS) {
+        if (isMacOS) {
           Future.microtask(() async {
             if ((await osxCanRecordAudio() ==
                 PermissionAuthorizeType.authorized)) {
@@ -800,6 +759,7 @@ class _DesktopHomePageState extends State<DesktopHomePage>
           isFileTransfer: call.arguments['isFileTransfer'],
           isTcpTunneling: call.arguments['isTcpTunneling'],
           isRDP: call.arguments['isRDP'],
+          password: call.arguments['password'],
           forceRelay: call.arguments['forceRelay'],
         );
       } else if (call.method == kWindowEventMoveTabToNewWindow) {
@@ -823,6 +783,12 @@ class _DesktopHomePageState extends State<DesktopHomePage>
         final screenRect = parseParamScreenRect(args);
         await rustDeskWinManager.openMonitorSession(
             windowId, peerId, display, displayCount, screenRect);
+      } else if (call.method == kWindowEventRemoteWindowCoords) {
+        final windowId = int.tryParse(call.arguments);
+        if (windowId != null) {
+          return jsonEncode(
+              await rustDeskWinManager.getOtherRemoteWindowCoords(windowId));
+        }
       }
     });
     _uniLinksSubscription = listenUniLinks();

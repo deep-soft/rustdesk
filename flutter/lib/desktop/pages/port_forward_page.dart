@@ -25,19 +25,21 @@ class _PortForward {
 }
 
 class PortForwardPage extends StatefulWidget {
-  const PortForwardPage(
-      {Key? key,
-      required this.id,
-      required this.password,
-      required this.tabController,
-      required this.isRDP,
-      this.forceRelay})
-      : super(key: key);
+  const PortForwardPage({
+    Key? key,
+    required this.id,
+    required this.password,
+    required this.tabController,
+    required this.isRDP,
+    required this.isSharedPassword,
+    this.forceRelay,
+  }) : super(key: key);
   final String id;
   final String? password;
   final DesktopTabController tabController;
   final bool isRDP;
   final bool? forceRelay;
+  final bool? isSharedPassword;
 
   @override
   State<PortForwardPage> createState() => _PortForwardPageState();
@@ -58,6 +60,7 @@ class _PortForwardPageState extends State<PortForwardPage>
     _ffi.start(widget.id,
         isPortForward: true,
         password: widget.password,
+        isSharedPassword: widget.isSharedPassword,
         forceRelay: widget.forceRelay,
         isRdp: widget.isRDP);
     Get.put(_ffi, tag: 'pf_${widget.id}');
@@ -138,8 +141,9 @@ class _PortForwardPageState extends State<PortForwardPage>
         child: Text(translate(label)).marginOnly(left: _kTextLeftMargin));
 
     return Theme(
-      data: Theme.of(context)
-          .copyWith(backgroundColor: Theme.of(context).colorScheme.background),
+      data: Theme.of(context).copyWith(
+        colorScheme: Theme.of(context).colorScheme,
+      ),
       child: Obx(() => ListView.builder(
           controller: ScrollController(),
           itemCount: pfs.length + 2,
@@ -286,7 +290,7 @@ class _PortForwardPageState extends State<PortForwardPage>
         ).marginOnly(left: _kTextLeftMargin));
     return Theme(
       data: Theme.of(context)
-          .copyWith(backgroundColor: Theme.of(context).colorScheme.background),
+          .copyWith(colorScheme: Theme.of(context).colorScheme),
       child: ListView.builder(
           controller: ScrollController(),
           itemCount: 2,
