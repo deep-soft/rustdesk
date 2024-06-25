@@ -26,6 +26,7 @@ env:
   RDSK_PCH_SH4:                '${{ secrets.RDSK_PCH_SH4 }}'
   RDSK_PCH_SH_CLN:             '${{ secrets.RDSK_PCH_SH_CLN }}'
   RUST_VERSION:                "rust-1.76.0"
+  WIN_RUST_VERSION:            "1.75"
   LLVM_VERSION:                "15.0.6"
 #  FLUTTER_VERSION:             "3.16.9"
   FLUTTER_VERSION:             "3.19.6"
@@ -190,13 +191,21 @@ jobs:
           echo "DATE_YYMD=$_date_YYMD" >> $GITHUB_ENV
 
           VERSION=$(grep -e "^version = " Cargo.toml  | awk -F '"' '{print $2}');
-          ##VERSION_COMMA=$(echo $VERSION.$DATE_YYMD | tr "." ",")
-          VERSION_COMMA=$(echo $VERSION.$_date_y1MD | tr "." ",")
+          ##VERSION_COMMA=$(echo $VERSION.$DATE_YYMD | tr "." ",");
+          VERSION_COMMA=$(echo $VERSION.$_date_y1MD | tr "." ",");
+          echo "VERSION_COMMA=$VERSION_COMMA" >> $GITHUB_ENV
+          
+      - name: Print env variables
+        shell: bash
+        run: |
+          DATE_YMD=${{ env.DATE_YMD }};
+          DATE_YYMD=${{ env.DATE_YYMD }};
+          VERSION=${{ env.VERSION }};
+          VERSION_COMMA=${{ env.VERSION_COMMA }};
           echo $DATE_YMD;
           echo $DATE_YYMD;
           echo $VERSION;
           echo $VERSION_COMMA;
-
 
       - name: set WORK_DIR_OS
         shell: cmd
@@ -323,6 +332,8 @@ jobs:
           sed -i 's|\[package.metadata.winres\]|\[package.metadata.winres\]\nFileVersion = "${{ env.VERSION }}.${{ env.DATE_YMD }}"\nProductVersion = "${{ env.VERSION }}${{ env.TAG_BUILD }}"|' ./Cargo.toml;
           sed -i 's|#\[cfg(all(windows, feature = "inline"))\]|#\[cfg(all(windows))\]|g' ./build.rs;
           sed -i 's|\[package.metadata.winres\]|\[package.metadata.winres\]\nFileVersion = "${{ env.VERSION }}.${{ env.DATE_YMD }}"\nProductVersion = "${{ env.VERSION }}${{ env.TAG_BUILD }}"|' ./libs/portable/Cargo.toml;
+          sed -i 's|\[dependencies\]|\[dependencies\]\nembed-resource = "2.4.2"|' ./libs/portable/Cargo.toml;
+          echo "embed-resource = \"2.4.2\"" >> ./libs/portable/Cargo.toml;
 
       - name: print Cargo.toml
         continue-on-error: true
@@ -341,7 +352,8 @@ jobs:
         continue-on-error: true
         shell: bash
         run: |
-          sed -i 's|"FileVersion", VERSION_AS_STRING |"FileVersion", "${{ env.VERSION }}.${{ env.DATE_YMD }}" |' ./flutter/windows/runner/Runner.rc;
+          #sed -i 's|"FileVersion", VERSION_AS_STRING |"FileVersion", "${{ env.VERSION }}.${{ env.DATE_YMD }}" |' ./flutter/windows/runner/Runner.rc;
+          sed -i 's|"FileVersion", VERSION_AS_STRING |"FileVersion", "${{ env.VERSION_COMMA" |" ./flutter/windows/runner/Runner.rc;
           sed -i 's|"ProductVersion", VERSION_AS_STRING |"ProductVersion", "${{ env.VERSION }}${{ env.TAG_BUILD }}" |' ./flutter/windows/runner/Runner.rc;
           cat ./flutter/windows/runner/Runner.rc;
           # change year in Copyright, 2023 to 2024
@@ -473,18 +485,19 @@ jobs:
 #           Expand-Archive windows-x64-flutter-release.zip -DestinationPath engine
 #           mv -Force engine/*  C:/hostedtoolcache/windows/flutter/stable-${{ env.FLUTTER_VERSION }}-x64/bin/cache/artifacts/engine/windows-x64-release/
 
-      - name: Replace engine with rustdesk custom flutter engine
-        run: |
-          flutter doctor -v
-          flutter precache --windows
-          Invoke-WebRequest -Uri https://github.com/fufesou/flutter-engine/releases/download/bugfix-subwindow-crash-3.16.9-apply-pull-47787/windows-x64-release.zip -OutFile windows-x64-flutter-release.zip
-          Expand-Archive windows-x64-flutter-release.zip -DestinationPath .
-          mv -Force windows-x64-release/*  C:/hostedtoolcache/windows/flutter/stable-${{ env.FLUTTER_VERSION }}-x64/bin/cache/artifacts/engine/windows-x64-release/
+#      - name: Replace engine with rustdesk custom flutter engine
+#        run: |
+#          flutter doctor -v
+#          flutter precache --windows
+#          Invoke-WebRequest -Uri https://github.com/fufesou/flutter-engine/releases/download/bugfix-subwindow-crash-3.16.9-apply-pull-47787/windows-x64-release.zip -OutFile windows-x64-flutter-release.zip
+#          Expand-Archive windows-x64-flutter-release.zip -DestinationPath .
+#          mv -Force windows-x64-release/*  C:/hostedtoolcache/windows/flutter/stable-${{ env.FLUTTER_VERSION }}-x64/bin/cache/artifacts/engine/windows-x64-release/
 
       - name: Install Rust toolchain
         uses: deep-soft/rust-toolchain@master
         with:
-          toolchain: stable
+          # toolchain: stable
+          toolchain: ${{ env.WIN_RUST_VERSION }}
           #  Rustup toolchain specifier e.g. stable, nightly, 1.42.0
           #  the default is to match the @rev as described above. When passing an explicit toolchain as an input instead of @rev, you'll want to use "rust-toolchain@master" as the revision of the action.
           targets: ${{ matrix.job.target }}
@@ -690,6 +703,14 @@ jobs:
           mkdir -p ./SignOutput;
           mv ./target/release/rustdesk-portable-packer.exe ./SignOutput/${{ env.PROG_NAME }}-${{ env.VERSION }}-${{ matrix.job.target }}-${{ matrix.job.os }}.exe;
           cp ${{ env.WORK_DIR_BASH }}/_version_.txt ./SignOutput;
+
+      - name: Add usbmmidd_v2.zip
+        continue-on-error: true
+        run: |
+          Invoke-WebRequest -Uri https://github.com/rustdesk-org/rdev/releases/download/usbmmidd_v2/usbmmidd_v2.zip -OutFile usbmmidd_v2.zip
+          Expand-Archive usbmmidd_v2.zip -DestinationPath .
+          Remove-Item -Path usbmmidd_v2\Win32 -Recurse
+          mv -Force .\usbmmidd_v2 ./SignOutput
 
       # - name: Rename rustdesk
       #   shell: bash
