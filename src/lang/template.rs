@@ -622,5 +622,13 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("During controlled", ""),
         ("During service is on", ""),
         ("Capture screen using DirectX", ""),
+        ("Back", ""),
+        ("Apps", ""),
+        ("Volume up", ""),
+        ("Volume down", ""),
+        ("Power", ""),
+        ("Telegram bot", ""),
+        ("enable-bot-tip", ""),
+        ("enable-bot-desc", ""),
     ].iter().cloned().collect();
 }
