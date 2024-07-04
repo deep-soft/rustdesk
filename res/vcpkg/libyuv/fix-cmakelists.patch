@@ -1,18 +1,10 @@
-Subject: [PATCH] patch cmakelist for vcpkg
----
-Index: CMakeLists.txt
-IDEA additional info:
-Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
-<+>UTF-8
-===================================================================
-# inserted line to check for error
 diff --git a/CMakeLists.txt b/CMakeLists.txt
 --- a/CMakeLists.txt	(revision 010dea8ba4158896e5608a52dd4372ca7f57cdca)
 +++ b/CMakeLists.txt	(revision da9ae4ff969b9722ce90b800d514fa26ad1fdf87)
 @@ -2,18 +2,21 @@
  # Originally created for "roxlu build system" to compile libyuv on windows
  # Run with -DTEST=ON to build unit tests
-
+ 
 +CMAKE_MINIMUM_REQUIRED( VERSION 3.12)
 +
  PROJECT ( YUV C CXX )	# "C" is required even for C++ projects
