@@ -87,3 +87,4 @@ diff --git a/CMakeLists.txt b/CMakeLists.txt
  
  # create the .deb and .rpm packages using cpack
  INCLUDE ( CM_linux_packages.cmake )
+
