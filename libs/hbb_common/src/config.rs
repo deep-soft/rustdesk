@@ -2099,6 +2099,7 @@ pub mod keys {
     pub const OPTION_ENABLE_DIRECTX_CAPTURE: &str = "enable-directx-capture";
     pub const OPTION_ENABLE_ANDROID_SOFTWARE_ENCODING_HALF_SCALE: &str =
         "enable-android-software-encoding-half-scale";
+    pub const OPTION_DISABLE_UDP: &str = "disable-udp";
 
     // flutter local options
     pub const OPTION_FLUTTER_REMOTE_MENUBAR_STATE: &str = "remoteMenubarState";
@@ -2121,6 +2122,8 @@ pub mod keys {
 
     pub const OPTION_DISABLE_GROUP_PANEL: &str = "disable-group-panel";
     pub const OPTION_PRE_ELEVATE_SERVICE: &str = "pre-elevate-service";
+
+    pub const OPTION_DISPLAY_NAME: &str = "display-name";
 
     // proxy settings
     // The following options are not real keys, they are just used for custom client advanced settings.
@@ -2185,6 +2188,12 @@ pub mod keys {
         OPTION_KEEP_SCREEN_ON,
         OPTION_DISABLE_GROUP_PANEL,
         OPTION_PRE_ELEVATE_SERVICE,
+        OPTION_DISPLAY_NAME,
+        "remove-preset-password-warning",
+        "hide-security-settings",
+        "hide-network-settings",
+        "hide-server-settings",
+        "hide-proxy-settings",
     ];
     // DEFAULT_SETTINGS, OVERWRITE_SETTINGS
     pub const KEYS_SETTINGS: &[&str] = &[
@@ -2223,6 +2232,7 @@ pub mod keys {
         OPTION_PRESET_ADDRESS_BOOK_TAG,
         OPTION_ENABLE_DIRECTX_CAPTURE,
         OPTION_ENABLE_ANDROID_SOFTWARE_ENCODING_HALF_SCALE,
+        OPTION_DISABLE_UDP,
     ];
 }
 

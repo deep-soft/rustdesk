@@ -2715,20 +2715,26 @@ Future<void> shouldBeBlocked(RxBool block, WhetherUseRemoteBlock? use) async {
 }
 
 typedef WhetherUseRemoteBlock = Future<bool> Function();
-Widget buildRemoteBlock({required Widget child, WhetherUseRemoteBlock? use}) {
-  var block = false.obs;
+Widget buildRemoteBlock(
+    {required Widget child,
+    required RxBool block,
+    required bool mask,
+    WhetherUseRemoteBlock? use}) {
   return Obx(() => MouseRegion(
         onEnter: (_) async {
           await shouldBeBlocked(block, use);
         },
         onExit: (event) => block.value = false,
         child: Stack(children: [
-          child,
-          Offstage(
-              offstage: !block.value,
-              child: Container(
-                color: Colors.black.withOpacity(0.5),
-              )),
+          // scope block tab
+          FocusScope(child: child, canRequestFocus: !block.value),
+          // mask block click, cm not block click and still use check_click_time to avoid block local click
+          if (mask)
+            Offstage(
+                offstage: !block.value,
+                child: Container(
+                  color: Colors.black.withOpacity(0.5),
+                )),
         ]),
       ));
 }
@@ -3301,6 +3307,10 @@ Widget buildPresetPasswordWarning() {
         return Text(
             'Error: ${snapshot.error}'); // Show an error message if the Future completed with an error
       } else if (snapshot.hasData && snapshot.data == true) {
+        if (bind.mainGetLocalOption(key: "remove-preset-password-warning") ==
+            'Y') {
+          return SizedBox.shrink();
+        }
         return Container(
           color: Colors.yellow,
           child: Column(
