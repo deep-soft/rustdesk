@@ -98,10 +98,11 @@ on:
         description: SED_STUFF_PARAMS
         default: "build.py"
         required: true
-#      DEBUG_MODE:
-#        description: DEBUG_MODE
-#        default: "N"
-#        required: true
+      VCPKG_LIBYUV:
+        description: remove res/vcpkg/libyuv
+        type: boolean
+        default: true
+        required: true
 
 jobs:
   build-for-windows:
@@ -126,6 +127,14 @@ jobs:
 
       - name: Checkout source code
         uses: deep-soft/checkout@v4
+
+      - name: VCPKG_LIBYUV
+        if: ${{ inputs.VCPKG_LIBYUV }}
+        continue-on-error: true
+        shell: bash
+        run: |
+          rmdir res/vcpkg/libyuv
+          ls -la res/vcpkg
 
       - name: Set custom_TAG_NAME
         shell: bash
