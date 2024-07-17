@@ -416,10 +416,6 @@ class _RemotePageState extends State<RemotePage>
   }
 
   void leaveView(PointerExitEvent evt) {
-    if (isMacOS) {
-      DesktopMultiWindow.hideShow();
-    }
-
     if (_ffi.ffiModel.keyboard) {
       _ffi.inputModel.tryMoveEdgeOnExit(evt.position);
     }
