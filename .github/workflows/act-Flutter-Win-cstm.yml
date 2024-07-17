@@ -133,7 +133,7 @@ jobs:
         continue-on-error: true
         shell: bash
         run: |
-          rmdir res/vcpkg/libyuv
+          rm -r res/vcpkg/libyuv
           ls -la res/vcpkg
 
       - name: Set custom_TAG_NAME
