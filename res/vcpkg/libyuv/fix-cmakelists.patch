@@ -11,7 +11,7 @@ diff --git a/CMakeLists.txt b/CMakeLists.txt
 @@ -2,18 +2,21 @@
  # Originally created for "roxlu build system" to compile libyuv on windows
  # Run with -DTEST=ON to build unit tests
-
+ 
 +CMAKE_MINIMUM_REQUIRED( VERSION 3.12)
 +
  PROJECT ( YUV C CXX )	# "C" is required even for C++ projects
