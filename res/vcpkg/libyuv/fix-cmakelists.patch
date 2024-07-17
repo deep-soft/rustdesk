@@ -73,7 +73,7 @@ diff --git a/CMakeLists.txt b/CMakeLists.txt
    endif()
 -endif()
 +endif()
-
+ 
 -
  # install the conversion tool, .so, .a, and all the header files
 -INSTALL ( PROGRAMS ${CMAKE_BINARY_DIR}/yuvconvert			DESTINATION bin )
