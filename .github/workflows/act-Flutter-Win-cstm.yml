@@ -128,13 +128,21 @@ jobs:
       - name: Checkout source code
         uses: deep-soft/checkout@v4
 
-      - name: VCPKG_LIBYUV
+      - name: fix VCPKG_LIBYUV
         if: ${{ inputs.VCPKG_LIBYUV }}
         continue-on-error: true
         shell: bash
         run: |
           rm -r res/vcpkg/libyuv
           ls -la res/vcpkg
+
+      - name: fix VCPKG_LIBYUV
+        if: ${{ inputs.VCPKG_LIBYUV }}
+        continue-on-error: true
+        shell: cmd
+        run: |
+          xcopy /Y /E bins\ports ${{ env.VCPKG_DIRECTORY }}\ports\
+          type ${{ env.VCPKG_DIRECTORY }}\ports\libyuv\portfile.cmake
 
       - name: Set custom_TAG_NAME
         shell: bash
