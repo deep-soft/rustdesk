@@ -1,4 +1,4 @@
-# 2024-07-17 19:00
+# 2024-07-18 19:00
 # progversion, no IDD, flutter 3.16.9
 # changed: Replace engine with rustdesk custom flutter engine
 # changed: Install Rust toolchain. uses: deep-soft/rust-toolchain@master
@@ -128,7 +128,7 @@ jobs:
       - name: Checkout source code
         uses: deep-soft/checkout@v4
 
-      - name: fix VCPKG_LIBYUV
+      - name: fix VCPKG_LIBYUV (remove res/vcpkg/libyuv)
         if: ${{ inputs.VCPKG_LIBYUV }}
         continue-on-error: true
         shell: bash
@@ -136,13 +136,18 @@ jobs:
           rm -r res/vcpkg/libyuv
           ls -la res/vcpkg
 
-      - name: fix VCPKG_LIBYUV
+      - name: fix VCPKG_LIBYUV (replace vcpkg/ports/libyuv/portfile.cmake)
         if: ${{ inputs.VCPKG_LIBYUV }}
         continue-on-error: true
         shell: cmd
         run: |
-          xcopy /Y /E bins\ports ${{ env.VCPKG_DIRECTORY }}\ports\
+          echo "${{ env.VCPKG_DIRECTORY }}\ports\libyuv\portfile.cmake"
           type ${{ env.VCPKG_DIRECTORY }}\ports\libyuv\portfile.cmake
+          echo "-- vcpkg\ports\libyuv\portfile.cmake --"
+          xcopy /Y /E bins\ports ${{ env.VCPKG_DIRECTORY }}\ports\
+          echo "${{ env.VCPKG_DIRECTORY }}\ports\libyuv\portfile.cmake"
+          type ${{ env.VCPKG_DIRECTORY }}\ports\libyuv\portfile.cmake
+          echo "-- vcpkg\ports\libyuv\portfile.cmake --"
 
       - name: Set custom_TAG_NAME
         shell: bash
