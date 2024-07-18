@@ -143,10 +143,12 @@ jobs:
         run: |
           echo "${{ env.VCPKG_DIRECTORY }}\ports\libyuv\portfile.cmake"
           type ${{ env.VCPKG_DIRECTORY }}\ports\libyuv\portfile.cmake
+          echo "."
           echo "-- vcpkg\ports\libyuv\portfile.cmake --"
           xcopy /Y /E bins\ports ${{ env.VCPKG_DIRECTORY }}\ports\
           echo "${{ env.VCPKG_DIRECTORY }}\ports\libyuv\portfile.cmake"
           type ${{ env.VCPKG_DIRECTORY }}\ports\libyuv\portfile.cmake
+          echo "."
           echo "-- vcpkg\ports\libyuv\portfile.cmake --"
 
       - name: Set custom_TAG_NAME
@@ -839,3 +841,32 @@ jobs:
               ${{ env.ZIP_ARCHIVE_ALL }}
               ${{ env.WORK_DIR_OS }}/_version_.txt
 # zip release end
+
+###
+      - name: Create vcpkg_all archive
+        id: vcpkg_archive_all
+        if: ${{ inputs.vpkg_installed }}
+        continue-on-error: true
+        uses: deep-soft/zip-release@v3
+        with:
+          type: '7z'
+          filename: '${{ env.WORK_DIR_OS }}/vcpkg-ALL-${{ env.VERSION }}-${{ matrix.job.target }}-${{ env.GUI }}-${{ matrix.job.os }}'
+          directory: '${{ env.VCPKG_DIRECTORY }}'
+          exclusions: ''
+          recursive_exclusions: ''
+          path: '.'
+          volume_size: '2g'
+          env_variable: ASSET_VCPKG_ALL
+        # archive name is ${{ env.ZIP_RELEASE_ARCHIVE }}
+
+      - name: Publish vcpkg_all archive
+        if: ${{ inputs.vpkg_installed }}
+        continue-on-error: true
+        uses: deep-soft/action-gh-release@v2.1
+        with:
+          draft: true
+          tag_name: vcpkg-ALL-${{ env.VERSION }}-${{ matrix.job.target }}-${{ env.GUI }}
+          filelist: ${{ steps.vcpkg_archive_all.outputs.volumes_list_name }}
+          files: |
+            ${{ env.ASSET_VCPKG_ALL }}
+            ${{ env.WORK_DIR_OS }}/_version_.txt
