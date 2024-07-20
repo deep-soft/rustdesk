@@ -150,8 +150,9 @@ jobs:
         #  echo "."
         #  echo "-- vcpkg\ports\libyuv\portfile.cmake --"
         run: |
-          7z.exe x -ores/vcpkg/ports/libyuv/ bins/libyuv-patch.zip
+          7z.exe x -ores/vcpkg/libyuv/ bins/libyuv-patch.zip
           dir res\vcpkg
+          dir res\vcpkg\libyuv
 
       - name: Set custom_TAG_NAME
         shell: bash
