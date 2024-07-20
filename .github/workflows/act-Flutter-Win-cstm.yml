@@ -1,4 +1,4 @@
-# 2024-07-18 19:00
+# 2024-07-20 21:30
 # progversion, no IDD, flutter 3.16.9
 # changed: Replace engine with rustdesk custom flutter engine
 # changed: Install Rust toolchain. uses: deep-soft/rust-toolchain@master
@@ -140,16 +140,18 @@ jobs:
         if: ${{ inputs.VCPKG_LIBYUV }}
         continue-on-error: true
         shell: cmd
+        #  echo "${{ env.VCPKG_DIRECTORY }}\ports\libyuv\portfile.cmake"
+        #  type ${{ env.VCPKG_DIRECTORY }}\ports\libyuv\portfile.cmake
+        #  echo "."
+        #  echo "-- vcpkg\ports\libyuv\portfile.cmake --"
+        #  xcopy /Y /E bins\ports ${{ env.VCPKG_DIRECTORY }}\ports\
+        #  echo "${{ env.VCPKG_DIRECTORY }}\ports\libyuv\portfile.cmake"
+        #  type ${{ env.VCPKG_DIRECTORY }}\ports\libyuv\portfile.cmake
+        #  echo "."
+        #  echo "-- vcpkg\ports\libyuv\portfile.cmake --"
         run: |
-          echo "${{ env.VCPKG_DIRECTORY }}\ports\libyuv\portfile.cmake"
-          type ${{ env.VCPKG_DIRECTORY }}\ports\libyuv\portfile.cmake
-          echo "."
-          echo "-- vcpkg\ports\libyuv\portfile.cmake --"
-          xcopy /Y /E bins\ports ${{ env.VCPKG_DIRECTORY }}\ports\
-          echo "${{ env.VCPKG_DIRECTORY }}\ports\libyuv\portfile.cmake"
-          type ${{ env.VCPKG_DIRECTORY }}\ports\libyuv\portfile.cmake
-          echo "."
-          echo "-- vcpkg\ports\libyuv\portfile.cmake --"
+          7z.exe x -ores/vcpkg/ports/libyuv/ bins/libyuv-patch.zip
+          dir res\vcpkg
 
       - name: Set custom_TAG_NAME
         shell: bash
