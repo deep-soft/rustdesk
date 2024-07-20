@@ -848,14 +848,14 @@ jobs:
         if: ${{ inputs.vpkg_installed }}
         continue-on-error: true
         uses: deep-soft/zip-release@v3
+        # volume_size: '2g'
         with:
-          type: '7z'
+          type: 'zip'
           filename: '${{ env.WORK_DIR_OS }}/vcpkg-ALL-${{ env.VERSION }}-${{ matrix.job.target }}-${{ env.GUI }}-${{ matrix.job.os }}'
           directory: '${{ env.VCPKG_DIRECTORY }}'
           exclusions: ''
           recursive_exclusions: ''
           path: '.'
-          volume_size: '2g'
           env_variable: ASSET_VCPKG_ALL
         # archive name is ${{ env.ZIP_RELEASE_ARCHIVE }}
 
