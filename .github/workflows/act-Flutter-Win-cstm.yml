@@ -1,4 +1,4 @@
-# 2024-07-20 21:30
+# 2024-07-21 00:10
 # progversion, no IDD, flutter 3.16.9
 # changed: Replace engine with rustdesk custom flutter engine
 # changed: Install Rust toolchain. uses: deep-soft/rust-toolchain@master
@@ -79,6 +79,11 @@ on:
         type: boolean
         default: false
         required: true
+      VCPKG_LIBYUV:
+        description: patch vcpkg/libyuv (from bins/zip)
+        type: boolean
+        default: true
+        required: true
       vpkg_installed:
         description: Archive vpkg_installed
         type: boolean
@@ -97,11 +102,6 @@ on:
       SED_STUFF_PARAMS:
         description: SED_STUFF_PARAMS
         default: "build.py"
-        required: true
-      VCPKG_LIBYUV:
-        description: remove res/vcpkg/libyuv
-        type: boolean
-        default: true
         required: true
 
 jobs:
@@ -128,7 +128,7 @@ jobs:
       - name: Checkout source code
         uses: deep-soft/checkout@v4
 
-      - name: fix VCPKG_LIBYUV (remove res/vcpkg/libyuv)
+      - name: patch vcpkg/libyuv (from bins/zip)
         if: ${{ inputs.VCPKG_LIBYUV }}
         continue-on-error: true
         shell: bash
@@ -136,19 +136,10 @@ jobs:
         run: |
           ls -la res/vcpkg
 
-      - name: fix VCPKG_LIBYUV (replace vcpkg/ports/libyuv/portfile.cmake)
+      - name: patch vcpkg/libyuv (from bins/zip)
         if: ${{ inputs.VCPKG_LIBYUV }}
         continue-on-error: true
         shell: cmd
-        #  echo "${{ env.VCPKG_DIRECTORY }}\ports\libyuv\portfile.cmake"
-        #  type ${{ env.VCPKG_DIRECTORY }}\ports\libyuv\portfile.cmake
-        #  echo "."
-        #  echo "-- vcpkg\ports\libyuv\portfile.cmake --"
-        #  xcopy /Y /E bins\ports ${{ env.VCPKG_DIRECTORY }}\ports\
-        #  echo "${{ env.VCPKG_DIRECTORY }}\ports\libyuv\portfile.cmake"
-        #  type ${{ env.VCPKG_DIRECTORY }}\ports\libyuv\portfile.cmake
-        #  echo "."
-        #  echo "-- vcpkg\ports\libyuv\portfile.cmake --"
         run: |
           7z.exe x -ores/vcpkg/libyuv/ bins/libyuv-patch.zip
           dir res\vcpkg
