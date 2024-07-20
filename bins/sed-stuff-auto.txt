@@ -12,13 +12,13 @@ R:    menuItems.add(_wolAction(peer.id));\n    if (Platform.isWindows) {
 F:flutter/lib/common/widgets/peer_card.dart
 
 #10 - fufesou/rdev
-S:fufesou/rdev
+S:fufesou/rdev#b3434caee84c92412b45a2f655a15ac5dad33488
 R:deep-soft/rdev
 F:Cargo.lock
 
 #11 - fufesou/rdev
-S:fufesou/rdev
-R:deep-soft/rdev
+S:/fufesou/
+R:/deep-soft/
 F:Cargo.toml
 
 #12 - fufesou/rdev
