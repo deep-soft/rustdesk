@@ -1,4 +1,4 @@
-# 2024-02-11 09:00
+# 2024-07-21 23:00
 # flutter 3.16.9
 # This yaml shares the build bridge steps with ci and nightly.
 #
@@ -75,7 +75,7 @@ jobs:
 
 ## -- read from toml - begin
       - name: Read toml package.version
-        uses: deep-soft/toml-action@v1.0.2
+        uses: deep-soft/toml-action@v1.0.3
         id: read_toml_version
         with:
           file: 'Cargo.toml'
