@@ -50,6 +50,13 @@ env:
 on:
   workflow_call:
   workflow_dispatch:
+    inputs:
+      other_packages:
+        description: other packages (rpm, flatpack, appimage, ...)
+        type: boolean
+        default: false
+        required: true
+
 #  schedule:
 #    # schedule build every night
 #    - cron: "0 0 * * *"
@@ -402,25 +409,27 @@ jobs:
               mv "$name" "${name%%.deb}-${{ matrix.job.arch }}.deb"
             done
 
-            # rpm package
-            echo "##@## rpm package"
-            pushd /workspace
-            HBB=`pwd` rpmbuild ./res/rpm-flutter.spec -bb
-            pushd ~/rpmbuild/RPMS/${{ matrix.job.arch }}
-            mkdir -p /opt/artifacts/rpm
-            for name in rustdesk*??.rpm; do
-                mv "$name" "/opt/artifacts/rpm/${name%%.rpm}.rpm"
-            done
+            if [[ ${{ inputs.other_packages }} ]]; then
+              # rpm package
+              echo "##@## rpm package"
+              pushd /workspace
+              HBB=`pwd` rpmbuild ./res/rpm-flutter.spec -bb
+              pushd ~/rpmbuild/RPMS/${{ matrix.job.arch }}
+              mkdir -p /opt/artifacts/rpm
+              for name in rustdesk*??.rpm; do
+                  mv "$name" "/opt/artifacts/rpm/${name%%.rpm}.rpm"
+              done
 
-            # rpm suse package
-            echo "##@## rpm suse package"
-            pushd /workspace
-            HBB=`pwd` rpmbuild ./res/rpm-flutter-suse.spec -bb
-            pushd ~/rpmbuild/RPMS/${{ matrix.job.arch }}
-            mkdir -p /opt/artifacts/rpm
-            for name in rustdesk*??.rpm; do
-                mv "$name" "/opt/artifacts/rpm/${name%%.rpm}-suse.rpm"
-            done
+              # rpm suse package
+              echo "##@## rpm suse package"
+              pushd /workspace
+              HBB=`pwd` rpmbuild ./res/rpm-flutter-suse.spec -bb
+              pushd ~/rpmbuild/RPMS/${{ matrix.job.arch }}
+              mkdir -p /opt/artifacts/rpm
+              for name in rustdesk*??.rpm; do
+                  mv "$name" "/opt/artifacts/rpm/${name%%.rpm}-suse.rpm"
+              done
+            fi
 
       - name: Rename rustdesk
         shell: bash
@@ -458,12 +467,12 @@ jobs:
           path: rustdesk-${{ env.VERSION }}-${{ matrix.job.target }}-${{ matrix.job.os }}.deb
 
       - name: Patch archlinux PKGBUILD
-        if: ${{ matrix.job.extra-build-features == '' }}
+        if: ${{ inputs.other_packages }}
         run: |
           sed -i "s/arch=('x86_64')/arch=('${{ matrix.job.arch }}')/g" res/PKGBUILD
 
       - name: Build archlinux package
-        if: ${{ matrix.job.extra-build-features == '' }}
+        if: ${{ inputs.other_packages }}
         uses: deep-soft/arch-makepkg-action@master
         with:
           packages: >
@@ -501,7 +510,7 @@ jobs:
             cd res && HBB=`pwd`/.. FLUTTER=1 makepkg -f
 
       - name: Publish archlinux package
-        if: ${{ matrix.job.extra-build-features == '' }}
+        if: ${{ inputs.other_packages }}
         uses: deep-soft/action-gh-release@v2.1
         with:
           draft: true
@@ -512,7 +521,7 @@ jobs:
             ${{ env.ASSET_SRC1 }}
 
       - name: Publish version build - archlinux package
-        if: ${{ matrix.job.extra-build-features == '' }}
+        if: ${{ inputs.other_packages }}
         uses: deep-soft/action-gh-release@v2.1
         with:
           draft: true
@@ -521,7 +530,7 @@ jobs:
             res/rustdesk*.zst
 
       - name: Build appimage package
-        if: ${{ matrix.job.extra-build-features == 'appimage' }}
+        if: ${{ inputs.other_packages }}
         shell: bash
         run: |
           # set-up appimage-builder
@@ -535,7 +544,7 @@ jobs:
           sudo appimage-builder --skip-tests --recipe ./AppImageBuilder-x86_64.yml
 
       - name: Publish appimage package
-        if: ${{ matrix.job.extra-build-features == 'appimage' }}
+        if: ${{ inputs.other_packages }}
         uses: deep-soft/action-gh-release@v2.1
         with:
           draft: true
@@ -546,7 +555,7 @@ jobs:
             ${{ env.ASSET_SRC1 }}
 
       - name: Publish version build - appimage package
-        if: ${{ matrix.job.extra-build-features == 'appimage' }}
+        if: ${{ inputs.other_packages }}
         uses: deep-soft/action-gh-release@v2.1
         with:
           draft: true
@@ -555,7 +564,7 @@ jobs:
             ./appimage/rustdesk-${{ env.VERSION }}-*.AppImage
 
       - name: Publish fedora28/centos8 package
-        if: ${{ matrix.job.extra-build-features == '' }}
+        if: ${{ inputs.other_packages }}
         uses: deep-soft/action-gh-release@v2.1
         with:
           draft: true
@@ -566,7 +575,7 @@ jobs:
             ${{ env.ASSET_SRC1 }}
 
       - name: Publish version build - fedora28/centos8 package
-        if: ${{ matrix.job.extra-build-features == '' }}
+        if: ${{ inputs.other_packages }}
         uses: deep-soft/action-gh-release@v2.1
         with:
           draft: true
@@ -575,10 +584,12 @@ jobs:
             /opt/artifacts/rpm/*.rpm
 
       - name: Rename Binary
+        if: ${{ inputs.other_packages }}
         run: |
           mv rustdesk-${{ env.VERSION }}-${{ matrix.job.target }}-${{ matrix.job.os }}.deb rustdesk-${{ env.VERSION }}.deb
 
       - name: Build rustdesk flatpak package for ${{ matrix.job.arch }}
+        if: ${{ inputs.other_packages }}
         continue-on-error: true
         id: flatpak
         shell: bash
@@ -608,6 +619,7 @@ jobs:
             flatpak build-bundle ./repo rustdesk-${{ env.VERSION }}-${{ matrix.job.arch }}.flatpak com.rustdesk.RustDesk
 
       - name: Publish flatpak package
+        if: ${{ inputs.other_packages }}
         uses: deep-soft/action-gh-release@v2.1
         with:
           draft: true
@@ -618,6 +630,7 @@ jobs:
             ${{ env.ASSET_SRC1 }}
 
       - name: Publish version build - flatpak package
+        if: ${{ inputs.other_packages }}
         uses: deep-soft/action-gh-release@v2.1
         with:
           draft: true
