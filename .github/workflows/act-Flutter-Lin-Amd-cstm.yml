@@ -303,8 +303,9 @@ jobs:
         shell: bash
 
       - uses: deep-soft/run-on-arch-action@amd64-support
-        name: Build rustdesk library for ${{ matrix.job.arch }}
-        id: vcpkg
+        continue-on-error: true
+        name: Build rustdesk for ${{ matrix.job.arch }}
+        id: build_rustdesk
         with:
           arch: ${{ matrix.job.arch }}
           distro: ${{ matrix.job.distro }}
@@ -432,6 +433,7 @@ jobs:
             fi
 
       - name: Rename rustdesk
+        continue-on-error: true
         shell: bash
         run: |
           for name in rustdesk*??.deb; do
@@ -440,6 +442,7 @@ jobs:
           done
 
       - name: Publish debian package
+        continue-on-error: true
         uses: deep-soft/action-gh-release@v2.1
         with:
           draft: true
@@ -450,6 +453,7 @@ jobs:
             ${{ env.ASSET_SRC1 }}
 
       - name: Publish version build - debian package
+        continue-on-error: true
         uses: deep-soft/action-gh-release@v2.1
         with:
           draft: true
@@ -458,6 +462,7 @@ jobs:
             rustdesk-${{ env.VERSION }}-${{ matrix.job.target }}-${{ matrix.job.os }}.deb
 
       - name: Upload Artifact
+        continue-on-error: true
         uses: deep-soft/upload-artifact@v4
         if: ${{ contains(matrix.job.extra-build-features, 'flatpak') }}
         with:
@@ -466,11 +471,13 @@ jobs:
 
       - name: Patch archlinux PKGBUILD
         if: ${{ inputs.other_packages == 'true' }}
+        continue-on-error: true
         run: |
           sed -i "s/arch=('x86_64')/arch=('${{ matrix.job.arch }}')/g" res/PKGBUILD
 
       - name: Build archlinux package
         if: ${{ inputs.other_packages == 'true' }}
+        continue-on-error: true
         uses: deep-soft/arch-makepkg-action@master
         with:
           packages: >
@@ -509,6 +516,7 @@ jobs:
 
       - name: Publish archlinux package
         if: ${{ inputs.other_packages == 'true' }}
+        continue-on-error: true
         uses: deep-soft/action-gh-release@v2.1
         with:
           draft: true
@@ -520,6 +528,7 @@ jobs:
 
       - name: Publish version build - archlinux package
         if: ${{ inputs.other_packages == 'true' }}
+        continue-on-error: true
         uses: deep-soft/action-gh-release@v2.1
         with:
           draft: true
@@ -529,6 +538,7 @@ jobs:
 
       - name: Build appimage package
         if: ${{ inputs.other_packages == 'true' }}
+        continue-on-error: true
         shell: bash
         run: |
           # set-up appimage-builder
@@ -543,6 +553,7 @@ jobs:
 
       - name: Publish appimage package
         if: ${{ inputs.other_packages == 'true' }}
+        continue-on-error: true
         uses: deep-soft/action-gh-release@v2.1
         with:
           draft: true
@@ -554,6 +565,7 @@ jobs:
 
       - name: Publish version build - appimage package
         if: ${{ inputs.other_packages == 'true' }}
+        continue-on-error: true
         uses: deep-soft/action-gh-release@v2.1
         with:
           draft: true
@@ -563,6 +575,7 @@ jobs:
 
       - name: Publish fedora28/centos8 package
         if: ${{ inputs.other_packages == 'true' }}
+        continue-on-error: true
         uses: deep-soft/action-gh-release@v2.1
         with:
           draft: true
@@ -574,6 +587,7 @@ jobs:
 
       - name: Publish version build - fedora28/centos8 package
         if: ${{ inputs.other_packages == 'true' }}
+        continue-on-error: true
         uses: deep-soft/action-gh-release@v2.1
         with:
           draft: true
@@ -583,6 +597,7 @@ jobs:
 
       - name: Rename Binary
         if: ${{ inputs.other_packages == 'true' }}
+        continue-on-error: true
         run: |
           mv rustdesk-${{ env.VERSION }}-${{ matrix.job.target }}-${{ matrix.job.os }}.deb rustdesk-${{ env.VERSION }}.deb
 
@@ -618,6 +633,7 @@ jobs:
 
       - name: Publish flatpak package
         if: ${{ inputs.other_packages == 'true' }}
+        continue-on-error: true
         uses: deep-soft/action-gh-release@v2.1
         with:
           draft: true
@@ -629,6 +645,7 @@ jobs:
 
       - name: Publish version build - flatpak package
         if: ${{ inputs.other_packages == 'true' }}
+        continue-on-error: true
         uses: deep-soft/action-gh-release@v2.1
         with:
           draft: true
