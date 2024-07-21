@@ -68,12 +68,12 @@ jobs:
       matrix:
         # use a high level qemu-user-static
         job:
-#         - { arch: x86_64, target: i686-unknown-linux-gnu    , os: ubuntu-20.04, extra-build-features: ""        , enable-headless: true,  use-cross: true }
-#         - { arch: x86_64, target: i686-unknown-linux-musl   , os: ubuntu-20.04, extra-build-features: ""        , enable-headless: true,  use-cross: true }
-          - { arch: x86_64, target: x86_64-unknown-linux-gnu  , os: ubuntu-20.04, extra-build-features: ""        , enable-headless: true                   }
-          - { arch: x86_64, target: x86_64-unknown-linux-gnu  , os: ubuntu-20.04, extra-build-features: "flatpak" , enable-headless: false                  }
-          - { arch: x86_64, target: x86_64-unknown-linux-gnu  , os: ubuntu-20.04, extra-build-features: "appimage", enable-headless: false                  }
-#         - { arch: x86_64, target: x86_64-unknown-linux-musl , os: ubuntu-20.04, extra-build-features: ""        , enable-headless: true,  use-cross: true }
+#         - { arch: x86_64, target: i686-unknown-linux-gnu    , os: ubuntu-20.04, extra-build-features: ""         , enable-headless: true,  use-cross: true }
+#         - { arch: x86_64, target: i686-unknown-linux-musl   , os: ubuntu-20.04, extra-build-features: ""         , enable-headless: true,  use-cross: true }
+#         - { arch: x86_64, target: x86_64-unknown-linux-musl , os: ubuntu-20.04, extra-build-features: ""         , enable-headless: true,  use-cross: true }
+          - { arch: x86_64, target: x86_64-unknown-linux-gnu  , os: ubuntu-20.04, vcpkg-triplet: x64-linux , distro: ubuntu18.04, extra-build-features: ""        , enable-headless: true                    }
+          - { arch: x86_64, target: x86_64-unknown-linux-gnu  , os: ubuntu-20.04, vcpkg-triplet: x64-linux , distro: ubuntu18.04, extra-build-features: "flatpak"  , enable-headless: false                  }
+          - { arch: x86_64, target: x86_64-unknown-linux-gnu  , os: ubuntu-20.04, vcpkg-triplet: x64-linux , distro: ubuntu18.04, extra-build-features: "appimage" , enable-headless: false                  }
     steps:
       - name: Export GitHub Actions cache environment variables
         uses: actions/github-script@v7
@@ -296,7 +296,8 @@ jobs:
 
       - name: Install vcpkg dependencies
         run: |
-          $VCPKG_ROOT/vcpkg install --x-install-root="$VCPKG_ROOT/installed"
+          # $VCPKG_ROOT/vcpkg install --x-install-root="$VCPKG_ROOT/installed"
+          $VCPKG_ROOT/vcpkg install --triplet ${{ matrix.job.vcpkg-triplet }} --x-install-root="$VCPKG_ROOT/installed"
         shell: bash
 
       - uses: deep-soft/run-on-arch-action@amd64-support
@@ -304,9 +305,7 @@ jobs:
         id: vcpkg
         with:
           arch: ${{ matrix.job.arch }}
-          distro: ubuntu18.04
-          # not ready yet
-          # distro: ubuntu18.04-rustdesk
+          distro: ${{ matrix.job.distro }}
           githubToken: ${{ github.token }}
           setup: |
             ls -l "${PWD}"
@@ -637,7 +636,23 @@ jobs:
             export PATH=/opt/flutter/bin:$PATH
             flutter doctor -v
             pushd /workspace
-            python3 ./build.py --flutter --hwcodec --skip-cargo
+            #old python3 ./build.py --flutter --hwcodec --skip-cargo
+
+            export VCPKG_ROOT=/opt/artifacts/vcpkg
+            export JOBS=""
+            cargo build --lib $JOBS --features hwcodec,flutter --release
+            rm -rf target/release/deps target/release/build
+            rm -rf ~/.cargo
+
+            # build flutter
+            pushd /workspace
+            export CARGO_INCREMENTAL=0
+            export DEB_ARCH=${{ matrix.job.deb_arch }}
+            python3 ./build.py --flutter --skip-cargo
+            for name in rustdesk*??.deb; do
+              mv "$name" "${name%%.deb}-${{ matrix.job.arch }}.deb"
+            done
+
             # rpm package
             pushd /workspace
             case ${{ matrix.job.arch }} in
