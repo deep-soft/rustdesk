@@ -55,12 +55,7 @@ on:
 #    - cron: "0 0 * * *"
 
 jobs:
-  generate-bridge-linux:
-    uses: ./.github/workflows/act-build-bridge.yml
-    secrets: inherit
-
   build-rustdesk-linux-amd64:
-    needs: [generate-bridge-linux]
     name: build-rust ${{ matrix.job.target }} (${{ matrix.job.os }}) [${{ matrix.job.extra-build-features }}]
     runs-on: ${{ matrix.job.os }}
     strategy:
@@ -274,16 +269,15 @@ jobs:
           RUST_TOOLCHAIN_VERSION=$(cargo --version | awk '{print $2}')
           echo "RUST_TOOLCHAIN_VERSION=$RUST_TOOLCHAIN_VERSION" >> $GITHUB_ENV
 
-      - name: Disable rust bridge build
+      - name: Install flutter rust bridge deps
+        shell: bash
         run: |
-          # only build cdylib
-          sed -i  "s/\[\"cdylib\", \"staticlib\", \"rlib\"\]/\[\"cdylib\"\]/g" Cargo.toml
+          cargo install flutter_rust_bridge_codegen --version ${{ env.FLUTTER_RUST_BRIDGE_VERSION }} --features "uuid"
+          pushd flutter && flutter pub get && popd
 
-      - name: Restore bridge files
-        uses: deep-soft/download-artifact@v4
-        with:
-          name: bridge-artifact
-          path: ./
+      - name: Run flutter rust bridge
+        run: |
+          ~/.cargo/bin/flutter_rust_bridge_codegen --rust-input ./src/flutter_ffi.rs --dart-output ./flutter/lib/generated_bridge.dart
 
       - name: Setup vcpkg with Github Actions binary cache
         uses: deep-soft/run-vcpkg@v11
@@ -375,14 +369,9 @@ jobs:
             export VCPKG_ROOT=/opt/artifacts/vcpkg
             export DEFAULT_FEAT=""
             export JOBS=""
-            if ${{ matrix.job.enable-headless }}; then
-              export DEFAULT_FEAT=linux_headless
-            fi
-            # cargo build --lib       --features hwcodec,flutter,flutter_texture_render,${{ matrix.job.extra-build-features }},$DEFAULT_FEAT --release
             cargo build --lib $JOBS --features hwcodec,flutter --release
             rm -rf target/release/deps target/release/build
             rm -rf ~/.cargo
-
             # Setup Flutter
             # disable git safe.directory
             git config --global --add safe.directory "*"
@@ -393,7 +382,6 @@ jobs:
             wget https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_${{ env.FLUTTER_VERSION }}-stable.tar.xz
             tar xf flutter_linux_${{ env.FLUTTER_VERSION }}-stable.tar.xz
             flutter doctor -v
-
             # build flutter
             pushd /workspace
             export CARGO_INCREMENTAL=0
@@ -430,37 +418,3 @@ jobs:
           tag_name: ${{ env.TAG_VERSION }}${{ env.TAG_BUILD }}
           files: |
             rustdesk-${{ env.VERSION }}-${{ matrix.job.target }}-${{ matrix.job.os }}.deb
-
-      - name: Build appimage package
-        if: ${{ matrix.job.extra-build-features == 'appimage' }}
-        shell: bash
-        run: |
-          # set-up appimage-builder
-          pushd /tmp
-          wget -O appimage-builder-x86_64.AppImage https://github.com/AppImageCrafters/appimage-builder/releases/download/v1.1.0/appimage-builder-1.1.0-x86_64.AppImage
-          chmod +x appimage-builder-x86_64.AppImage
-          sudo mv appimage-builder-x86_64.AppImage /usr/local/bin/appimage-builder
-          popd
-          # run appimage-builder
-          pushd appimage
-          sudo appimage-builder --skip-tests --recipe ./AppImageBuilder-x86_64.yml
-
-      - name: Publish appimage package
-        if: ${{ matrix.job.extra-build-features == 'appimage' }}
-        uses: deep-soft/action-gh-release@v2.1
-        with:
-          draft: true
-          tag_name: ${{ env.TAG_NAME }}
-          files: |
-            ./appimage/rustdesk-${{ env.VERSION }}-*.AppImage
-            ${{ env.ASSET_SRC }}
-            ${{ env.ASSET_SRC1 }}
-
-      - name: Publish version build - appimage package
-        if: ${{ matrix.job.extra-build-features == 'appimage' }}
-        uses: deep-soft/action-gh-release@v2.1
-        with:
-          draft: true
-          tag_name: ${{ env.TAG_VERSION }}${{ env.TAG_BUILD }}
-          files: |
-            ./appimage/rustdesk-${{ env.VERSION }}-*.AppImage
