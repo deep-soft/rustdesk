@@ -366,16 +366,19 @@ jobs:
             """ > ~/.cargo/config
             cat ~/.cargo/config
             # start build
+            echo "start build"
             pushd /workspace
             export VCPKG_ROOT=/opt/artifacts/vcpkg
             export JOBS=""
             echo $JOBS
             # cargo build --lib --features hwcodec,flutter,flutter_texture_render,${{ matrix.job.extra-build-features }},$DEFAULT_FEAT --release
+            echo "cargo build lib"
             cargo build --lib $JOBS --features hwcodec,flutter --release
             #rm -rf target/release/deps target/release/build
             #rm -rf ~/.cargo
 
             # build flutter
+            echo "setup flutter"
             # Setup Flutter
             pushd /opt
             wget https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_${{ env.FLUTTER_VERSION }}-stable.tar.xz
@@ -389,10 +392,11 @@ jobs:
             export VCPKG_ROOT=/opt/artifacts/vcpkg
             export JOBS=""
             cargo build --lib $JOBS --features hwcodec,flutter --release
-            rm -rf target/release/deps target/release/build
-            rm -rf ~/.cargo
+            #rm -rf target/release/deps target/release/build
+            #rm -rf ~/.cargo
 
             # build flutter
+            echo "build flutter"
             pushd /workspace
             export CARGO_INCREMENTAL=0
             export DEB_ARCH=${{ matrix.job.deb_arch }}
@@ -402,6 +406,7 @@ jobs:
             done
 
             # rpm package
+            echo "rpm package"
             pushd /workspace
             HBB=`pwd` rpmbuild ./res/rpm-flutter.spec -bb
             pushd ~/rpmbuild/RPMS/${{ matrix.job.arch }}
@@ -411,6 +416,7 @@ jobs:
             done
 
             # rpm suse package
+            echo "rpm suse package"
             pushd /workspace
             HBB=`pwd` rpmbuild ./res/rpm-flutter-suse.spec -bb
             pushd ~/rpmbuild/RPMS/${{ matrix.job.arch }}
