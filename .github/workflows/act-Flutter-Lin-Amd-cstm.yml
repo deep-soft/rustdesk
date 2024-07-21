@@ -408,9 +408,7 @@ jobs:
             export DEB_ARCH=${{ matrix.job.deb_arch }}
             python3 ./build.py --flutter --skip-cargo
             ls -la
-            for name in rustdesk*??.deb; do
-              mv "$name" "${name%%.deb}-${{ matrix.job.arch }}.deb"
-            done
+            mv "rustdesk-${{ env.VERSION }}.deb" rustdesk-${{ env.VERSION }}-${{ matrix.job.target }}-${{ matrix.job.os }}.deb
 
             echo "other packages: " ${{ inputs.other_packages }}
             if [[ "${{ inputs.other_packages }}" == "true" ]]; then
@@ -435,14 +433,14 @@ jobs:
               done
             fi
 
-      - name: Rename rustdesk
-        continue-on-error: true
-        shell: bash
-        run: |
-          for name in rustdesk*??.deb; do
-              # use cp to duplicate deb files to fit other packages.
-              cp "$name" "${name%%.deb}-${{ matrix.job.target }}-${{ matrix.job.os }}.deb"
-          done
+#      - name: Rename rustdesk
+#        continue-on-error: true
+#        shell: bash
+#        run: |
+#          for name in rustdesk*??.deb; do
+#              # use cp to duplicate deb files to fit other packages.
+#              cp "$name" "${name%%.deb}-${{ matrix.job.target }}-${{ matrix.job.os }}.deb"
+#          done
 
       - name: Publish debian package
         continue-on-error: true
