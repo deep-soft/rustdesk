@@ -346,11 +346,13 @@ jobs:
                llvm-10-dev \
                llvm-dev \
                nasm \
+               yasm \
                ninja-build \
                pkg-config \
+               rpm \
+               unzip \
                tree \
-               wget \
-               yasm
+               wget
             # we have libopus compiled by us.
             apt-get remove -y libopus-dev || true
             # output devs
@@ -405,12 +407,13 @@ jobs:
             export CARGO_INCREMENTAL=0
             export DEB_ARCH=${{ matrix.job.deb_arch }}
             python3 ./build.py --flutter --skip-cargo
+            ls -la
             for name in rustdesk*??.deb; do
               mv "$name" "${name%%.deb}-${{ matrix.job.arch }}.deb"
             done
 
             echo "other packages: " ${{ inputs.other_packages }}
-            if [[ ${{ inputs.other_packages == 'true' }} ]]; then
+            if [[ "${{ inputs.other_packages }}" == "true" ]]; then
               # rpm package
               echo "##@## rpm package"
               pushd /workspace
