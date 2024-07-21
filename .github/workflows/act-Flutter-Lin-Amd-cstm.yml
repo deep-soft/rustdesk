@@ -68,7 +68,8 @@ jobs:
       matrix:
         # use a high level qemu-user-static
         job:
-          - { arch: x86_64, target: x86_64-unknown-linux-gnu  , os: ubuntu-20.04, vcpkg-triplet: x64-linux , distro: ubuntu18.04, extra-build-features: ""        , enable-headless: true                    }
+          - { arch: x86_64, target: x86_64-unknown-linux-gnu  , os: ubuntu-20.04, vcpkg-triplet: x64-linux , distro: ubuntu18.04, deb_arch: amd64 }
+          
     steps:
       - name: Export GitHub Actions cache environment variables
         uses: actions/github-script@v7
@@ -351,6 +352,7 @@ jobs:
           run: |
             # disable git safe.directory
             git config --global --add safe.directory "*"
+
             # rust
             pushd /opt
             # do not use rustup, because memory overflow in qemu
@@ -358,6 +360,7 @@ jobs:
             tar -zxvf rust.tar.gz > /dev/null && rm rust.tar.gz
             cd rust-${{env.RUST_TOOLCHAIN_VERSION}}-${{ matrix.job.target }} && ./install.sh
             rm -rf rust-${{env.RUST_TOOLCHAIN_VERSION}}-${{ matrix.job.target }}
+
             # edit config
             mkdir -p ~/.cargo/
             echo """
@@ -365,20 +368,22 @@ jobs:
               registry = 'https://github.com/rust-lang/crates.io-index'
             """ > ~/.cargo/config
             cat ~/.cargo/config
+
             # start build
-            echo "start build"
+            echo "##@## start build"
             pushd /workspace
             export VCPKG_ROOT=/opt/artifacts/vcpkg
             export JOBS=""
             echo $JOBS
+            
+            echo "##@## cargo build lib"
             # cargo build --lib --features hwcodec,flutter,flutter_texture_render,${{ matrix.job.extra-build-features }},$DEFAULT_FEAT --release
-            echo "cargo build lib"
             cargo build --lib $JOBS --features hwcodec,flutter --release
             #rm -rf target/release/deps target/release/build
             #rm -rf ~/.cargo
 
-            # build flutter
-            echo "setup flutter"
+            # setup flutter
+            echo "##@## setup flutter"
             # Setup Flutter
             pushd /opt
             wget https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_${{ env.FLUTTER_VERSION }}-stable.tar.xz
@@ -386,17 +391,9 @@ jobs:
             ls -l .
             export PATH=/opt/flutter/bin:$PATH
             flutter doctor -v
-            pushd /workspace
-            #old python3 ./build.py --flutter --hwcodec --skip-cargo
-
-            export VCPKG_ROOT=/opt/artifacts/vcpkg
-            export JOBS=""
-            cargo build --lib $JOBS --features hwcodec,flutter --release
-            #rm -rf target/release/deps target/release/build
-            #rm -rf ~/.cargo
 
             # build flutter
-            echo "build flutter"
+            echo "##@## build flutter"
             pushd /workspace
             export CARGO_INCREMENTAL=0
             export DEB_ARCH=${{ matrix.job.deb_arch }}
@@ -406,7 +403,7 @@ jobs:
             done
 
             # rpm package
-            echo "rpm package"
+            echo "##@## rpm package"
             pushd /workspace
             HBB=`pwd` rpmbuild ./res/rpm-flutter.spec -bb
             pushd ~/rpmbuild/RPMS/${{ matrix.job.arch }}
@@ -416,7 +413,7 @@ jobs:
             done
 
             # rpm suse package
-            echo "rpm suse package"
+            echo "##@## rpm suse package"
             pushd /workspace
             HBB=`pwd` rpmbuild ./res/rpm-flutter-suse.spec -bb
             pushd ~/rpmbuild/RPMS/${{ matrix.job.arch }}
