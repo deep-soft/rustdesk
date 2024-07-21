@@ -372,18 +372,13 @@ jobs:
             cat ~/.cargo/config
             # start build
             pushd /workspace
-            # mock 
-            case "${{ matrix.job.arch }}" in
-              x86_64)
-                # no need mock on x86_64
-                export VCPKG_ROOT=/opt/artifacts/vcpkg
-                export DEFAULT_FEAT=""
-                if ${{ matrix.job.enable-headless }}; then
-                  export DEFAULT_FEAT=linux_headless
-                fi
-                cargo build --lib --features hwcodec,flutter,flutter_texture_render,${{ matrix.job.extra-build-features }},$DEFAULT_FEAT --release
-                ;;
-            esac
+            export VCPKG_ROOT=/opt/artifacts/vcpkg
+            export JOBS=""
+            echo $JOBS
+            # cargo build --lib --features hwcodec,flutter,flutter_texture_render,${{ matrix.job.extra-build-features }},$DEFAULT_FEAT --release
+            cargo build --lib $JOBS --features hwcodec,flutter --release
+            rm -rf target/release/deps target/release/build
+            rm -rf ~/.cargo
 
       - name: Upload Artifacts
         uses: deep-soft/upload-artifact@v4
