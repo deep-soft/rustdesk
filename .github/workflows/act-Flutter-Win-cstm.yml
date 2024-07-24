@@ -82,7 +82,7 @@ on:
       VCPKG_LIBYUV:
         description: patch vcpkg/libyuv (from bins/zip)
         type: boolean
-        default: true
+        default: false
         required: true
       vpkg_installed:
         description: Archive vpkg_installed
