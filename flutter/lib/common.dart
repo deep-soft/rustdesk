@@ -31,7 +31,6 @@ import 'mobile/pages/file_manager_page.dart';
 import 'mobile/pages/remote_page.dart';
 import 'desktop/pages/remote_page.dart' as desktop_remote;
 import 'package:flutter_hbb/desktop/widgets/remote_toolbar.dart';
-import 'models/input_model.dart';
 import 'models/model.dart';
 import 'models/platform_model.dart';
 
@@ -647,8 +646,12 @@ String formatDurationToTime(Duration duration) {
 
 closeConnection({String? id}) {
   if (isAndroid || isIOS) {
-    gFFI.chatModel.hideChatOverlay();
-    Navigator.popUntil(globalKey.currentContext!, ModalRoute.withName("/"));
+    () async {
+      await SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual,
+          overlays: SystemUiOverlay.values);
+      gFFI.chatModel.hideChatOverlay();
+      Navigator.popUntil(globalKey.currentContext!, ModalRoute.withName("/"));
+    }();
   } else {
     if (isWeb) {
       Navigator.popUntil(globalKey.currentContext!, ModalRoute.withName("/"));
@@ -3326,6 +3329,42 @@ bool isInHomePage() {
   return controller.state.value.selected == 0;
 }
 
+Widget _buildPresetPasswordWarning() {
+  if (bind.mainGetBuildinOption(key: kOptionRemovePresetPasswordWarning) !=
+      'N') {
+    return SizedBox.shrink();
+  }
+  return Container(
+    color: Colors.yellow,
+    child: Column(
+      children: [
+        Align(
+            child: Text(
+          translate("Security Alert"),
+          style: TextStyle(
+            color: Colors.red,
+            fontSize:
+                18, // https://github.com/rustdesk/rustdesk-server-pro/issues/261
+            fontWeight: FontWeight.bold,
+          ),
+        )).paddingOnly(bottom: 8),
+        Text(
+          translate("preset_password_warning"),
+          style: TextStyle(color: Colors.red),
+        )
+      ],
+    ).paddingAll(8),
+  ); // Show a warning message if the Future completed with true
+}
+
+Widget buildPresetPasswordWarningMobile() {
+  if (bind.isPresetPasswordMobileOnly()) {
+    return _buildPresetPasswordWarning();
+  } else {
+    return SizedBox.shrink();
+  }
+}
+
 Widget buildPresetPasswordWarning() {
   return FutureBuilder<bool>(
     future: bind.isPresetPassword(),
@@ -3336,32 +3375,7 @@ Widget buildPresetPasswordWarning() {
         return Text(
             'Error: ${snapshot.error}'); // Show an error message if the Future completed with an error
       } else if (snapshot.hasData && snapshot.data == true) {
-        if (bind.mainGetBuildinOption(
-                key: kOptionRemovePresetPasswordWarning) !=
-            'N') {
-          return SizedBox.shrink();
-        }
-        return Container(
-          color: Colors.yellow,
-          child: Column(
-            children: [
-              Align(
-                  child: Text(
-                translate("Security Alert"),
-                style: TextStyle(
-                  color: Colors.red,
-                  fontSize:
-                      18, // https://github.com/rustdesk/rustdesk-server-pro/issues/261
-                  fontWeight: FontWeight.bold,
-                ),
-              )).paddingOnly(bottom: 8),
-              Text(
-                translate("preset_password_warning"),
-                style: TextStyle(color: Colors.red),
-              )
-            ],
-          ).paddingAll(8),
-        ); // Show a warning message if the Future completed with true
+        return _buildPresetPasswordWarning();
       } else {
         return SizedBox
             .shrink(); // Show nothing if the Future completed with false or null
@@ -3433,7 +3447,12 @@ setResizable(bool resizable) {
 
 isOptionFixed(String key) => bind.mainIsOptionFixed(key: key);
 
-final isCustomClient = bind.isCustomClient();
+bool? _isCustomClient;
+bool get isCustomClient {
+  _isCustomClient ??= bind.isCustomClient();
+  return _isCustomClient!;
+}
+
 get defaultOptionLang => isCustomClient ? 'default' : '';
 get defaultOptionTheme => isCustomClient ? 'system' : '';
 get defaultOptionYes => isCustomClient ? 'Y' : '';
