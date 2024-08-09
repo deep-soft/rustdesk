@@ -427,6 +427,14 @@ pub fn install_path() -> String {
 }
 
 #[inline]
+pub fn install_options() -> String {
+    #[cfg(windows)]
+    return crate::platform::windows::get_install_options();
+    #[cfg(not(windows))]
+    return "{}".to_owned();
+}
+
+#[inline]
 pub fn get_socks() -> Vec<String> {
     #[cfg(not(any(target_os = "android", target_os = "ios")))]
     let s = ipc::get_socks();
@@ -1442,5 +1450,24 @@ pub fn check_hwcodec() {
                 scrap::hwcodec::start_check_process();
             }
         })
+    }
+}
+
+#[cfg(feature = "flutter")]
+pub fn get_unlock_pin() -> String {
+    #[cfg(any(target_os = "android", target_os = "ios"))]
+    return String::default();
+    #[cfg(not(any(target_os = "android", target_os = "ios")))]
+    return ipc::get_unlock_pin();
+}
+
+#[cfg(feature = "flutter")]
+pub fn set_unlock_pin(pin: String) -> String {
+    #[cfg(any(target_os = "android", target_os = "ios"))]
+    return String::default();
+    #[cfg(not(any(target_os = "android", target_os = "ios")))]
+    match ipc::set_unlock_pin(pin, true) {
+        Ok(_) => String::default(),
+        Err(err) => err.to_string(),
     }
 }
