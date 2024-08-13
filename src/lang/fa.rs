@@ -636,5 +636,10 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("Requires at least {} characters", "حداقل به {} کاراکترها نیاز دارد"),
         ("Wrong PIN", "پین اشتباه است"),
         ("Set PIN", "پین را تنظیم کنید"),
+        ("Enable trusted devices", ""),
+        ("Manage trusted devices", ""),
+        ("Platform", ""),
+        ("Days remaining", ""),
+        ("enable-trusted-devices-tip", ""),
     ].iter().cloned().collect();
 }
