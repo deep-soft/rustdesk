@@ -48,7 +48,7 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("Privacy Statement", "Declaración de privacidad"),
         ("Mute", "Silenciar"),
         ("Build Date", "Fecha de compilación"),
-        ("Version", "¨Versión"),
+        ("Version", "Versión"),
         ("Home", "Inicio"),
         ("Audio Input", "Entrada de audio"),
         ("Enhancements", "Mejoras"),
@@ -641,5 +641,8 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("Platform", "Plataforma"),
         ("Days remaining", "Días restantes"),
         ("enable-trusted-devices-tip", ""),
+        ("Parent directory", ""),
+        ("Resume", ""),
+        ("Invalid file name", ""),
     ].iter().cloned().collect();
 }
