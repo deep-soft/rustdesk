@@ -520,6 +520,7 @@ impl<T: InvokeUiCM> IpcTaskRunner<T> {
                                             }
                                         }
                                         Err(e) => {
+                                            log::debug!("Failed to get clipboard content. {}", e);
                                             allow_err!(self.stream.send(&Data::ClipboardNonFile(Some((format!("{}", e), vec![])))).await);
                                         }
                                     }
@@ -625,7 +626,6 @@ pub async fn start_ipc<T: InvokeUiCM>(cm: ConnectionManager<T>) {
         OPTION_ENABLE_FILE_TRANSFER,
         &Config::get_option(OPTION_ENABLE_FILE_TRANSFER),
     ));
-
     match ipc::new_listener("_cm").await {
         Ok(mut incoming) => {
             while let Some(result) = incoming.next().await {
@@ -647,7 +647,7 @@ pub async fn start_ipc<T: InvokeUiCM>(cm: ConnectionManager<T>) {
             log::error!("Failed to start cm ipc server: {}", err);
         }
     }
-    crate::platform::quit_gui();
+    quit_cm();
 }
 
 #[cfg(target_os = "android")]
@@ -1041,4 +1041,12 @@ pub fn close_voice_call(id: i32) {
         #[cfg(not(any(target_os = "ios")))]
         allow_err!(client.tx.send(Data::CloseVoiceCall("".to_owned())));
     };
+}
+
+#[cfg(not(any(target_os = "android", target_os = "ios")))]
+pub fn quit_cm() {
+    // in case of std::process::exit not work
+    log::info!("quit cm");
+    CLIENTS.write().unwrap().clear();
+    crate::platform::quit_gui();
 }
