@@ -324,10 +324,6 @@ jobs:
       - name: Install vcpkg dependencies
         shell: bash
         run: |
-          - { arch: aarch64, target: aarch64-linux-android  , os: ubuntu-20.04, release_type: release, suffix: ""  }
-          - { arch: armv7,   target: armv7-linux-androideabi, os: ubuntu-20.04, release_type: release, suffix: ""  }
-          - { arch: x86_64,  target: x86_64-linux-android,    os: ubuntu-20.04, release_type: release, suffix: ""  }
-        
           case ${{ matrix.job.target }} in
             aarch64-linux-android)
               ANDROID_TARGET=arm64-v8a
