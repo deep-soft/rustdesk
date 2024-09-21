@@ -30,10 +30,11 @@ env:
   FLUTTER_VERSION:             "3.16.9"
   FLUTTER_RUST_BRIDGE_VERSION: "1.80.1"
   FLUTTER_ELINUX_VERSION:      "3.16.9"
-  FLUTTER_ELINUX_COMMIT_ID:    "c02bd16e1630f5bd690b85c5c2456ac1920e25af"
+  # FLUTTER_ELINUX_COMMIT_ID:    "c02bd16e1630f5bd690b85c5c2456ac1920e25af"
+  FLUTTER_ELINUX_COMMIT_ID:    "1de2026f28ead93ff1773e6e680387643e914ea1"
   # vcpkg version: 2023.10.19
   # for multiarch gcc compatibility
-  VCPKG_COMMIT_ID:             "8eb57355a4ffb410a2e94c07b4dca2dffbee8e50"
+  VCPKG_COMMIT_ID:             "1de2026f28ead93ff1773e6e680387643e914ea1"
   VCPKG_BINARY_SOURCES:        "clear;x-gha,readwrite"
   CARGO_NDK_VERSION:           "3.1.2"
   NDK_VERSION:                 "r27"
