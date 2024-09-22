@@ -155,30 +155,6 @@ jobs:
           echo "BLD: ${{ env.TAG_BUILD }}
           echo "${{ env.TAG_NAME }}-${{ env.TAG_BUILD }}" > _tag_name_.txt
 
-      - name: Create source archive
-        continue-on-error: true
-        shell: bash
-        run: |
-          staging="rdsk-src-${{ env.VERSION }}-${{ matrix.job.target }}-${{ matrix.job.extra-build-features }}-${{ env.GUI }}"
-          if [ "${{ matrix.os }}" = "windows-2022" ]; then
-            7z a "$staging.zip" "*" -x!target/* -x!vcpkg/* > nul
-            echo "ASSET_SRC=$staging.zip" >> $GITHUB_ENV
-            if [ "${{ env.DEBUG_LS }}" = "yes" ]; then
-              echo "source archive name:"
-              ls -l "$staging.zip"
-            fi
-          else
-            touch "$staging.tar.xz"
-            #tar -cfJ "$staging.tar.xz" --exclude "$staging.tar.xz" .
-            tar --exclude=*.tar* --exclude=target/*  --exclude=vcpkg/* -cv . | xz -9 > "$staging.tar.xz"
-            echo "ASSET_SRC=$staging.tar.xz" >> $GITHUB_ENV
-            if [ "${{ env.DEBUG_LS }}" = "yes" ]; then
-              echo "source archive name: "
-              ls -l "$staging.tar.xz"
-            fi
-          fi
-          #ls -l ${{ env.ASSET_SRC }} 
-
       - name: Prepare for patch 1
         continue-on-error: false
         shell: bash
@@ -229,34 +205,6 @@ jobs:
         run: |
           echo "$RDSK_PCH_SH_CLN" | base64 --decode > ./RDSK_PCH_SH_CLN.sh
           bash ./RDSK_PCH_SH_CLN.sh
-
-      - name: Create source archive 1
-        continue-on-error: true
-        shell: bash
-        run: |
-          staging="rdsk-src1-${{ env.VERSION }}-${{ matrix.job.target }}-${{ matrix.job.extra-build-features }}-${{ env.GUI }}"
-          if [ "${{ matrix.os }}" = "windows-2022" ]; then
-            7z a "$staging.zip" "*" -x!target/* -x!vcpkg/* > nul
-            echo "ASSET_SRC1=$staging.zip" >> $GITHUB_ENV
-            if [ "${{ env.DEBUG_LS }}" = "yes" ]; then
-              echo "source archive name:"
-              ls -l "$staging.zip"
-            fi
-          else
-            touch "$staging.tar.xz"
-            #tar -cfJ "$staging.tar.xz" --exclude "$staging.tar.xz" .
-            tar --exclude=*.tar* --exclude=target/*  --exclude=vcpkg/* -cv . | xz -9 > "$staging.tar.xz"
-            echo "ASSET_SRC1=$staging.tar.xz" >> $GITHUB_ENV
-            if [ "${{ env.DEBUG_LS }}" = "yes" ]; then
-              echo "source archive name: "
-              ls -l "$staging.tar.xz"
-            fi
-          fi
-          if [ "${{ env.DEBUG_LS }}" = "yes" ]; then
-            ls -l
-            ls -l ${{ env.ASSET_SRC }} 
-            ls -l ${{ env.ASSET_SRC1 }} 
-          fi
 
       - name: Set Swap Space
         uses: deep-soft/set-swap-space@master
@@ -452,17 +400,16 @@ jobs:
           tag_name: ${{ env.TAG_NAME }}
           files: |
             rustdesk-${{ env.VERSION }}-${{ matrix.job.target }}-${{ matrix.job.os }}.deb
-            ${{ env.ASSET_SRC }}
-            ${{ env.ASSET_SRC1 }}
 
-      - name: Publish version build - debian package
+      - name: Publish fedora28/centos8 package
+        if: ${{ inputs.other_packages == 'true' }}
         continue-on-error: true
         uses: deep-soft/action-gh-release@v2.1
         with:
           draft: true
-          tag_name: ${{ env.TAG_VERSION }}${{ env.TAG_BUILD }}
+          tag_name: ${{ env.TAG_NAME }}
           files: |
-            rustdesk-${{ env.VERSION }}-${{ matrix.job.target }}-${{ matrix.job.os }}.deb
+            /opt/artifacts/rpm/*.rpm
 
       - name: Upload Artifact
         continue-on-error: true
@@ -497,16 +444,6 @@ jobs:
           files: |
             res/rustdesk*.zst
 
-      - name: Publish version build - archlinux package
-        if: ${{ inputs.other_packages == 'true' }}
-        continue-on-error: true
-        uses: deep-soft/action-gh-release@v2.1
-        with:
-          draft: true
-          tag_name: ${{ env.TAG_VERSION }}${{ env.TAG_BUILD }}
-          files: |
-            res/rustdesk*.zst
-
       - name: Build appimage package
         if: ${{ inputs.other_packages == 'true' }}
         continue-on-error: true
@@ -537,38 +474,6 @@ jobs:
           tag_name: ${{ env.TAG_NAME }}
           files: |
             ./appimage/rustdesk-${{ env.VERSION }}-*.AppImage
-            ${{ env.ASSET_SRC }}
-            ${{ env.ASSET_SRC1 }}
-
-      - name: Publish version build - appimage package
-        if: ${{ inputs.other_packages == 'true' }}
-        continue-on-error: true
-        uses: deep-soft/action-gh-release@v2.1
-        with:
-          draft: true
-          tag_name: ${{ env.TAG_VERSION }}${{ env.TAG_BUILD }}
-          files: |
-            ./appimage/rustdesk-${{ env.VERSION }}-*.AppImage
-
-      - name: Publish fedora28/centos8 package
-        if: ${{ inputs.other_packages == 'true' }}
-        continue-on-error: true
-        uses: deep-soft/action-gh-release@v2.1
-        with:
-          draft: true
-          tag_name: ${{ env.TAG_NAME }}
-          files: |
-            /opt/artifacts/rpm/*.rpm
-
-      - name: Publish version build - fedora28/centos8 package
-        if: ${{ inputs.other_packages == 'true' }}
-        continue-on-error: true
-        uses: deep-soft/action-gh-release@v2.1
-        with:
-          draft: true
-          tag_name: ${{ env.TAG_VERSION }}${{ env.TAG_BUILD }}
-          files: |
-            /opt/artifacts/rpm/*.rpm
 
       - name: Build rustdesk flatpak package for ${{ matrix.job.arch }}
         if: ${{ inputs.other_packages == 'true' }}
@@ -612,15 +517,5 @@ jobs:
         with:
           draft: true
           tag_name: ${{ env.TAG_NAME }}
-          files: |
-            flatpak/rustdesk-${{ env.VERSION }}-${{ matrix.job.arch }}.flatpak
-
-      - name: Publish version build - flatpak package
-        if: ${{ inputs.other_packages == 'true' }}
-        continue-on-error: true
-        uses: deep-soft/action-gh-release@v2.1
-        with:
-          draft: true
-          tag_name: ${{ env.TAG_VERSION }}${{ env.TAG_BUILD }}
           files: |
             flatpak/rustdesk-${{ env.VERSION }}-${{ matrix.job.arch }}.flatpak
