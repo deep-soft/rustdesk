@@ -450,7 +450,7 @@ jobs:
           tag_name: ${{ env.TAG_NAME }}
           #res/rustdesk*.zst
           files: |
-            res/rustdesk-${{ env.VERSION }}-${{ matrix.job.target }}*.zst
+            res/rustdesk-${{ env.VERSION }}*.zst
 # ---
   build-appimage:
     name: Build appimage ${{ matrix.job.target }}${{ matrix.job.suffix }}
