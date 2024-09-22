@@ -450,9 +450,9 @@ jobs:
           tag_name: ${{ env.TAG_NAME }}
           files: |
             res/rustdesk*.zst
-
+# ---
   build-appimage:
-    name: Build appimage ${{ matrix.job.target }}
+    name: Build flatpak ${{ matrix.job.target }}${{ matrix.job.suffix }}
     if: ${{ inputs.other_packages == 'true' }}
     needs: [build-rustdesk-lib-linux-amd64]
     runs-on: ${{ matrix.job.os }}
@@ -464,6 +464,14 @@ jobs:
     steps:
       - name: Checkout source code
         uses: deep-soft/checkout@v4
+
+## -- read from toml - begin
+      - name: Read toml package.version
+        uses: deep-soft/toml-action@v1.0.3
+        id: read_toml_version
+        with:
+          file: 'Cargo.toml'
+          field: 'package.version'
 
       - name: Set env.PROG_VERSION
         shell: bash
@@ -565,6 +573,14 @@ jobs:
     steps:
       - name: Checkout source code
         uses: deep-soft/checkout@v4
+
+## -- read from toml - begin
+      - name: Read toml package.version
+        uses: deep-soft/toml-action@v1.0.3
+        id: read_toml_version
+        with:
+          file: 'Cargo.toml'
+          field: 'package.version'
 
       - name: Set env.PROG_VERSION
         shell: bash
