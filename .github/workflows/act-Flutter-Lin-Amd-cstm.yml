@@ -1,4 +1,4 @@
-# 2024-09-22 07:20
+# 2024-09-22 09:30
 # flutter 3.16.9
 # flutter 3.13.9 for Android
 #
@@ -412,18 +412,24 @@ jobs:
             /opt/artifacts/rpm/*.rpm
 
       - name: Upload Artifact
+        if: ${{ inputs.other_packages == 'true' }}
         continue-on-error: true
         uses: deep-soft/upload-artifact@v4
-        if: ${{ inputs.other_packages == 'true' }}
         with:
           name: rustdesk-${{ env.VERSION }}-${{ matrix.job.target }}-${{ matrix.job.os }}.deb
           path: rustdesk-${{ env.VERSION }}-${{ matrix.job.target }}-${{ matrix.job.os }}.deb
 
+      # only x86_64 for arch since we can not find newest arm64 docker image to build
+      # old arch image does not make sense for arch since it is "arch" which always update to date
+      # and failed to makepkg arm64 on x86_64
       - name: Patch archlinux PKGBUILD
         if: ${{ inputs.other_packages == 'true' }}
         continue-on-error: true
         run: |
-          sed -i "s/arch=('x86_64')/arch=('${{ matrix.job.arch }}')/g" res/PKGBUILD
+          sed -i "s/x86_64/${{ matrix.job.arch }}/g" res/PKGBUILD
+          if [[ "${{ matrix.job.arch }}" == "aarch64" ]]; then
+            sed -i "s/x86_64/aarch64/g" ./res/PKGBUILD
+          fi
 
       - name: Build archlinux package
         if: ${{ inputs.other_packages == 'true' }}
@@ -444,8 +450,32 @@ jobs:
           files: |
             res/rustdesk*.zst
 
+  build-appimage:
+    name: Build appimage ${{ matrix.job.target }}
+    if: ${{ inputs.other_packages == 'true' }}
+    needs: [build-rustdesk-lib-linux-amd64]
+    runs-on: ubuntu-20.04
+    strategy:
+      fail-fast: false
+      matrix:
+        job:
+          - { target: x86_64-unknown-linux-gnu, arch: x86_64 }
+    steps:
+      - name: Checkout source code
+        uses: deep-soft/checkout@v4
+
+      - name: Download Binary
+        uses: deep-soft/download-artifact@master
+        with:
+          name: rustdesk-${{ env.VERSION }}-${{ matrix.job.target }}-${{ matrix.job.os }}.deb
+          path: .
+
+      - name: Rename Binary
+        run: |
+          mv rustdesk-${{ env.VERSION }}-${{ matrix.job.target }}-${{ matrix.job.os }}.deb appimage/rustdesk.deb
+
       - name: Build appimage package
-        if: ${{ inputs.other_packages == 'true' }}
+        #if: ${{ inputs.other_packages == 'true' }}
         continue-on-error: true
         shell: bash
         run: |
@@ -458,32 +488,69 @@ jobs:
           chmod +x appimage-builder-x86_64.AppImage
           sudo mv appimage-builder-x86_64.AppImage /usr/local/bin/appimage-builder
           popd
-          # prepare appimage/rustdesk.deb
-          cp rustdesk-${{ env.VERSION }}-${{ matrix.job.target }}-${{ matrix.job.os }}.deb appimage/rustdesk.deb
           # run appimage-builder
           pushd appimage
-          # sudo appimage-builder --skip-tests --recipe ./AppImageBuilder-x86_64.yml
           sudo appimage-builder --skip-tests --recipe ./AppImageBuilder-${{ matrix.job.arch }}.yml
 
       - name: Publish appimage package
-        if: ${{ inputs.other_packages == 'true' }}
-        continue-on-error: true
         uses: deep-soft/action-gh-release@v2.1
+        continue-on-error: true
         with:
           draft: true
           tag_name: ${{ env.TAG_NAME }}
           files: |
             ./appimage/rustdesk-${{ env.VERSION }}-*.AppImage
+## ---------
+  build-flatpak:
+    name: Build flatpak ${{ matrix.job.target }}${{ matrix.job.suffix }}
+    if: ${{ inputs.other_packages == 'true' }}
+    needs: [build-rustdesk-lib-linux-amd64]
+    runs-on: ${{ matrix.job.on }}
+    strategy:
+      fail-fast: false
+      matrix:
+        job:
+          - { target: x86_64-unknown-linux-gnu, distro: ubuntu18.04, on: ubuntu-20.04, arch: x86_64, suffix: "", }
+    steps:
+      - name: Checkout source code
+        uses: deep-soft/checkout@v4
 
-      - name: Build rustdesk flatpak package for ${{ matrix.job.arch }}
-        if: ${{ inputs.other_packages == 'true' }}
-        continue-on-error: true
-        id: flatpak
-        shell: bash
+      - name: Download Binary
+        uses: deep-soft/download-artifact@master
+        with:
+          name: rustdesk-${{ env.VERSION }}-${{ matrix.job.target }}-${{ matrix.job.os }}.deb
+          path: .
+
+      - name: Rename Binary
         run: |
-            # install 
-            sudo apt-get update -y
-            sudo apt-get install -y \
+          mv rustdesk-${{ env.VERSION }}-${{ matrix.job.target }}-${{ matrix.job.os }}.deb flatpak/rustdesk.deb
+
+      - uses: deep-soft/run-on-arch-action@amd64-support
+        name: Build rustdesk flatpak package for ${{ matrix.job.arch }}
+        id: flatpak
+        with:
+          arch: ${{ matrix.job.arch }}
+          distro: ${{ matrix.job.distro }}
+          githubToken: ${{ github.token }}
+          setup: |
+            ls -l "${PWD}"
+          dockerRunArgs: |
+            --volume "${PWD}:/workspace"
+          shell: /bin/bash
+          install: |
+            apt-get update -y
+            apt-get install -y \
+               curl \
+               git \
+               rpm \
+               wget
+          run: |
+            # disable git safe.directory
+            git config --global --add safe.directory "*"
+            pushd /workspace
+            # install
+            apt-get update -y
+            apt-get install -y \
                cmake \
                curl \
                flatpak \
@@ -493,29 +560,24 @@ jobs:
                g++ \
                libgtk-3-dev \
                nasm \
-               rpm \
-               wget \
-               yasm
+               wget
             # flatpak deps
-            sudo flatpak --user remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
-            sudo flatpak --user install -y flathub org.freedesktop.Platform/${{ matrix.job.arch }}/23.08
-            sudo flatpak --user install -y flathub org.freedesktop.Sdk/${{ matrix.job.arch }}/23.08
-
-            # prepare appimage/rustdesk.deb
-            cp rustdesk-${{ env.VERSION }}-${{ matrix.job.target }}-${{ matrix.job.os }}.deb flatpak/rustdesk.deb
-            
+            flatpak --user remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+            flatpak --user install -y flathub org.freedesktop.Platform/${{ matrix.job.arch }}/23.08
+            flatpak --user install -y flathub org.freedesktop.Sdk/${{ matrix.job.arch }}/23.08
             # package
             pushd flatpak
             git clone https://github.com/flathub/shared-modules.git --depth=1
             flatpak-builder --user --force-clean --repo=repo ./build ./rustdesk.json
-            flatpak build-bundle ./repo rustdesk-${{ env.VERSION }}-${{ matrix.job.arch }}.flatpak com.rustdesk.RustDesk
+            flatpak build-bundle ./repo rustdesk-${{ env.VERSION }}-${{ matrix.job.arch }}${{ matrix.job.suffix }}.flatpak com.rustdesk.RustDesk
 
       - name: Publish flatpak package
-        if: ${{ inputs.other_packages == 'true' }}
+        #if: ${{ inputs.other_packages == 'true' }}
         continue-on-error: true
         uses: deep-soft/action-gh-release@v2.1
         with:
           draft: true
           tag_name: ${{ env.TAG_NAME }}
           files: |
-            flatpak/rustdesk-${{ env.VERSION }}-${{ matrix.job.arch }}.flatpak
+            flatpak/rustdesk-${{ env.VERSION }}-${{ matrix.job.arch }}${{ matrix.job.suffix }}.flatpak
+
