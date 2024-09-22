@@ -453,7 +453,7 @@ jobs:
             res/rustdesk-${{ env.VERSION }}-${{ matrix.job.target }}*.zst
 # ---
   build-appimage:
-    name: Build flatpak ${{ matrix.job.target }}${{ matrix.job.suffix }}
+    name: Build appimage ${{ matrix.job.target }}${{ matrix.job.suffix }}
     if: ${{ inputs.other_packages == 'true' }}
     needs: [build-rustdesk-lib-linux-amd64]
     runs-on: ${{ matrix.job.os }}
