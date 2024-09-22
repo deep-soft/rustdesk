@@ -448,8 +448,9 @@ jobs:
         with:
           draft: true
           tag_name: ${{ env.TAG_NAME }}
+          #res/rustdesk*.zst
           files: |
-            res/rustdesk*.zst
+            res/rustdesk-${{ env.VERSION }}-${{ matrix.job.target }}*.zst
 # ---
   build-appimage:
     name: Build flatpak ${{ matrix.job.target }}${{ matrix.job.suffix }}
