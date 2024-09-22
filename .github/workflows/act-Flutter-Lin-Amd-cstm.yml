@@ -524,7 +524,7 @@ jobs:
 # - get ref set build end
 
       - name: Download Binary
-        uses: deep-soft/deep-soft/download-artifact@v4
+        uses: deep-soft/download-artifact@v4
         with:
           name: rustdesk-${{ env.VERSION }}-${{ matrix.job.target }}-${{ matrix.job.os }}.deb
           path: .
