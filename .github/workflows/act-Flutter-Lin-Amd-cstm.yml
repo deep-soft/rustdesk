@@ -268,9 +268,9 @@ jobs:
             --volume "/opt/artifacts:/opt/artifacts"
           shell: /bin/bash
           install: |
-            sudo apt-get update -y
+            apt-get update -y
             echo -e "installing deps"
-            sudo apt-get install -y \
+            apt-get install -y \
                clang \
                cmake \
                curl \
@@ -304,7 +304,7 @@ jobs:
                tree \
                wget
             # we have libopus compiled by us.
-            sudo apt-get remove -y libopus-dev || true
+            apt-get remove -y libopus-dev || true
             # output devs
             ls -l ./
             tree -L 3 /opt/artifacts/vcpkg/installed
