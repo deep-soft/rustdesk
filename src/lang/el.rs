@@ -364,6 +364,7 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("Recording", "Εγγραφή"),
         ("Directory", "Φάκελος εγγραφών"),
         ("Automatically record incoming sessions", "Αυτόματη εγγραφή εισερχόμενων συνεδριών"),
+        ("Automatically record outgoing sessions", ""),
         ("Change", "Αλλαγή"),
         ("Start session recording", "Έναρξη εγγραφής συνεδρίας"),
         ("Stop session recording", "Διακοπή εγγραφής συνεδρίας"),
@@ -651,5 +652,6 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("Download", ""),
         ("Upload folder", ""),
         ("Upload files", ""),
+        ("Clipboard is synchronized", ""),
     ].iter().cloned().collect();
 }
