@@ -1174,33 +1174,21 @@ void msgBox(SessionID sessionId, String type, String title, String text,
           dialogManager.dismissAll();
         }));
   }
-  if (reconnect != null && title == "Connection Error") {
+  if (reconnect != null &&
+      title == "Connection Error" &&
+      reconnectTimeout != null) {
     // `enabled` is used to disable the dialog button once the button is clicked.
     final enabled = true.obs;
-    final button = reconnectTimeout != null
-        ? Obx(() => _ReconnectCountDownButton(
-              second: reconnectTimeout,
-              onPressed: enabled.isTrue
-                  ? () {
-                      // Disable the button
-                      enabled.value = false;
-                      reconnect(dialogManager, sessionId, false);
-                    }
-                  : null,
-            ))
-        : Obx(
-            () => dialogButton(
-              'Reconnect',
-              isOutline: true,
-              onPressed: enabled.isTrue
-                  ? () {
-                      // Disable the button
-                      enabled.value = false;
-                      reconnect(dialogManager, sessionId, false);
-                    }
-                  : null,
-            ),
-          );
+    final button = Obx(() => _ReconnectCountDownButton(
+          second: reconnectTimeout,
+          onPressed: enabled.isTrue
+              ? () {
+                  // Disable the button
+                  enabled.value = false;
+                  reconnect(dialogManager, sessionId, false);
+                }
+              : null,
+        ));
     buttons.insert(0, button);
   }
   if (link.isNotEmpty) {
@@ -2304,16 +2292,19 @@ connectMainDesktop(String id,
     required bool isRDP,
     bool? forceRelay,
     String? password,
+    String? connToken,
     bool? isSharedPassword}) async {
   if (isFileTransfer) {
     await rustDeskWinManager.newFileTransfer(id,
         password: password,
         isSharedPassword: isSharedPassword,
+        connToken: connToken,
         forceRelay: forceRelay);
   } else if (isTcpTunneling || isRDP) {
     await rustDeskWinManager.newPortForward(id, isRDP,
         password: password,
         isSharedPassword: isSharedPassword,
+        connToken: connToken,
         forceRelay: forceRelay);
   } else {
     await rustDeskWinManager.newRemoteDesktop(id,
@@ -2333,6 +2324,7 @@ connect(BuildContext context, String id,
     bool isRDP = false,
     bool forceRelay = false,
     String? password,
+    String? connToken,
     bool? isSharedPassword}) async {
   if (id == '') return;
   if (!isDesktop || desktopType == DesktopType.main) {
@@ -2374,6 +2366,7 @@ connect(BuildContext context, String id,
         'password': password,
         'isSharedPassword': isSharedPassword,
         'forceRelay': forceRelay,
+        'connToken': connToken,
       });
     }
   } else {

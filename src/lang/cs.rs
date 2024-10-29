@@ -130,7 +130,7 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("Show quality monitor", "Zobrazit monitor kvality"),
         ("Disable clipboard", "Vypnout schránku"),
         ("Lock after session end", "Po ukončení relace zamknout plochu"),
-        ("Insert", "Vložit"),
+        ("Insert Ctrl + Alt + Del", "Vložit Ctrl + Alt + Del"),
         ("Insert Lock", "Zamknout"),
         ("Refresh", "Načíst znovu"),
         ("ID does not exist", "Toto ID neexistuje"),

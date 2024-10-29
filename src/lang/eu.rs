@@ -130,7 +130,7 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("Show quality monitor", "Erakutsi kalitate monitorea"),
         ("Disable clipboard", "Desgaitu arbela"),
         ("Lock after session end", "Blokeatu sesioa amaitu ostean"),
-        ("Insert", "Sartu"),
+        ("Insert Ctrl + Alt + Del", "Sartu Ctrl + Alt + Del"),
         ("Insert Lock", "Sarrera-blokeoa"),
         ("Refresh", "Freskatu"),
         ("ID does not exist", "IDa ez da existitzen"),

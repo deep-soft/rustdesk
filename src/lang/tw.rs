@@ -130,7 +130,7 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("Show quality monitor", "顯示品質監測"),
         ("Disable clipboard", "停用剪貼簿"),
         ("Lock after session end", "工作階段結束後鎖定電腦"),
-        ("Insert", "插入"),
+        ("Insert Ctrl + Alt + Del", "插入 Ctrl + Alt + Del"),
         ("Insert Lock", "鎖定遠端電腦"),
         ("Refresh", "重新載入"),
         ("ID does not exist", "ID 不存在"),
