@@ -50,10 +50,10 @@ if [[ -f "$file_in" ]]; then
       if [[ -f "$_fil_" ]]; then
         ((countf++));
         echo_debug "sed -i \"s|$_str_|$_rpl_|\" $_fil_";
-        _str_s_=$(grep "$_str_" "$_fil_");
+        _str_s_=$(grep -F "$_str_" "$_fil_");
         echo_debug_2 "CNTF:$countf: $_str_n_";
         sed -i "s|$_str_|$_rpl_|" $_fil_;
-        _str_r_=$(grep "$_rpl_" "$_fil_");
+        _str_r_=$(grep -F "$_rpl_" "$_fil_");
         if [[ "$_str_s_" != "" ]] && [[ "$_str_r_" != "" ]]; then
           echo "OK_OK: [CNT:$count, CNTF:$countf]";
         else
@@ -61,9 +61,9 @@ if [[ -f "$file_in" ]]; then
         fi;
         if [[ "$debug_mode" == "Y" ]]; then
           echo "grep 1";
-          if [[ "$_str_" != "" ]]; then grep "$_str_" "$_fil_"; else echo ""; fi
+          if [[ "$_str_" != "" ]]; then grep -F "$_str_" "$_fil_"; else echo ""; fi
           echo "grep 2";
-          if [[ "$$_rpl_" != "" ]]; then grep "$$_rpl_" "$_fil_"; else echo ""; fi
+          if [[ "$$_rpl_" != "" ]]; then grep -F "$$_rpl_" "$_fil_"; else echo ""; fi
         fi;
       else
         echo "not_found: [$_fil_]";
