@@ -1424,6 +1424,10 @@ class CanvasModel with ChangeNotifier {
 
   Timer? _timerMobileFocusCanvasCursor;
 
+  // `isMobileCanvasChanged` is used to avoid canvas reset when changing the input method
+  // after showing the soft keyboard.
+  bool isMobileCanvasChanged = false;
+
   final ScrollController _horizontal = ScrollController();
   final ScrollController _vertical = ScrollController();
 
@@ -1475,14 +1479,16 @@ class CanvasModel with ChangeNotifier {
     if (isMobile) {
       h = h -
           mediaData.viewInsets.bottom -
-          (parent.target?.cursorModel.keyHelpToolsRect?.bottom ?? 0);
+          (parent.target?.cursorModel.keyHelpToolsRectToAdjustCanvas?.bottom ??
+              0);
     }
     return Size(w < 0 ? 0 : w, h < 0 ? 0 : h);
   }
 
   // mobile only
   double getAdjustY() {
-    final bottom = parent.target?.cursorModel.keyHelpToolsRect?.bottom ?? 0;
+    final bottom =
+        parent.target?.cursorModel.keyHelpToolsRectToAdjustCanvas?.bottom ?? 0;
     return max(bottom - MediaQueryData.fromView(ui.window).padding.top, 0);
   }
 
@@ -1515,12 +1521,8 @@ class CanvasModel with ChangeNotifier {
     if (kIgnoreDpi && style == kRemoteViewStyleOriginal) {
       _scale = 1.0 / _devicePixelRatio;
     }
-    _x = (size.width - displayWidth * _scale) / 2;
-    _y = (size.height - displayHeight * _scale) / 2;
+    _resetCanvasOffset(displayWidth, displayHeight);
     _imageOverflow.value = _x < 0 || y < 0;
-    if (isMobile && style == kRemoteViewStyleOriginal) {
-      _moveToCenterCursor();
-    }
     if (notify) {
       notifyListeners();
     }
@@ -1528,6 +1530,14 @@ class CanvasModel with ChangeNotifier {
       parent.target?.inputModel.refreshMousePos();
     }
     tryUpdateScrollStyle(Duration.zero, style);
+  }
+
+  _resetCanvasOffset(int displayWidth, int displayHeight) {
+    _x = (size.width - displayWidth * _scale) / 2;
+    _y = (size.height - displayHeight * _scale) / 2;
+    if (isMobile && _lastViewStyle.style == kRemoteViewStyleOriginal) {
+      _moveToCenterCursor();
+    }
   }
 
   tryUpdateScrollStyle(Duration duration, String? style) async {
@@ -1633,6 +1643,9 @@ class CanvasModel with ChangeNotifier {
 
   panX(double dx) {
     _x += dx;
+    if (isMobile) {
+      isMobileCanvasChanged = true;
+    }
     notifyListeners();
   }
 
@@ -1640,14 +1653,16 @@ class CanvasModel with ChangeNotifier {
     if (isWebDesktop) {
       updateViewStyle();
     } else {
-      _x = (size.width - getDisplayWidth() * _scale) / 2;
-      _y = (size.height - getDisplayHeight() * _scale) / 2;
+      _resetCanvasOffset(getDisplayWidth(), getDisplayHeight());
     }
     notifyListeners();
   }
 
   panY(double dy) {
     _y += dy;
+    if (isMobile) {
+      isMobileCanvasChanged = true;
+    }
     notifyListeners();
   }
 
@@ -1667,6 +1682,9 @@ class CanvasModel with ChangeNotifier {
     // (focalPoint.dy - _y_1 - adjust) / s1 + displayOriginY = (focalPoint.dy - _y_2 - adjust) / s2 + displayOriginY
     // _y_2 = focalPoint.dy - adjust - (focalPoint.dy - _y_1 - adjust) / s1 * s2
     _y = focalPoint.dy - adjust - (focalPoint.dy - _y - adjust) / s * _scale;
+    if (isMobile) {
+      isMobileCanvasChanged = true;
+    }
     notifyListeners();
   }
 
@@ -1677,10 +1695,7 @@ class CanvasModel with ChangeNotifier {
     if (kIgnoreDpi && _lastViewStyle.style == kRemoteViewStyleOriginal) {
       _scale = 1.0 / _devicePixelRatio;
     }
-    final displayWidth = getDisplayWidth();
-    final displayHeight = getDisplayHeight();
-    _x = (size.width - displayWidth * _scale) / 2;
-    _y = (size.height - displayHeight * _scale) / 2;
+    _resetCanvasOffset(getDisplayWidth(), getDisplayHeight());
     bind.sessionSetViewStyle(sessionId: sessionId, value: _lastViewStyle.style);
     notifyListeners();
   }
@@ -1937,9 +1952,13 @@ class CursorModel with ChangeNotifier {
   // `lastIsBlocked` is only used in common/widgets/remote_input.dart -> _RawTouchGestureDetectorRegionState -> onDoubleTap()
   // Because onDoubleTap() doesn't have the `event` parameter, we can't get the touch event's position.
   bool _lastIsBlocked = false;
+  bool _lastKeyboardIsVisible = false;
 
-  Rect? get keyHelpToolsRect => _keyHelpToolsRect;
-  keyHelpToolsVisibilityChanged(Rect? r) {
+  bool get lastKeyboardIsVisible => _lastKeyboardIsVisible;
+
+  Rect? get keyHelpToolsRectToAdjustCanvas =>
+      _lastKeyboardIsVisible ? _keyHelpToolsRect : null;
+  keyHelpToolsVisibilityChanged(Rect? r, bool keyboardIsVisible) {
     _keyHelpToolsRect = r;
     if (r == null) {
       _lastIsBlocked = false;
@@ -1949,11 +1968,11 @@ class CursorModel with ChangeNotifier {
       // `lastIsBlocked` will be set when the cursor is moving or touch somewhere else.
       _lastIsBlocked = true;
     }
-    if (isMobile) {
-      if (r != null || _lastIsBlocked) {
-        parent.target?.canvasModel.mobileFocusCanvasCursor();
-      }
+    if (isMobile && _lastKeyboardIsVisible != keyboardIsVisible) {
+      parent.target?.canvasModel.mobileFocusCanvasCursor();
+      parent.target?.canvasModel.isMobileCanvasChanged = false;
     }
+    _lastKeyboardIsVisible = keyboardIsVisible;
   }
 
   get lastIsBlocked => _lastIsBlocked;
@@ -2035,7 +2054,7 @@ class CursorModel with ChangeNotifier {
   }
 
   // For touch mode
-  move(double x, double y) {
+  Future<bool> move(double x, double y) async {
     if (shouldBlock(x, y)) {
       _lastIsBlocked = true;
       return false;
@@ -2044,7 +2063,7 @@ class CursorModel with ChangeNotifier {
     if (!_moveLocalIfInRemoteRect(x, y)) {
       return false;
     }
-    parent.target?.inputModel.moveMouse(_x, _y);
+    await parent.target?.inputModel.moveMouse(_x, _y);
     return true;
   }
 
@@ -2102,9 +2121,9 @@ class CursorModel with ChangeNotifier {
     notifyListeners();
   }
 
-  updatePan(Offset delta, Offset localPosition, bool touchMode) {
+  updatePan(Offset delta, Offset localPosition, bool touchMode) async {
     if (touchMode) {
-      _handleTouchMode(delta, localPosition);
+      await _handleTouchMode(delta, localPosition);
       return;
     }
     double dx = delta.dx;
@@ -2202,7 +2221,7 @@ class CursorModel with ChangeNotifier {
     return x >= 0 && y >= 0 && x <= w && y <= h;
   }
 
-  _handleTouchMode(Offset delta, Offset localPosition) {
+  _handleTouchMode(Offset delta, Offset localPosition) async {
     bool isMoved = false;
     if (_remoteWindowCoords.isNotEmpty &&
         _windowRect != null &&
@@ -2218,7 +2237,7 @@ class CursorModel with ChangeNotifier {
                 coords.canvas.scale;
         x2 += coords.cursor.offset.dx;
         y2 += coords.cursor.offset.dy;
-        parent.target?.inputModel.moveMouse(x2, y2);
+        await parent.target?.inputModel.moveMouse(x2, y2);
         isMoved = true;
       }
     }
@@ -2261,7 +2280,7 @@ class CursorModel with ChangeNotifier {
 
       _x = movement.dx;
       _y = movement.dy;
-      parent.target?.inputModel.moveMouse(_x, _y);
+      await parent.target?.inputModel.moveMouse(_x, _y);
     }
     notifyListeners();
   }
