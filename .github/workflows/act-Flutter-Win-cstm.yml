@@ -60,6 +60,11 @@ on:
   workflow_call:
   workflow_dispatch:
     inputs:
+      flutter_version:
+        description: flutter version (prev 3.19.6)
+        default: "3.24.4"
+        required: true
+        # FLUTTER_VERSION
       custom_TAG_NAME:
         description: custom TAG_NAME
         default: "Win-cstm"
@@ -124,6 +129,20 @@ jobs:
           script: |
             core.exportVariable('ACTIONS_CACHE_URL',     process.env.ACTIONS_CACHE_URL     || '');
             core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
+
+      - name: set flutter version
+        shell: bash
+        run: |
+          # 3.19.6
+          # 3.24.4
+          if [[ "${{ inputs.flutter_version }}" != "" ]]; then
+            echo "FLUTTER_VERSION=${{ inputs.flutter_version }}" >> $GITHUB_ENV;
+          fi
+
+      - name: print flutter version
+        shell: bash
+        run: |
+          echo "FLUTTER_VERSION = ${{ env.FLUTTER_VERSION }}";
 
       - name: Checkout source code
         uses: deep-soft/checkout@v4
