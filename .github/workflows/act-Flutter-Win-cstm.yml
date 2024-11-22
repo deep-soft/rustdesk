@@ -31,7 +31,7 @@ env:
   LLVM_VERSION:                "15.0.6"
 #  FLUTTER_VERSION:             "3.16.9"
 #  FLUTTER_VERSION:             "3.19.6"
-  FLUTTER_VERSION:              "3.22.3" # was"3.24.4"
+  FLUTTER_VERSION:              "3.24.4" # bridge is"3.22.3"
   FLUTTER_RUST_BRIDGE_VERSION: "1.80.1"
   FLUTTER_ELINUX_VERSION:      "3.16.9"
   FLUTTER_ELINUX_COMMIT_ID:    "c02bd16e1630f5bd690b85c5c2456ac1920e25af"
@@ -511,6 +511,7 @@ jobs:
         uses: deep-soft/install-llvm-action@v1
         with:
           version: ${{ env.LLVM_VERSION }}
+
 # restore bridge
       - name: Restore bridge files
         uses: actions/download-artifact@master
@@ -560,7 +561,8 @@ jobs:
           if [[ "${{env.FLUTTER_VERSION}}" == "3.24.4" ]]; then
             cp .github/patches/flutter_3.24.4_dropdown_menu_enableFilter.diff $(dirname $(dirname $(which flutter)))
             cd $(dirname $(dirname $(which flutter)))
-            [[ "3.24.4" == ${{env.FLUTTER_VERSION}} ]] && git apply flutter_3.24.4_dropdown_menu_enableFilter.diff
+            git apply flutter_3.24.4_dropdown_menu_enableFilter.diff
+            # [[ "3.24.4" == ${{env.FLUTTER_VERSION}} ]] && git apply flutter_3.24.4_dropdown_menu_enableFilter.diff
           fi
 
       - name: Install Rust toolchain
