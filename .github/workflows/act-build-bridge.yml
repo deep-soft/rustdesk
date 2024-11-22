@@ -1,6 +1,7 @@
-# 2024-07-21 23:00
-# flutter 3.16.9
+# 2024-11-22 07:10
+# flutter 3.24.4, generate_bridge on linux
 # This yaml shares the build bridge steps with ci and nightly.
+#
 #
 #
 #and act-Flutter-Win-Arm-And-Mac-cstm
@@ -16,28 +17,36 @@ env:
   VERSION:                     "1.0.0"
   DEBUG_LS:                    "yes"
   # To make a custom build with your own servers set the below secret values
-  RS_PUB_KEY:                  '${{ secrets.RS_PUB_KEY }}'
+  RS_PUB_KEY:                  '${{ secrets.RS_PUB_KEY        }}'
   RENDEZVOUS_SERVER:           '${{ secrets.RENDEZVOUS_SERVER }}'
-  API_SERVER:                  '${{ secrets.API_SERVER }}'
-  RDSK_PCH_SH_PRE:             '${{ secrets.RDSK_PCH_SH_PRE }}'
-  RDSK_PCH_SH:                 '${{ secrets.RDSK_PCH_SH }}'
-  RDSK_PCH_HL:                 '${{ secrets.RDSK_PCH_HL }}'
-  RDSK_PCH_SH2:                '${{ secrets.RDSK_PCH_SH2 }}'
-  RDSK_PCH_SH4:                '${{ secrets.RDSK_PCH_SH4 }}'
-  RDSK_PCH_SH_CLN:             '${{ secrets.RDSK_PCH_SH_CLN }}'
-  # RUST_VERSION:                "rust-1.70.0"
-  RUST_VERSION:                "1.75"
+  API_SERVER:                  '${{ secrets.API_SERVER        }}'
+  RDSK_PCH_SH_PRE:             '${{ secrets.RDSK_PCH_SH_PRE   }}'
+  RDSK_PCH_SH:                 '${{ secrets.RDSK_PCH_SH       }}'
+  RDSK_PCH_HL:                 '${{ secrets.RDSK_PCH_HL       }}'
+  RDSK_PCH_SH2:                '${{ secrets.RDSK_PCH_SH2      }}'
+  RDSK_PCH_SH4:                '${{ secrets.RDSK_PCH_SH4      }}'
+  RDSK_PCH_SH_CLN:             '${{ secrets.RDSK_PCH_SH_CLN   }}'
+  RUST_VERSION:                "rust-1.76.0"
+  WIN_RUST_VERSION:            "1.75"
   LLVM_VERSION:                "15.0.6"
-  FLUTTER_VERSION:             "3.19.6"
+#  FLUTTER_VERSION:             "3.16.9"
+#  FLUTTER_VERSION:             "3.19.6"
+  FLUTTER_VERSION:             "3.24.4"
   FLUTTER_RUST_BRIDGE_VERSION: "1.80.1"
   FLUTTER_ELINUX_VERSION:      "3.16.9"
   FLUTTER_ELINUX_COMMIT_ID:    "c02bd16e1630f5bd690b85c5c2456ac1920e25af"
   # vcpkg version: 2023.10.19
   # for multiarch gcc compatibility
-  VCPKG_COMMIT_ID:             "8eb57355a4ffb410a2e94c07b4dca2dffbee8e50"
+  # VCPKG_COMMIT_ID:             "8eb57355a4ffb410a2e94c07b4dca2dffbee8e50"
+  # vcpkg version: 2024.06.15
+  # VCPKG_COMMIT_ID:             "f7423ee180c4b7f40d43402c2feb3859161ef625"
+  VCPKG_COMMIT_ID:             "1de2026f28ead93ff1773e6e680387643e914ea1"
+  VCPKG_DIRECTORY:             "C:\\vcpkg"
   VCPKG_BINARY_SOURCES:        "clear;x-gha,readwrite"
   CARGO_NDK_VERSION:           "3.1.2"
-  NDK_VERSION:                 "r26b"
+  # NDK_VERSION:                 "r26b"
+  NDK_VERSION:                 "r26d"
+  ANDROID_FLUTTER_VERSION:     "3.24.4"
   #signing keys env variable checks
   ANDROID_SIGNING_KEY:         '${{ secrets.ANDROID_SIGNING_KEY }}'
   #  signingKeyBase64:         '${{ secrets.ANDROID_SIGNING_KEY }}'
@@ -271,15 +280,12 @@ jobs:
         with:
           prefix-key: bridge-${{ matrix.job.os }}
 
-# no need now?!
-#      - name: Cache Bridge
-#        id: cache-bridge
-#        uses: deep-soft/cache@v3
-#        with:
-#          path: /tmp/flutter_rust_bridge
-#          key: vcpkg-${{ matrix.job.arch }}
-#          path: /opt/hostedtoolcache/flutter
-#          key: bridge-${{ matrix.job.target }}
+      - name: Cache Bridge
+        id: cache-bridge
+        uses: deep-soft/cache@v3
+        with:
+          path: /tmp/flutter_rust_bridge
+          key: vcpkg-${{ matrix.job.arch }}
 
       - name: Install flutter
         uses: deep-soft/flutter-action@v2
@@ -292,11 +298,12 @@ jobs:
         shell: bash
         run: |
           cargo install flutter_rust_bridge_codegen --version ${{ env.FLUTTER_RUST_BRIDGE_VERSION }} --features "uuid"
-          pushd flutter && flutter pub get && popd
+          pushd flutter && sed -i -e 's/extended_text: 14.0.0/extended_text: 13.0.0/g' pubspec.yaml && flutter pub get && popd
 
       - name: Run flutter rust bridge
         run: |
-          ~/.cargo/bin/flutter_rust_bridge_codegen --rust-input ./src/flutter_ffi.rs --dart-output ./flutter/lib/generated_bridge.dart
+          ~/.cargo/bin/flutter_rust_bridge_codegen --rust-input ./src/flutter_ffi.rs --dart-output ./flutter/lib/generated_bridge.dart --c-output ./flutter/macos/Runner/bridge_generated.h
+          cp ./flutter/macos/Runner/bridge_generated.h ./flutter/ios/Runner/bridge_generated.h
 
       - name: Upload Artifact
         uses: deep-soft/upload-artifact@v4
@@ -307,3 +314,5 @@ jobs:
             ./src/bridge_generated.io.rs
             ./flutter/lib/generated_bridge.dart
             ./flutter/lib/generated_bridge.freezed.dart
+            ./flutter/macos/Runner/bridge_generated.h
+            ./flutter/ios/Runner/bridge_generated.h
