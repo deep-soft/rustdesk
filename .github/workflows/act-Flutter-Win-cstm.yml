@@ -1,5 +1,5 @@
 # 2024-11-22 07:10
-# flutter 3.24.4, generate_bridge on linux
+# flutter 3.24.5, generate_bridge on linux
 # progversion, no IDD, 
 # changed: Replace engine with rustdesk custom flutter engine
 # changed: Install Rust toolchain. uses: deep-soft/rust-toolchain@master
@@ -31,7 +31,7 @@ env:
   LLVM_VERSION:                "15.0.6"
 #  FLUTTER_VERSION:             "3.16.9"
 #  FLUTTER_VERSION:             "3.19.6"
-  FLUTTER_VERSION:              "3.24.4" # bridge is"3.22.3"
+  FLUTTER_VERSION:              "3.24.5" # bridge is"3.22.3"
   FLUTTER_RUST_BRIDGE_VERSION: "1.80.1"
   FLUTTER_ELINUX_VERSION:      "3.16.9"
   FLUTTER_ELINUX_COMMIT_ID:    "c02bd16e1630f5bd690b85c5c2456ac1920e25af"
@@ -46,7 +46,7 @@ env:
   CARGO_NDK_VERSION:           "3.1.2"
   # NDK_VERSION:                 "r26b"
   NDK_VERSION:                 "r26d"
-  ANDROID_FLUTTER_VERSION:     "3.24.4"
+  ANDROID_FLUTTER_VERSION:     "3.24.5"
   #signing keys env variable checks
   ANDROID_SIGNING_KEY:         '${{ secrets.ANDROID_SIGNING_KEY }}'
   #  signingKeyBase64:         '${{ secrets.ANDROID_SIGNING_KEY }}'
@@ -64,20 +64,26 @@ on:
   workflow_call:
   workflow_dispatch:
     inputs:
-      flutter_version:
-        description: flutter version (prev 3.19.6)
-        default: "3.24.4"
-        required: true
-        # FLUTTER_VERSION
       custom_TAG_NAME:
         description: custom TAG_NAME
         default: "Win-cstm"
         required: true
-      search_delete_runner_rc:
-        description: search and delete runner.rc runner.res
+      flutter_version:
+        description: flutter version (prev 3.19.6)
+        default: "3.24.5"
+        required: true
+        # FLUTTER_VERSION
+      replace_flutter_engine:
+        description: Replace flutter engine
         type: boolean
         default: false
         required: true
+# skipped to add other input, max inputs: 10
+#      search_delete_runner_rc:
+#        description: search and delete runner.rc runner.res
+#        type: boolean
+#        default: false
+#        required: true
       archive_SRC2:
         description: Archive SRC2
         type: boolean
@@ -142,7 +148,7 @@ jobs:
         shell: bash
         run: |
           # 3.19.6
-          # 3.24.4
+          # 3.24.5
           if [[ "${{ inputs.flutter_version }}" != "" ]]; then
             echo "FLUTTER_VERSION=${{ inputs.flutter_version }}" >> $GITHUB_ENV;
           fi
@@ -548,6 +554,7 @@ jobs:
 
       # https://github.com/flutter/flutter/issues/155685
       - name: Replace engine with rustdesk custom flutter engine
+        if: ${{ inputs.replace_flutter_engine }}
         run: |
           flutter doctor -v
           flutter precache --windows
@@ -558,11 +565,11 @@ jobs:
       - name: Patch flutter
         shell: bash
         run: |
-          if [[ "${{env.FLUTTER_VERSION}}" == "3.24.4" ]]; then
+          if [[ "${{env.FLUTTER_VERSION}}" == "3.24.5" ]]; then
             cp .github/patches/flutter_3.24.4_dropdown_menu_enableFilter.diff $(dirname $(dirname $(which flutter)))
             cd $(dirname $(dirname $(which flutter)))
             git apply flutter_3.24.4_dropdown_menu_enableFilter.diff
-            # [[ "3.24.4" == ${{env.FLUTTER_VERSION}} ]] && git apply flutter_3.24.4_dropdown_menu_enableFilter.diff
+            # [[ "3.24.5" == ${{env.FLUTTER_VERSION}} ]] && git apply flutter_3.24.4_dropdown_menu_enableFilter.diff
           fi
 
       - name: Install Rust toolchain
