@@ -566,10 +566,10 @@ jobs:
         shell: bash
         run: |
           if [[ "${{env.FLUTTER_VERSION}}" == "3.24.5" ]]; then
-            cp .github/patches/flutter_3.24.4_dropdown_menu_enableFilter.diff $(dirname $(dirname $(which flutter)))
-            cd $(dirname $(dirname $(which flutter)))
-            git apply flutter_3.24.4_dropdown_menu_enableFilter.diff
-            # [[ "3.24.5" == ${{env.FLUTTER_VERSION}} ]] && git apply flutter_3.24.4_dropdown_menu_enableFilter.diff
+            cp .github/patches/flutter_3.24.4_dropdown_menu_enableFilter.diff $(dirname $(dirname $(which flutter))) ;
+            cd $(dirname $(dirname $(which flutter))) ;
+            git apply flutter_3.24.4_dropdown_menu_enableFilter.diff || true ;
+            # [[ "3.24.5" == ${{env.FLUTTER_VERSION}} ]] && git apply flutter_3.24.4_dropdown_menu_enableFilter.diff ;
           fi
 
       - name: Install Rust toolchain
