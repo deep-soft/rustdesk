@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
-import 'dart:io';
 
 import 'package:back_button_interceptor/back_button_interceptor.dart';
 import 'package:desktop_multi_window/desktop_multi_window.dart';
@@ -3460,35 +3459,6 @@ Widget buildPresetPasswordWarning() {
   );
 }
 
-bool get isLinuxMateDesktop =>
-    isLinux &&
-    (Platform.environment['XDG_CURRENT_DESKTOP']?.toLowerCase() == 'mate' ||
-        Platform.environment['XDG_SESSION_DESKTOP']?.toLowerCase() == 'mate' ||
-        Platform.environment['DESKTOP_SESSION']?.toLowerCase() == 'mate');
-
-Map<String, dynamic>? _linuxOsDistro;
-
-String getLinuxOsDistroId() {
-  if (_linuxOsDistro == null) {
-    String osInfo = bind.getOsDistroInfo();
-    if (osInfo.isEmpty) {
-      _linuxOsDistro = {};
-    } else {
-      try {
-        _linuxOsDistro = jsonDecode(osInfo);
-      } catch (e) {
-        debugPrint('Failed to parse os info: $e');
-        // Don't call `bind.getOsDistroInfo()` again if failed to parse osInfo.
-        _linuxOsDistro = {};
-      }
-    }
-  }
-  return (_linuxOsDistro?['id'] ?? '') as String;
-}
-
-bool get isLinuxMint =>
-    getLinuxOsDistroId().toLowerCase().contains('linuxmint');
-
 // https://github.com/leanflutter/window_manager/blob/87dd7a50b4cb47a375b9fc697f05e56eea0a2ab3/lib/src/widgets/virtual_window_frame.dart#L44
 Widget buildVirtualWindowFrame(BuildContext context, Widget child) {
   boxShadow() => isMainDesktopWindow
@@ -3632,4 +3602,21 @@ List<SubWindowResizeEdge>? get subWindowManagerEnableResizeEdges => isWindows
 
 void earlyAssert() {
   assert('\1' == '1');
+}
+
+void checkUpdate() {
+  if (isDesktop || isAndroid) {
+    if (!bind.isCustomClient()) {
+      platformFFI.registerEventHandler(
+          kCheckSoftwareUpdateFinish, kCheckSoftwareUpdateFinish,
+          (Map<String, dynamic> evt) async {
+        if (evt['url'] is String) {
+          stateGlobal.updateUrl.value = evt['url'];
+        }
+      });
+      Timer(const Duration(seconds: 1), () async {
+        bind.mainGetSoftwareUpdateUrl();
+      });
+    }
+  }
 }
