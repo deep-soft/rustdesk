@@ -309,13 +309,19 @@ jobs:
           flutter-version: ${{ env.ANDROID_FLUTTER_VERSION }}
 
       - name: Patch flutter
+        continue-on-error: true
         run: |
+          flutter channel stable;
+          flutter upgrade;
+          flutter clean;
           pushd flutter;
           sed -i -e 's/extended_text: 14.0.0/extended_text: 13.0.0/g' pubspec.yaml
           flutter pub get
           popd
           cd $(dirname $(dirname $(which flutter)))
-          [[ "3.24.5" == ${{env.ANDROID_FLUTTER_VERSION}} ]] && git apply ${{ github.workspace }}/.github/patches/flutter_3.24.4_dropdown_menu_enableFilter.diff
+          # [[ "3.24.5" == ${{env.ANDROID_FLUTTER_VERSION}} ]] && 
+          git apply ${{ github.workspace }}/.github/patches/flutter_3.24.4_dropdown_menu_enableFilter.diff
+          cd ..
 
       - uses: deep-soft/setup-ndk@v1
         id: setup-ndk
@@ -379,7 +385,7 @@ jobs:
           key: ${{ matrix.job.target }}-${{ matrix.job.release_type }}
 
       - name: fix android for flutter 3.13
-        # if: $${{ env.ANDROID_FLUTTER_VERSION == '3.13.9' }}
+        if: $${{ env.ANDROID_FLUTTER_VERSION == '3.13.9' }}
         run: |
           cd flutter
           sed -i 's/uni_links_desktop/#uni_links_desktop/g' pubspec.yaml
