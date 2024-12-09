@@ -37,8 +37,8 @@ env:
   VCPKG_COMMIT_ID:             "1de2026f28ead93ff1773e6e680387643e914ea1"
   VCPKG_BINARY_SOURCES:        "clear;x-gha,readwrite"
   CARGO_NDK_VERSION:           "3.1.2"
-  NDK_VERSION:                 "r27c" # was "r27"
-  ANDROID_FLUTTER_VERSION:     "3.22.3" # was "3.13.9" # >= 3.16 is very slow on my android phone, but work well on most of others. We may switch to new flutter after changing to texture rendering (I believe it can solve my problem).
+  NDK_VERSION:                 "r27" # was "r27c"
+  ANDROID_FLUTTER_VERSION:     "3.13.9" # was "3.13.9" # >= 3.16 is very slow on my android phone, but work well on most of others. We may switch to new flutter after changing to texture rendering (I believe it can solve my problem).
   #signing keys env variable checks
   ANDROID_SIGNING_KEY:         '${{ secrets.ANDROID_SIGNING_KEY }}'
   #  signingKeyBase64:         '${{ secrets.ANDROID_SIGNING_KEY }}'
