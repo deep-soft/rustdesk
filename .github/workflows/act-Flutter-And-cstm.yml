@@ -310,6 +310,10 @@ jobs:
 
       - name: Patch flutter
         run: |
+          pushd flutter;
+          sed -i -e 's/extended_text: 14.0.0/extended_text: 13.0.0/g' pubspec.yaml
+          flutter pub get
+          popd
           cd $(dirname $(dirname $(which flutter)))
           [[ "3.24.5" == ${{env.ANDROID_FLUTTER_VERSION}} ]] && git apply ${{ github.workspace }}/.github/patches/flutter_3.24.4_dropdown_menu_enableFilter.diff
 
@@ -339,7 +343,7 @@ jobs:
           #  x86_64-linux-android)
           #    ANDROID_TARGET=x86_64
           #  ;;
-          #esac
+          # esac
           ANDROID_TARGET=${{ matrix.job.android_target }};
           echo "ANDROID_TARGET:$ANDROID_TARGET";
           if ! ./flutter/build_android_deps.sh "${ANDROID_TARGET}"; then
