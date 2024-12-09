@@ -304,11 +304,15 @@ jobs:
 
       - name: Install flutter
         uses: deep-soft/flutter-action@v2
+        env:
+         PUB_CACHE: /home/runner/.pub-cache
         with:
           channel: "stable"
           flutter-version: ${{ env.ANDROID_FLUTTER_VERSION }}
 
       - name: Patch flutter
+        env:
+         PUB_CACHE: /home/runner/.pub-cache
         run: |
           pushd flutter;
           sed -i -e 's/extended_text: 14.0.0/extended_text: 13.0.0/g' pubspec.yaml
@@ -390,6 +394,7 @@ jobs:
 
       - name: Build rustdesk lib
         env:
+          PUB_CACHE: /home/runner/.pub-cache
           ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
           ANDROID_NDK_ROOT: ${{ steps.setup-ndk.outputs.ndk-path }}
           # VCPKG_ROOT: /opt/rustdesk_thirdparty_lib/vcpkg
