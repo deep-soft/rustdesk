@@ -1,5 +1,5 @@
-# 2024-11-22 07:10
-# flutter 3.24.4, generate_bridge on linux
+# 2024-12-09 20:40
+# flutter 3.24.5, generate_bridge on linux
 # This yaml shares the build bridge steps with ci and nightly.
 #
 #
@@ -31,7 +31,7 @@ env:
   LLVM_VERSION:                "15.0.6"
 #  FLUTTER_VERSION:             "3.16.9"
 #  FLUTTER_VERSION:             "3.19.6"
-  FLUTTER_VERSION:             "3.22.3"
+  FLUTTER_VERSION:             "3.24.5"
   FLUTTER_RUST_BRIDGE_VERSION: "1.80.1"
   FLUTTER_ELINUX_VERSION:      "3.16.9"
   FLUTTER_ELINUX_COMMIT_ID:    "c02bd16e1630f5bd690b85c5c2456ac1920e25af"
@@ -45,8 +45,9 @@ env:
   VCPKG_BINARY_SOURCES:        "clear;x-gha,readwrite"
   CARGO_NDK_VERSION:           "3.1.2"
   # NDK_VERSION:                 "r26b"
-  NDK_VERSION:                 "r26d"
-  ANDROID_FLUTTER_VERSION:     "3.24.4"
+  # NDK_VERSION:                 "r26d"
+  NDK_VERSION:                 "r27c"
+  ANDROID_FLUTTER_VERSION:     "3.24.5"
   #signing keys env variable checks
   ANDROID_SIGNING_KEY:         '${{ secrets.ANDROID_SIGNING_KEY }}'
   #  signingKeyBase64:         '${{ secrets.ANDROID_SIGNING_KEY }}'
