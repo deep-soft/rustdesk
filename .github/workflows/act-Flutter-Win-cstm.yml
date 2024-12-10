@@ -795,6 +795,7 @@ jobs:
           mkdir -p ./SignOutput;
           mv ./target/release/rustdesk-portable-packer.exe ./SignOutput/${{ env.PROG_NAME }}-${{ env.VERSION }}-${{ matrix.job.target }}-${{ matrix.job.os }}.exe;
           cp ${{ env.WORK_DIR_BASH }}/_version_.txt ./SignOutput;
+          cp ${{ env.WORK_DIR_BASH }}/_version_.txt ./SignOutput/${{ env.PROG_NAME }}-${{ env.VERSION }}-${{ matrix.job.target }}-${{ matrix.job.os }}.txt;
 
       # - name: Rename rustdesk
       #   shell: bash
@@ -848,6 +849,7 @@ jobs:
           files: |
             ./SignOutput/${{ env.PROG_NAME }}-${{ env.VERSION }}-${{ matrix.job.target }}-${{ matrix.job.os }}.exe
             ./SignOutput/${{ env.PROG_NAME }}-${{ env.VERSION }}-${{ matrix.job.target }}-${{ matrix.job.os }}.exe.sha256
+            ./SignOutput/${{ env.PROG_NAME }}-${{ env.VERSION }}-${{ matrix.job.target }}-${{ matrix.job.os }}.txt
             ./SignOutput/_version_.txt
             ${{ env.ASSET_SRC }}
             ${{ env.ASSET_SRC1 }}
@@ -863,6 +865,7 @@ jobs:
           files: |
             ./SignOutput/${{ env.PROG_NAME }}-*.exe
             ./SignOutput/${{ env.PROG_NAME }}-*.exe.sha256
+            ./SignOutput/${{ env.PROG_NAME }}-*.txt
             ./SignOutput/_version_.txt
             ${{ env.WORK_DIR_OS }}/_version_.txt
             ${{ env.ZIP_ARCHIVE_RELEASE }}
