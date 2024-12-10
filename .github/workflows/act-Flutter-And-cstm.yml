@@ -115,7 +115,6 @@ jobs:
                libpam0g-dev \
                libpulse-dev \
                libva-dev \
-               libvdpau-dev \
                libxcb-randr0-dev \
                libxcb-shape0-dev \
                libxcb-xfixes0-dev \
@@ -311,17 +310,17 @@ jobs:
       - name: Patch flutter
         continue-on-error: true
         run: |
-          pushd flutter
-          echo sed -i -e 's/extended_text: 14.0.0/extended_text: 13.0.0/g' pubspec.yaml
-          sed -i -e 's/extended_text: 14.0.0/extended_text: 13.0.0/g' pubspec.yaml
-          echo flutter pub get
-          flutter pub get
-          popd
+          # pushd flutter
+          # echo sed -i -e 's/extended_text: 14.0.0/extended_text: 13.0.0/g' pubspec.yaml
+          # sed -i -e 's/extended_text: 14.0.0/extended_text: 13.0.0/g' pubspec.yaml
+          # echo flutter pub get
+          # flutter pub get
+          # popd
           echo cd $(dirname $(dirname $(which flutter)))
           cd $(dirname $(dirname $(which flutter)))
           [[ "3.24.5" == ${{env.ANDROID_FLUTTER_VERSION}} ]] && git apply ${{ github.workspace }}/.github/patches/flutter_3.24.4_dropdown_menu_enableFilter.diff
-          echo cd ..
-          cd ..
+          # echo cd ..
+          # cd ..
 
       - uses: deep-soft/setup-ndk@v1
         id: setup-ndk
@@ -382,10 +381,10 @@ jobs:
       - uses: deep-soft/rust-cache@v2
         with:
           prefix-key: rustdesk-lib-cache-android # TODO: drop '-android' part after caches are invalidated
-          key: ${{ matrix.job.target }}-${{ matrix.job.release_type }}
+          key: ${{ matrix.job.target }}
 
       - name: fix android for flutter 3.13
-        if: $${{ env.ANDROID_FLUTTER_VERSION == '3.13.9' }}
+        if: ${{ env.ANDROID_FLUTTER_VERSION == '3.13.9' }}
         run: |
           cd flutter
           sed -i 's/uni_links_desktop/#uni_links_desktop/g' pubspec.yaml
