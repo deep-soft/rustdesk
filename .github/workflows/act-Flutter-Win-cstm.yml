@@ -75,7 +75,7 @@ on:
         required: true
         # FLUTTER_VERSION
       replace_flutter_engine:
-        description: Replace flutter engine
+        description: Replace flutter engine (win7)
         type: boolean
         default: true
         required: true
