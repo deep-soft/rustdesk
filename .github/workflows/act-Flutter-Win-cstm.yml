@@ -1,7 +1,8 @@
-# 2024-11-22 07:10
+# 2024-12-14 21:40
+# act-Flutter-Win-cstm.yml
 # flutter 3.24.5, generate_bridge on linux
 # progversion, no IDD, 
-# changed: Replace engine with rustdesk custom flutter engine
+# changed: Replace engine with rustdesk custom flutter engine - default true
 # changed: Install Rust toolchain. uses: deep-soft/rust-toolchain@master
 # windows-2022, sed-stuff, sha256 for self-extract
 # runner.rc, change ProductVersion, Copyright 2024, vcpkg
@@ -76,7 +77,7 @@ on:
       replace_flutter_engine:
         description: Replace flutter engine
         type: boolean
-        default: false
+        default: true
         required: true
 # skipped to add other input, max inputs: 10
 #      search_delete_runner_rc:
