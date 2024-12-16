@@ -1,14 +1,15 @@
-# 2024-12-14 21:40
 # act-Flutter-Win-cstm.yml
+# 2024-12-16 22:30
 # flutter 3.24.5, generate_bridge on linux
 # progversion, no IDD, 
-# changed: Replace engine with rustdesk custom flutter engine - default true
+# changed: Replace engine with rustdesk custom flutter engine - default true (for win7)
 # changed: Install Rust toolchain. uses: deep-soft/rust-toolchain@master
 # windows-2022, sed-stuff, sha256 for self-extract
 # runner.rc, change ProductVersion, Copyright 2024, vcpkg
 name: act - Flutter - Win - cstm
 
 env:
+  GUI:                         "Windows"
   TAG_NAME:                    "Win-cstm"
   TAG_VERSION:                 "rdsk-v1.2.1"
   TAG_BUILD:                   "-b"
@@ -32,7 +33,9 @@ env:
   LLVM_VERSION:                "15.0.6"
 #  FLUTTER_VERSION:             "3.16.9"
 #  FLUTTER_VERSION:             "3.19.6"
-  FLUTTER_VERSION:              "3.24.5" # bridge is"3.22.3"
+  BRIDGE_FLUTTER_VERSION:      "3.22.3" # flutter for bridge is "3.22.3"
+  ANDROID_FLUTTER_VERSION:     "3.24.5"
+  FLUTTER_VERSION:             "3.24.5" # bridge is "3.22.3"
   FLUTTER_RUST_BRIDGE_VERSION: "1.80.1"
   FLUTTER_ELINUX_VERSION:      "3.16.9"
   FLUTTER_ELINUX_COMMIT_ID:    "c02bd16e1630f5bd690b85c5c2456ac1920e25af"
@@ -41,13 +44,14 @@ env:
   # VCPKG_COMMIT_ID:             "8eb57355a4ffb410a2e94c07b4dca2dffbee8e50"
   # vcpkg version: 2024.06.15
   # VCPKG_COMMIT_ID:             "f7423ee180c4b7f40d43402c2feb3859161ef625"
-  VCPKG_COMMIT_ID:             "1de2026f28ead93ff1773e6e680387643e914ea1"
+  # vcpkg version: 2024.07.12
+  # VCPKG_COMMIT_ID:             "1de2026f28ead93ff1773e6e680387643e914ea1"
+  # vcpkg version: 2024.11.16
+  VCPKG_COMMIT_ID:             "b2cb0da531c2f1f740045bfe7c4dac59f0b2b69c"
   VCPKG_DIRECTORY:             "C:\\vcpkg"
   VCPKG_BINARY_SOURCES:        "clear;x-gha,readwrite"
   CARGO_NDK_VERSION:           "3.1.2"
-  # NDK_VERSION:                 "r26b"
-  NDK_VERSION:                 "r26d"
-  ANDROID_FLUTTER_VERSION:     "3.24.5"
+  NDK_VERSION:                 "r27c" # was "r27"
   #signing keys env variable checks
   ANDROID_SIGNING_KEY:         '${{ secrets.ANDROID_SIGNING_KEY }}'
   #  signingKeyBase64:         '${{ secrets.ANDROID_SIGNING_KEY }}'
@@ -56,7 +60,6 @@ env:
   #  keyPassword:              '${{ secrets.ANDROID_KEY_PASSWORD }}'
   MACOS_P12_BASE64:            '${{ secrets.MACOS_P12_BASE64 }}'
   cargo_clippy_log:            "cargo-clippy.log"
-  GUI:                         "Windows"
 
 on:
 #  schedule:
