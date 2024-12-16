@@ -126,6 +126,7 @@ on:
 jobs:
   generate-bridge:
     uses: ./.github/workflows/act-build-bridge.yml
+    secrets: inherit
 
   build-for-windows:
     name: ${{ matrix.job.target }} (${{ matrix.job.os }})
