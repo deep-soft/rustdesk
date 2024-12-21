@@ -1,6 +1,6 @@
 # act-Flutter-Win-cstm.yml
-# 2024-12-16 22:30
-# flutter 3.24.5, generate_bridge on linux
+# 2024-12-21 11:30
+# flutter 3.24.5, flutter 3.22.3 for bridge
 # progversion, no IDD, 
 # changed: Replace engine with rustdesk custom flutter engine - default true (for win7)
 # changed: Install Rust toolchain. uses: deep-soft/rust-toolchain@master
@@ -124,13 +124,13 @@ on:
         required: true
 
 jobs:
-  generate-bridge:
-    uses: ./.github/workflows/act-build-bridge.yml
-    secrets: inherit
+#wbr  generate-bridge:
+#wbr    uses: ./.github/workflows/act-build-bridge.yml
+#wbr    secrets: inherit
 
   build-for-windows:
     name: ${{ matrix.job.target }} (${{ matrix.job.os }})
-    needs: [generate-bridge]
+#wbr    needs: [generate-bridge]
     runs-on: ${{ matrix.job.os }}
     strategy:
       fail-fast: false
@@ -523,13 +523,53 @@ jobs:
         with:
           version: ${{ env.LLVM_VERSION }}
 
-# restore bridge
-      - name: Restore bridge files
-        uses: actions/download-artifact@master
+# restore bridge - begin
+#wbr      - name: Restore bridge files
+#wbr        uses: actions/download-artifact@master
+#wbr        with:
+#wbr          name: bridge-artifact
+#wbr          path: ./
+# restore bridge - end
+
+#wbr - begin
+      - name: Install flutter bridge version
+        uses: deep-soft/flutter-action@v2
+        with:
+          channel: "stable"
+          flutter-version: ${{ env.BRIDGE_FLUTTER_VERSION }}
+          cache: true
+
+      - name: flutter no telemetry
+        run: |
+          flutter --disable-analytics
+
+      - name: Install flutter rust bridge deps
+        shell: bash
+        run: |
+          cargo install flutter_rust_bridge_codegen --version ${{ env.FLUTTER_RUST_BRIDGE_VERSION }} --features "uuid" --locked
+          pushd flutter && sed -i -e 's/extended_text: 14.0.0/extended_text: 13.0.0/g' pubspec.yaml && flutter pub get && popd
+
+      - name: Run flutter rust bridge
+#          ~/.cargo/bin/flutter_rust_bridge_codegen --rust-input ./src/flutter_ffi.rs --dart-output ./flutter/lib/generated_bridge.dart --c-output ./flutter/macos/Runner/bridge_generated.h
+#          cp ./flutter/macos/Runner/bridge_generated.h ./flutter/ios/Runner/bridge_generated.h
+        shell: bash
+        run: |
+          ~/.cargo/bin/flutter_rust_bridge_codegen --rust-input ./src/flutter_ffi.rs --dart-output ./flutter/lib/generated_bridge.dart
+
+      - name: Upload Artifact
+        uses: deep-soft/upload-artifact@v4
         with:
           name: bridge-artifact
-          path: ./
+          path: |
+            ./src/bridge_generated.rs
+            ./flutter/lib/generated_bridge.dart
+            ./flutter/lib/generated_bridge.freezed.dart
+#            ./src/bridge_generated.io.rs
+#            ./flutter/macos/Runner/bridge_generated.h
+#            ./flutter/ios/Runner/bridge_generated.h
+#wbr - end
 
+#
       - name: Install flutter
         uses: deep-soft/flutter-action@v2
         with:
