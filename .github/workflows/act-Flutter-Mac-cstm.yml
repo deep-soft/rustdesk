@@ -84,6 +84,7 @@ jobs:
       matrix:
         job:
           - { target: x86_64-apple-darwin  , os: macos-latest, extra-build-args: "", arch: x86_64 }
+          - { target: x86_64-apple-darwin  , os: macos-13    , extra-build-args: "", arch: x86_64 }
 #         - { target: aarch64-apple-darwin , os: macos-latest, extra-build-args: "" }
     steps:
       - name: Export GitHub Actions cache environment variables
@@ -424,7 +425,7 @@ jobs:
           CREATE_DMG="$(command -v create-dmg)"
           CREATE_DMG="$(readlink -f "$CREATE_DMG")"
           sed -i -e 's/MAXIMUM_UNMOUNTING_ATTEMPTS=3/MAXIMUM_UNMOUNTING_ATTEMPTS=7/' "$CREATE_DMG"
-          create-dmg --icon "RustDesk.app" 200 190 --hide-extension "RustDesk.app" --window-size 800 400 --app-drop-link 600 185 rustdesk-${{ env.VERSION }}-${{ matrix.job.arch }}.dmg ./flutter/build/macos/Build/Products/Release/RustDesk.app
+          create-dmg --icon "RustDesk.app" 200 190 --hide-extension "RustDesk.app" --window-size 800 400 --app-drop-link 600 185 rustdesk-${{ env.VERSION }}.dmg ./flutter/build/macos/Build/Products/Release/RustDesk.app
 
       - name: Codesign app and Create signed DMG
         continue-on-error: true
@@ -450,7 +451,7 @@ jobs:
         continue-on-error: true
         run: |
           for name in rustdesk*??.dmg; do
-              mv "$name" "${name%%.dmg}-${{ matrix.job.arch }}.dmg"
+              mv "$name" "${name%%.dmg}-${{ matrix.job.arch }}-${{ matrix.job.os }}.dmg"
           done
           for name in rustdesk*??.dmg; do
               cp _tag_name_.txt "${name}.txt"
@@ -463,8 +464,8 @@ jobs:
           draft: true
           tag_name: ${{ env.TAG_NAME }}
           files: |
-            rustdesk*-${{ matrix.job.arch }}.dmg
-            rustdesk*-${{ matrix.job.arch }}.dmg.txt
+            rustdesk*-${{ matrix.job.arch }}-${{ matrix.job.os }}.dmg
+            rustdesk*-${{ matrix.job.arch }}-${{ matrix.job.os }}.dmg.txt
             ${{ env.ASSET_SRC }}
             ${{ env.ASSET_SRC1 }}
             _tag_name_.txt
@@ -476,8 +477,8 @@ jobs:
           draft: true
           tag_name: ${{ env.TAG_VERSION }}${{ env.TAG_BUILD }}
           files: |
-            rustdesk*-${{ matrix.job.arch }}.dmg
-            rustdesk*-${{ matrix.job.arch }}.dmg.txt
+            rustdesk*-${{ matrix.job.arch }}-${{ matrix.job.os }}.dmg
+            rustdesk*-${{ matrix.job.arch }}-${{ matrix.job.os }}.dmg.txt
             _tag_name_.txt
 
 # zip release begin
