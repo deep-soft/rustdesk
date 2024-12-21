@@ -556,6 +556,11 @@ jobs:
         run: |
           ~/.cargo/bin/flutter_rust_bridge_codegen --rust-input ./src/flutter_ffi.rs --dart-output ./flutter/lib/generated_bridge.dart
 
+      - name: restore extended_text in pubspec.yaml
+        shell: bash
+        run: |
+          pushd flutter && sed -i -e 's/extended_text: 13.0.0/extended_text: 14.0.0/g' pubspec.yaml && flutter pub get && popd
+
       - name: Upload Artifact
         uses: deep-soft/upload-artifact@v4
         with:
