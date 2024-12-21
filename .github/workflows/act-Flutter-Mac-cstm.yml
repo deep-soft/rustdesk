@@ -64,6 +64,13 @@ env:
 on:
   workflow_call:
   workflow_dispatch:
+    inputs:
+      archive_ALL:
+        description: Archive ALL
+        type: boolean
+        default: false
+        required: true
+
 #  schedule:
 #    # schedule build every night
 #    - cron: "0 0 * * *"
@@ -400,6 +407,7 @@ jobs:
           rustc -V
 
       - name: Build rustdesk
+        continue-on-error: true
         run: |
           if [ "${{ matrix.job.target }}" = "aarch64-apple-darwin" ]; then
             MIN_MACOS_VERSION="12.3"
@@ -410,7 +418,16 @@ jobs:
           fi
           ./build.py --flutter --hwcodec ${{ matrix.job.extra-build-args }}
 
-      - name: Codesign app and create signed dmg
+      - name: Create unsigned DMG
+        continue-on-error: true
+        run: |
+          CREATE_DMG="$(command -v create-dmg)"
+          CREATE_DMG="$(readlink -f "$CREATE_DMG")"
+          sed -i -e 's/MAXIMUM_UNMOUNTING_ATTEMPTS=3/MAXIMUM_UNMOUNTING_ATTEMPTS=7/' "$CREATE_DMG"
+          create-dmg --icon "RustDesk.app" 200 190 --hide-extension "RustDesk.app" --window-size 800 400 --app-drop-link 600 185 rustdesk-${{ env.VERSION }}-${{ matrix.job.arch }}.dmg ./flutter/build/macos/Build/Products/Release/RustDesk.app
+
+      - name: Codesign app and Create signed DMG
+        continue-on-error: true
         if: env.MACOS_P12_BASE64 != null
         run: |
           # Patch create-dmg to give more attempts to unmount image
@@ -421,7 +438,8 @@ jobs:
           security default-keychain -s rustdesk.keychain
           security unlock-keychain -p ${{ secrets.MACOS_P12_PASSWORD }} rustdesk.keychain
           # start sign the rustdesk.app and dmg
-          rm rustdesk-${{ env.VERSION }}.dmg || true
+          #  rm rustdesk-${{ env.VERSION }}-${{ matrix.job.arch }}.dmg || true
+          rm -rf *.dmg || true
           codesign --force --options runtime -s ${{ secrets.MACOS_CODESIGN_IDENTITY }} --deep --strict ./flutter/build/macos/Build/Products/Release/RustDesk.app -vvv
           create-dmg --icon "RustDesk.app" 200 190 --hide-extension "RustDesk.app" --window-size 800 400 --app-drop-link 600 185 rustdesk-${{ env.VERSION }}.dmg ./flutter/build/macos/Build/Products/Release/RustDesk.app
           codesign --force --options runtime -s ${{ secrets.MACOS_CODESIGN_IDENTITY }} --deep --strict rustdesk-${{ env.VERSION }}.dmg -vvv
@@ -429,6 +447,7 @@ jobs:
           rcodesign notary-submit --api-key-path ${{ github.workspace }}/rustdesk.json  --staple rustdesk-${{ env.VERSION }}.dmg
 
       - name: Rename rustdesk
+        continue-on-error: true
         run: |
           for name in rustdesk*??.dmg; do
               mv "$name" "${name%%.dmg}-${{ matrix.job.arch }}.dmg"
@@ -438,6 +457,7 @@ jobs:
           done
 
       - name: Publish DMG package
+        continue-on-error: true
         uses: deep-soft/action-gh-release@v2.1
         with:
           draft: true
@@ -450,6 +470,7 @@ jobs:
             _tag_name_.txt
 
       - name: Publish version build - DMG package
+        continue-on-error: true
         uses: deep-soft/action-gh-release@v2.1
         with:
           draft: true
@@ -458,3 +479,31 @@ jobs:
             rustdesk*-${{ matrix.job.arch }}.dmg
             rustdesk*-${{ matrix.job.arch }}.dmg.txt
             _tag_name_.txt
+
+# zip release begin
+      - name: Create Archive ALL
+        id: zip_archive_all
+        if:  ${{ inputs.archive_ALL}}
+        uses: deep-soft/zip-release@v3
+        with:
+          type: '7z'
+          filename: '${{ env.TAG_VERSION }}${{ env.TAG_BUILD }}-${{ matrix.job.os }}-ALL'
+          directory: '.'
+          path: '.'
+          exclusions: '*.git* /*node_modules/* .editorconfig'
+          volume_size: '2g'
+          env_variable: 'ZIP_ARCHIVE_ALL'
+          # archive name is ${{ env.ZIP_RELEASE_ARCHIVE }}
+
+      - name: Publish Archive ALL
+        if:  ${{ inputs.archive_ALL}}
+        continue-on-error: true
+        uses: deep-soft/action-gh-release@v2.1
+        with:
+          draft: true
+          tag_name: ${{ env.TAG_VERSION }}${{ env.TAG_BUILD }}-ALL
+          filelist: ${{ steps.zip_archive_all.outputs.volumes_list_name }}
+          files: |
+              ${{ env.ZIP_ARCHIVE_ALL }}
+              ${{ env.WORK_DIR_OS }}/_version_.txt
+# zip release end
