@@ -1,12 +1,15 @@
-# 2024-02-11 09:00
-# flutter 3.16.9
-#
-#
-#
-#
+# act-Flutter-Mac-cstm.yml
+# 2024-12-21 14:30
+# flutter 3.24.5, flutter 3.22.3 for bridge
+# progversion, no IDD, 
+# changed: Replace engine with rustdesk custom flutter engine - default true (for win7)
+# changed: Install Rust toolchain. uses: deep-soft/rust-toolchain@master
+# windows-2022, sed-stuff, sha256 for self-extract
+# runner.rc, change ProductVersion, Copyright 2024, vcpkg
 name: act - Flutter - Mac - cstm
 
 env:
+  GUI:                         "macOS"
   TAG_NAME:                    "Mac-cstm"
   TAG_VERSION:                 "rdsk-v1.2.1"
   TAG_BUILD:                   "-b"
@@ -16,27 +19,39 @@ env:
   VERSION:                     "1.0.0"
   DEBUG_LS:                    "yes"
   # To make a custom build with your own servers set the below secret values
-  RS_PUB_KEY:                  '${{ secrets.RS_PUB_KEY }}'
+  RS_PUB_KEY:                  '${{ secrets.RS_PUB_KEY        }}'
   RENDEZVOUS_SERVER:           '${{ secrets.RENDEZVOUS_SERVER }}'
-  API_SERVER:                  '${{ secrets.API_SERVER }}'
-  RDSK_PCH_SH_PRE:             '${{ secrets.RDSK_PCH_SH_PRE }}'
-  RDSK_PCH_SH:                 '${{ secrets.RDSK_PCH_SH }}'
-  RDSK_PCH_HL:                 '${{ secrets.RDSK_PCH_HL }}'
-  RDSK_PCH_SH2:                '${{ secrets.RDSK_PCH_SH2 }}'
-  RDSK_PCH_SH4:                '${{ secrets.RDSK_PCH_SH4 }}'
-  RDSK_PCH_SH_CLN:             '${{ secrets.RDSK_PCH_SH_CLN }}'
-  RUST_VERSION:                "rust-1.70.0"
+  API_SERVER:                  '${{ secrets.API_SERVER        }}'
+  RDSK_PCH_SH_PRE:             '${{ secrets.RDSK_PCH_SH_PRE   }}'
+  RDSK_PCH_SH:                 '${{ secrets.RDSK_PCH_SH       }}'
+  RDSK_PCH_HL:                 '${{ secrets.RDSK_PCH_HL       }}'
+  RDSK_PCH_SH2:                '${{ secrets.RDSK_PCH_SH2      }}'
+  RDSK_PCH_SH4:                '${{ secrets.RDSK_PCH_SH4      }}'
+  RDSK_PCH_SH_CLN:             '${{ secrets.RDSK_PCH_SH_CLN   }}'
+  RUST_VERSION:                "1.75" # was "rust-1.76.0"
+  WIN_RUST_VERSION:            "1.75"
   LLVM_VERSION:                "15.0.6"
-  FLUTTER_VERSION:             "3.16.9"
+#  FLUTTER_VERSION:             "3.16.9"
+#  FLUTTER_VERSION:             "3.19.6"
+  BRIDGE_FLUTTER_VERSION:      "3.22.3" # flutter for bridge is "3.22.3"
+  ANDROID_FLUTTER_VERSION:     "3.24.5"
+  FLUTTER_VERSION:             "3.24.5" # bridge is "3.22.3"
   FLUTTER_RUST_BRIDGE_VERSION: "1.80.1"
   FLUTTER_ELINUX_VERSION:      "3.16.9"
   FLUTTER_ELINUX_COMMIT_ID:    "c02bd16e1630f5bd690b85c5c2456ac1920e25af"
   # vcpkg version: 2023.10.19
   # for multiarch gcc compatibility
-  VCPKG_COMMIT_ID:             "8eb57355a4ffb410a2e94c07b4dca2dffbee8e50"
+  # VCPKG_COMMIT_ID:             "8eb57355a4ffb410a2e94c07b4dca2dffbee8e50"
+  # vcpkg version: 2024.06.15
+  # VCPKG_COMMIT_ID:             "f7423ee180c4b7f40d43402c2feb3859161ef625"
+  # vcpkg version: 2024.07.12
+  # VCPKG_COMMIT_ID:             "1de2026f28ead93ff1773e6e680387643e914ea1"
+  # vcpkg version: 2024.11.16
+  VCPKG_COMMIT_ID:             "b2cb0da531c2f1f740045bfe7c4dac59f0b2b69c"
+  VCPKG_DIRECTORY:             "C:\\vcpkg"
   VCPKG_BINARY_SOURCES:        "clear;x-gha,readwrite"
   CARGO_NDK_VERSION:           "3.1.2"
-  NDK_VERSION:                 "r26b"
+  NDK_VERSION:                 "r27c" # was "r27"
   #signing keys env variable checks
   ANDROID_SIGNING_KEY:         '${{ secrets.ANDROID_SIGNING_KEY }}'
   #  signingKeyBase64:         '${{ secrets.ANDROID_SIGNING_KEY }}'
@@ -45,7 +60,6 @@ env:
   #  keyPassword:              '${{ secrets.ANDROID_KEY_PASSWORD }}'
   MACOS_P12_BASE64:            '${{ secrets.MACOS_P12_BASE64 }}'
   cargo_clippy_log:            "cargo-clippy.log"
-  GUI:                         "macOS"
 
 on:
   workflow_call:
@@ -281,8 +295,59 @@ jobs:
 
       - name: Install build runtime
         run: |
-          brew install llvm create-dmg nasm yasm cmake gcc wget ninja pkg-config
+          brew install llvm create-dmg nasm yasm cmake gcc wget ninja
+          # pkg-config is handled in a separate step, because it may be already installed by `macos-latest`(14.7.1) runner
+          if command -v pkg-config &>/dev/null; then
+              echo "pkg-config is already installed"
+          else
+              brew install pkg-config
+          fi
+###
+#wbr - begin
+      - name: Install flutter bridge version
+        uses: deep-soft/flutter-action@v2
+        with:
+          channel: "stable"
+          flutter-version: ${{ env.BRIDGE_FLUTTER_VERSION }}
+          cache: true
 
+      - name: flutter no telemetry
+        run: |
+          flutter --disable-analytics
+
+      - name: Install flutter rust bridge deps
+        shell: bash
+        run: |
+          cargo install flutter_rust_bridge_codegen --version ${{ env.FLUTTER_RUST_BRIDGE_VERSION }} --features "uuid" --locked
+          pushd flutter && cp pubspec.yaml pubspec.yaml-org && popd
+          pushd flutter && sed -i -e 's/extended_text: 14.0.0/extended_text: 13.0.0/g' pubspec.yaml && flutter pub get && popd
+
+      - name: Run flutter rust bridge
+        shell: bash
+        run: |
+          ~/.cargo/bin/flutter_rust_bridge_codegen --rust-input ./src/flutter_ffi.rs --dart-output ./flutter/lib/generated_bridge.dart --c-output ./flutter/macos/Runner/bridge_generated.h
+          cp ./flutter/macos/Runner/bridge_generated.h ./flutter/ios/Runner/bridge_generated.h
+
+      - name: restore extended_text in pubspec.yaml
+        shell: bash
+        run: |
+          pushd flutter && cp pubspec.yaml-org pubspec.yaml && popd
+          # pushd flutter && sed -i -e 's/extended_text: 13.0.0/extended_text: 14.0.0/g' pubspec.yaml && flutter pub get && popd
+
+      - name: Upload Artifact
+        uses: deep-soft/upload-artifact@v4
+        with:
+          name: bridge-artifact
+          path: |
+            ./src/bridge_generated.rs
+            ./flutter/lib/generated_bridge.dart
+            ./flutter/lib/generated_bridge.freezed.dart
+            ./src/bridge_generated.io.rs
+            ./flutter/macos/Runner/bridge_generated.h
+            ./flutter/ios/Runner/bridge_generated.h
+#wbr - end
+
+###
       - name: Install flutter
         uses: deep-soft/flutter-action@v2
         with:
@@ -301,23 +366,28 @@ jobs:
         with:
           prefix-key: ${{ matrix.job.os }}
 
-      - name: Install flutter rust bridge deps
-        shell: bash
-        run: |
-          cargo install flutter_rust_bridge_codegen --version ${{ env.FLUTTER_RUST_BRIDGE_VERSION }} --features "uuid"
-          pushd flutter && flutter pub get && popd
-          ~/.cargo/bin/flutter_rust_bridge_codegen --rust-input ./src/flutter_ffi.rs --dart-output ./flutter/lib/generated_bridge.dart --c-output ./flutter/macos/Runner/bridge_generated.h
-
       - name: Setup vcpkg with Github Actions binary cache
         uses: deep-soft/run-vcpkg@v11
         with:
-#          setupOnly: true
           vcpkgGitCommitId: ${{ env.VCPKG_COMMIT_ID }}
+          doNotCache: false
+#          setupOnly: true
 
       - name: Install vcpkg dependencies
         run: |
-          # $VCPKG_ROOT/vcpkg install libvpx libyuv opus aom
-          $VCPKG_ROOT/vcpkg install --x-install-root="$VCPKG_ROOT/installed"
+          if ! $VCPKG_ROOT/vcpkg \
+            install \
+            --x-install-root="$VCPKG_ROOT/installed"; then
+            find "${VCPKG_ROOT}/" -name "*.log" | while read -r _1; do
+              echo "$_1:"
+              echo "======"
+              cat "$_1"
+              echo "======"
+              echo ""
+            done
+            exit 1
+          fi
+          head -n 100 "${VCPKG_ROOT}/buildtrees/ffmpeg/build-${{ matrix.job.vcpkg-triplet }}-rel-out.log" || true
 
       - name: Show version information (Rust, cargo, Clang)
         shell: bash
@@ -331,8 +401,14 @@ jobs:
 
       - name: Build rustdesk
         run: |
-          # --hwcodec not supported on macos yet
-          ./build.py --flutter ${{ matrix.job.extra-build-args }}
+          if [ "${{ matrix.job.target }}" = "aarch64-apple-darwin" ]; then
+            MIN_MACOS_VERSION="12.3"
+            sed -i -e "s/MACOSX_DEPLOYMENT_TARGET\=[0-9]*.[0-9]*/MACOSX_DEPLOYMENT_TARGET=${MIN_MACOS_VERSION}/" build.py
+            sed -i -e "s/platform :osx, '.*'/platform :osx, '${MIN_MACOS_VERSION}'/" flutter/macos/Podfile
+            sed -i -e "s/osx_minimum_system_version = \"[0-9]*.[0-9]*\"/osx_minimum_system_version = \"${MIN_MACOS_VERSION}\"/" Cargo.toml
+            sed -i -e "s/MACOSX_DEPLOYMENT_TARGET = [0-9]*.[0-9]*;/MACOSX_DEPLOYMENT_TARGET = ${MIN_MACOS_VERSION};/" flutter/macos/Runner.xcodeproj/project.pbxproj
+          fi
+          ./build.py --flutter --hwcodec ${{ matrix.job.extra-build-args }}
 
       - name: Codesign app and create signed dmg
         if: env.MACOS_P12_BASE64 != null
@@ -357,6 +433,9 @@ jobs:
           for name in rustdesk*??.dmg; do
               mv "$name" "${name%%.dmg}-${{ matrix.job.arch }}.dmg"
           done
+          for name in rustdesk*??.dmg; do
+              cp _tag_name_.txt "${name}.txt"
+          done
 
       - name: Publish DMG package
         uses: deep-soft/action-gh-release@v2.1
@@ -365,8 +444,10 @@ jobs:
           tag_name: ${{ env.TAG_NAME }}
           files: |
             rustdesk*-${{ matrix.job.arch }}.dmg
+            rustdesk*-${{ matrix.job.arch }}.dmg.txt
             ${{ env.ASSET_SRC }}
             ${{ env.ASSET_SRC1 }}
+            _tag_name_.txt
 
       - name: Publish version build - DMG package
         uses: deep-soft/action-gh-release@v2.1
@@ -375,3 +456,5 @@ jobs:
           tag_name: ${{ env.TAG_VERSION }}${{ env.TAG_BUILD }}
           files: |
             rustdesk*-${{ matrix.job.arch }}.dmg
+            rustdesk*-${{ matrix.job.arch }}.dmg.txt
+            _tag_name_.txt
