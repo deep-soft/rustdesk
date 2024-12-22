@@ -237,29 +237,31 @@ jobs:
       - name: Get ref, set build version
         shell: bash
         run: |
-          _ref_all_=$(git log -1 --format='%H')
-          # _ref_=$(echo ${_ref_all_::7})
-          _date_=$(date +%Y%m%d-%H%M)
-          _date_YMD=$(date +%Y%m%d)
-          _date_YYMD=$(date +%y%m%d)
-          _date_y1MD=${_date_YYMD:1}
-          _ref_org_=${{ env.TAG_REF }}
-          _ref_len_="${#_ref_org_}"
-          _ref_=$(echo ${_ref_all_::$_ref_len_})
-          # echo "TAG_REF=$_ref_" >> $GITHUB_ENV
-          TAG_REF=$_ref_
-          _build_=$TAG_BUILD-$_date_-$_ref_
+          _ref_all_=$(git log -1 --format='%H');
+          # _ref_=$(echo ${_ref_all_::7});
+          _date_=$(date +%Y%m%d-%H%M);
+          _date_YMD=$(date +%Y%m%d);
+          _date_YYMD=$(date +%y%m%d);
+          _date_y1MD=${_date_YYMD:1};
+          _ref_org_=${{ env.TAG_REF }};
+          _ref_len_="${#_ref_org_}";
+          _ref_=$(echo ${_ref_all_::$_ref_len_});
+          # echo "TAG_REF=$_ref_" >> $GITHUB_ENV;
+          TAG_REF=$_ref_;
+          _build_=$TAG_BUILD-$_date_-$_ref_;
           
-          echo "TAG_BUILD=$_build_" >> $GITHUB_ENV
-          echo "WORK_DIR_BASH=$(pwd)" >> $GITHUB_ENV
-          echo "TAG_DATE=$_date_" >> $GITHUB_ENV
-          echo "DATE_YMD=$_date_YMD" >> $GITHUB_ENV
-          echo "DATE_YYMD=$_date_YYMD" >> $GITHUB_ENV
+          echo "TAG_BUILD=$_build_" >> $GITHUB_ENV;
+          echo "WORK_DIR_BASH=$(pwd)" >> $GITHUB_ENV;
+          echo "TAG_DATE=$_date_" >> $GITHUB_ENV;
+          echo "DATE_YMD=$_date_YMD" >> $GITHUB_ENV;
+          echo "DATE_YYMD=$_date_YYMD" >> $GITHUB_ENV;
 
-          VERSION=$(grep -e "^version = " Cargo.toml  | awk -F '"' '{print $2}');
-          ##VERSION_COMMA=$(echo $VERSION.$DATE_YYMD | tr "." ",");
-          VERSION_COMMA=$(echo $VERSION.$_date_y1MD | tr "." ",");
-          echo "VERSION_COMMA=$VERSION_COMMA" >> $GITHUB_ENV
+          echo "_date_y1MD=$_date_y1MD";
+
+          VERSION=${{ env.VERSION }};
+          echo "VERSION=$VERSION";
+          VERSION_COMMA=$(echo "$VERSION.$_date_y1MD" | tr "." ",");
+          echo "VERSION_COMMA=$VERSION_COMMA" >> $GITHUB_ENV;
           
       - name: Print env variables
         shell: bash
@@ -268,10 +270,10 @@ jobs:
           DATE_YYMD=${{ env.DATE_YYMD }};
           VERSION=${{ env.VERSION }};
           VERSION_COMMA=${{ env.VERSION_COMMA }};
-          echo $DATE_YMD;
-          echo $DATE_YYMD;
-          echo $VERSION;
-          echo $VERSION_COMMA;
+          echo "$DATE_YMD";
+          echo "$DATE_YYMD";
+          echo "$VERSION";
+          echo "$VERSION_COMMA";
 
       - name: set WORK_DIR_OS
         shell: cmd
