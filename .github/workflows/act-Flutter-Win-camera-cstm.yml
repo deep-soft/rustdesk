@@ -171,8 +171,8 @@ jobs:
         shell: cmd
         run: |
           dir src\server\
-          7z.exe x -o bins/ bins/add-Camera-Display-patch.zip
-          git apply bins/add-Camera-Display.diff
+          7z.exe x bins/add-Camera-Display-patch.zip
+          git apply add-Camera-Display.diff
           dir src\server\
 
       - name: patch vcpkg/libyuv (from bins/zip)
