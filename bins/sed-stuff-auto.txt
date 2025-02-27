@@ -1,0 +1,14 @@
+#BOF#
+# 2024.08.30 23:10
+
+#8
+S:print(f'{feat} download end. extract bein')
+R:print(f'{feat} download end. extract begin')\n                zipURL=feat_info['zip_url']\n                print(f'url:{zipURL}')
+F:build.py
+
+#9
+S:menuItems.add(_rdpAction(context, peer.id));
+R:menuItems.add(_rdpAction(context, peer.id));\n      menuItems.add(_wolAction(peer.id));
+F:flutter/lib/common/widgets/peer_card.dart
+
+#EOF#
