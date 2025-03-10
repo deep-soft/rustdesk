@@ -84,6 +84,11 @@ on:
         type: boolean
         default: true
         required: true
+      patch_4b:
+        description: patch 4b
+        type: boolean
+        default: false
+        required: true
 # skipped to add other input, max inputs: 10
 #      search_delete_runner_rc:
 #        description: search and delete runner.rc runner.res
@@ -110,11 +115,12 @@ on:
         type: boolean
         default: false
         required: true
-      Replace_IDD_driver_WindowInjection:
-        description: Replace IDD_driver and WindowInjection
-        type: boolean
-        default: false
-        required: true
+# skipped to add other input, max inputs: 10
+#      Replace_IDD_driver_WindowInjection:
+#        description: Replace IDD_driver and WindowInjection
+#        type: boolean
+#        default: false
+#        required: true
       SED_STUFF:
         description: SED_STUFF
         type: boolean
@@ -376,6 +382,20 @@ jobs:
           echo "$RDSK_PCH_SH4" | base64 --decode > ./RDSK_PCH_SH2.sh
           bash ./RDSK_PCH_SH2.sh
           echo Done patch 4
+          if [ "${{ env.DEBUG_LS }}" = "yes" ]; then
+            ls -l
+            pwd
+          fi
+
+      - name: Apply patch 4b
+        # continue-on-error: true
+        if: ${{ inputs.patch_4b }}
+        shell: bash
+        run: |
+          echo patch 4b
+          echo "$RDSK_PCH_SH4b" | base64 --decode > ./RDSK_PCH_SH2.sh
+          bash ./RDSK_PCH_SH2.sh
+          echo Done patch 4b
           if [ "${{ env.DEBUG_LS }}" = "yes" ]; then
             ls -l
             pwd
