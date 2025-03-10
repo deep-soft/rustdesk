@@ -393,7 +393,7 @@ jobs:
         shell: bash
         run: |
           echo patch 4b
-          echo "$RDSK_PCH_SH4b" | base64 --decode > ./RDSK_PCH_SH2.sh
+          echo "$RDSK_PCH_SH4B" | base64 --decode > ./RDSK_PCH_SH2.sh
           bash ./RDSK_PCH_SH2.sh
           echo Done patch 4b
           if [ "${{ env.DEBUG_LS }}" = "yes" ]; then
