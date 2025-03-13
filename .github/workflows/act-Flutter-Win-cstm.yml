@@ -87,7 +87,7 @@ on:
       patch_4b:
         description: patch 4b
         type: boolean
-        default: false
+        default: true
         required: true
 # skipped to add other input, max inputs: 10
 #      search_delete_runner_rc:
