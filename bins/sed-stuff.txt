@@ -47,9 +47,9 @@ F:build.py
 #F:build.py
 
 #10
-S: model.verificationMethod == kUsePermanentPassword;
-R: model.verificationMethod == kUseBothPasswords;
-F:flutter/lib/desktop/pages/desktop_setting_page.dart
+#1S: model.verificationMethod == kUsePermanentPassword;
+#1R: model.verificationMethod == kUseBothPasswords;
+#1F:flutter/lib/desktop/pages/desktop_setting_page.dart
 
 #11
 S:// if (usePassword)
