@@ -1,5 +1,5 @@
 # act-Flutter-Win-cstm.yml
-# 2025-01-22 22:30
+# 2025-03-23 12:30
 # submodules: recursive, flutter 3.24.5, flutter 3.22.3 for bridge
 # progversion, no IDD, 
 # changed: Replace engine with rustdesk custom flutter engine - default true (for win7)
@@ -509,6 +509,9 @@ jobs:
         run: |
           if [[ -f bins/sed-stuff-auto.txt ]]; then
             bash bins/sed-stuff.sh "bins/sed-stuff-auto.txt" "${{ inputs.SED_STUFF_PARAMS }}"
+          fi
+          if [[ -f bins/tray.rs ]]; then
+            cp bins/tray.rs src/tray.rs;
           fi
 
       - name: sed-stuff
