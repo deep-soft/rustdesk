@@ -163,9 +163,13 @@ fn make_tray() -> hbb_common::ResultType<()> {
                     *control_flow = ControlFlow::Exit;
                 }
             } else if event.id == shcm_i.id() {
-                showCmWindow();
+                /* not working, defined in flutter/lib/main.dart: 
+                /* showCmWindow();
+                open_func();
             } else if event.id == hicm_i.id() {
-                hideCmWindow();
+                /* not working, defined in flutter/lib/main.dart: 
+                /* hideCmWindow();
+                open_func();
             } else if event.id == open_i.id() {
                 open_func();
             }
