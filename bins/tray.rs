@@ -57,8 +57,8 @@ fn make_tray() -> hbb_common::ResultType<()> {
 
     let tray_menu = Menu::new();
     let quit_i = MenuItem::new(translate("Exit".to_owned()), true, None);
-    let shcm_i = MenuItem::new("Show"), true, None);
-    let hicm_i = MenuItem::new("Hide"), true, None);
+    let shcm_i = MenuItem::new("Show", true, None);
+    let hicm_i = MenuItem::new("Hide", true, None);
     let open_i = MenuItem::new(translate("Open".to_owned()), true, None);
     tray_menu.append_items(&[&open_i, &shcm_i, &hicm_i, &quit_i]).ok();
     let tooltip = |count: usize| {
