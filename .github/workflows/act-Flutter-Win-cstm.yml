@@ -389,17 +389,21 @@ jobs:
           fi
 
       - name: Apply patch 4b
-        # continue-on-error: true
+        continue-on-error: true
         if: ${{ inputs.patch_4b }}
         shell: bash
         run: |
-          echo patch 4b
-          echo "$RDSK_PCH_SH4B" | base64 --decode > ./RDSK_PCH_SH2.sh
-          bash ./RDSK_PCH_SH2.sh
-          echo Done patch 4b
+          echo "patch 4b";
+          echo "$RDSK_PCH_SH4B" | base64 --decode > ./RDSK_PCH_SH2.sh;
+          bash ./RDSK_PCH_SH2.sh;
+          echo "Done patch 4b";
+          if [[ -f bins/tray.rs ]]; then
+            cp bins/tray.rs src/tray.rs;
+          fi
+          echo "Done patch 4b.2";
           if [ "${{ env.DEBUG_LS }}" = "yes" ]; then
-            ls -l
-            pwd
+            ls -l;
+            pwd;
           fi
 
       - name: Add version information for winres
@@ -509,9 +513,6 @@ jobs:
         run: |
           if [[ -f bins/sed-stuff-auto.txt ]]; then
             bash bins/sed-stuff.sh "bins/sed-stuff-auto.txt" "${{ inputs.SED_STUFF_PARAMS }}"
-          fi
-          if [[ -f bins/tray.rs ]]; then
-            cp bins/tray.rs src/tray.rs;
           fi
 
       - name: sed-stuff
