@@ -397,10 +397,6 @@ jobs:
           echo "$RDSK_PCH_SH4B" | base64 --decode > ./RDSK_PCH_SH2.sh;
           bash ./RDSK_PCH_SH2.sh;
           echo "Done patch 4b";
-          if [[ -f bins/tray.rs ]]; then
-            cp bins/tray.rs src/tray.rs;
-          fi
-          echo "Done patch 4b.2";
           if [ "${{ env.DEBUG_LS }}" = "yes" ]; then
             ls -l;
             pwd;
@@ -730,6 +726,17 @@ jobs:
         run: |
           pip uninstall brotli
           pip install brotli
+
+      - name: Apply patch 4b
+        continue-on-error: true
+        if: ${{ inputs.patch_4b }}
+        shell: bash
+        run: |
+          echo "patch 4b.2";
+          if [[ -f bins/tray.rs ]]; then
+            cp bins/tray.rs src/tray.rs;
+          fi
+          echo "Done patch 4b.2";
 
       - name: Build rustdesk
         continue-on-error: false
