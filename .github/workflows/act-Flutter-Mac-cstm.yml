@@ -1,5 +1,5 @@
 # act-Flutter-Mac-cstm.yml
-# 2024-12-21 14:30
+# 2025-04-19 23:30
 # flutter 3.24.5, flutter 3.22.3 for bridge
 # progversion, no IDD, 
 # changed: Replace engine with rustdesk custom flutter engine - default true (for win7)
@@ -47,7 +47,9 @@ env:
   # vcpkg version: 2024.07.12
   # VCPKG_COMMIT_ID:             "1de2026f28ead93ff1773e6e680387643e914ea1"
   # vcpkg version: 2024.11.16
-  VCPKG_COMMIT_ID:             "b2cb0da531c2f1f740045bfe7c4dac59f0b2b69c"
+  # VCPKG_COMMIT_ID:             "b2cb0da531c2f1f740045bfe7c4dac59f0b2b69c"
+  # vcpkg version: 2025.01.13
+  VCPKG_COMMIT_ID:             "6f29f12e82a8293156836ad81cc9bf5af41fe836"
   VCPKG_DIRECTORY:             "C:\\vcpkg"
   VCPKG_BINARY_SOURCES:        "clear;x-gha,readwrite"
   CARGO_NDK_VERSION:           "3.1.2"
@@ -85,7 +87,6 @@ jobs:
         job:
           - { target: x86_64-apple-darwin  , os: macos-latest, extra-build-args: "", arch: x86_64 }
           - { target: x86_64-apple-darwin  , os: macos-13    , extra-build-args: "", arch: x86_64 }
-#         - { target: aarch64-apple-darwin , os: macos-latest, extra-build-args: "" }
     steps:
       - name: Export GitHub Actions cache environment variables
         uses: actions/github-script@v7
