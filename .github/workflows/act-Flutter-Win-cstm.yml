@@ -786,6 +786,7 @@ jobs:
           mv -Force .\usbmmidd_v2 .\flutter\build\windows\x64\runner\Release
 
       - name: Sign rustdesk files
+        continue-on-error: true
         uses: deep-soft/code-sign-action@v9
         with:
           certificate: '${{ secrets.WINDOWS_PFX_BASE64 }}'
@@ -823,6 +824,7 @@ jobs:
 
 # Release zip portable - begin
       - name: SHA256 for Release zip portable
+        continue-on-error: true
         uses: deep-soft/sha-checksums@v1
         with:
           type: 'sha256'
@@ -874,7 +876,8 @@ jobs:
  #         fi
 
       - name: Build self-extracted executable
-        continue-on-error: false
+#        continue-on-error: false
+        continue-on-error: true
         # v1 ok: python3 ./generate.py -f ../../flutter/build/windows/x64/runner/Release/ -o . -e ../../flutter/build/windows/x64/runner/Release/rustdesk.exe;
         # v2 failed: python3 ./generate.py -f ../../rustdesk/ -o . -e ../../rustdesk/rustdesk.exe;
         shell: bash
@@ -895,7 +898,7 @@ jobs:
       #     done
 
       - name: Sign rustdesk self-extracted file
-        continue-on-error: false
+        continue-on-error: true
         uses: deep-soft/code-sign-action@v9
         with:
           certificate: '${{ secrets.WINDOWS_PFX_BASE64 }}'
@@ -907,6 +910,7 @@ jobs:
 
       - name: SHA256 for self-extracted file
         uses: deep-soft/sha-checksums@v1
+        continue-on-error: true
         with:
           type: 'sha256'
           filename: '${{ env.WORK_DIR_OS }}/${{ env.PROG_NAME }}-${{ env.VERSION }}-${{ matrix.job.target }}-${{ matrix.job.os }}.exe.sha256'
@@ -946,7 +950,8 @@ jobs:
             ${{ env.WORK_DIR_OS }}/_version_.txt
 
       - name: Publish version build - Release
-        continue-on-error: false
+#        continue-on-error: false
+        continue-on-error: true
         uses: deep-soft/action-gh-release@v2.1
         with:
           draft: true
@@ -964,6 +969,7 @@ jobs:
         id: zip_archive_all
         if:  ${{ inputs.archive_ALL}}
         uses: deep-soft/zip-release@v3
+        continue-on-error: true
         with:
           type: '7z'
           filename: '${{ env.TAG_VERSION }}${{ env.TAG_BUILD }}-${{ matrix.job.os }}-ALL'
