@@ -275,6 +275,13 @@ pub enum Data {
     #[cfg(all(target_os = "windows", feature = "flutter"))]
     PrinterData(Vec<u8>),
     InstallOption(Option<(String, String)>),
+    #[cfg(all(
+        feature = "flutter",
+        not(any(target_os = "android", target_os = "ios"))
+    ))]
+    ControllingSessionCount(usize),
+    #[cfg(target_os = "windows")]
+    PortForwardSessionCount(Option<usize>),
 }
 
 #[tokio::main(flavor = "current_thread")]
@@ -599,6 +606,13 @@ async fn handle(data: Data, stream: &mut Connection) {
                     .await
             );
         }
+        #[cfg(all(
+            feature = "flutter",
+            not(any(target_os = "android", target_os = "ios"))
+        ))]
+        Data::ControllingSessionCount(count) => {
+            crate::updater::update_controlling_session_count(count);
+        }
         #[cfg(feature = "hwcodec")]
         #[cfg(not(any(target_os = "android", target_os = "ios")))]
         Data::CheckHwcodec => {
@@ -678,6 +692,25 @@ async fn handle(data: Data, stream: &mut Connection) {
             None => {
                 // `None` is usually used to get values.
                 // This branch is left blank for unification and further use.
+            }
+        },
+        #[cfg(target_os = "windows")]
+        Data::PortForwardSessionCount(c) => match c {
+            None => {
+                let count = crate::server::AUTHED_CONNS
+                    .lock()
+                    .unwrap()
+                    .iter()
+                    .filter(|c| c.conn_type == crate::server::AuthConnType::PortForward)
+                    .count();
+                allow_err!(
+                    stream
+                        .send(&Data::PortForwardSessionCount(Some(count)))
+                        .await
+                );
+            }
+            _ => {
+                // Port forward session count is only a get value.
             }
         },
         _ => {}
@@ -1189,6 +1222,16 @@ pub async fn notify_server_to_check_hwcodec() -> ResultType<()> {
     Ok(())
 }
 
+#[cfg(target_os = "windows")]
+pub async fn get_port_forward_session_count(ms_timeout: u64) -> ResultType<usize> {
+    let mut c = connect(ms_timeout, "").await?;
+    c.send(&Data::PortForwardSessionCount(None)).await?;
+    if let Some(Data::PortForwardSessionCount(Some(count))) = c.next_timeout(ms_timeout).await? {
+        return Ok(count);
+    }
+    bail!("Failed to get port forward session count");
+}
+
 #[cfg(feature = "hwcodec")]
 #[cfg(not(any(target_os = "android", target_os = "ios")))]
 #[tokio::main(flavor = "current_thread")]
@@ -1278,6 +1321,17 @@ pub async fn clear_wayland_screencast_restore_token(key: String) -> ResultType<b
         return Ok(v.is_empty());
     }
     return Ok(false);
+}
+
+#[cfg(all(
+    feature = "flutter",
+    not(any(target_os = "android", target_os = "ios"))
+))]
+#[tokio::main(flavor = "current_thread")]
+pub async fn update_controlling_session_count(count: usize) -> ResultType<()> {
+    let mut c = connect(1000, "").await?;
+    c.send(&Data::ControllingSessionCount(count)).await?;
+    Ok(())
 }
 
 async fn handle_wayland_screencast_restore_token(
