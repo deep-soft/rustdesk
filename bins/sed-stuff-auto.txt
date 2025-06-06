@@ -1,5 +1,5 @@
 #BOF#
-# 2025.06.06 21:30
+# 2024.08.30 23:10
 
 #8
 S:print(f'{feat} download end. extract bein')
@@ -9,11 +9,6 @@ F:build.py
 #9
 S:menuItems.add(_rdpAction(context, peer.id));
 R:menuItems.add(_rdpAction(context, peer.id));\n      menuItems.add(_wolAction(peer.id));
-F:flutter/lib/common/widgets/peer_card.dart
-
-#10
-S:menuItems.add(_rdpAction(context, peer.id));
-R:menuItems.add(_rdpAction(context, peer.id));\n\n  if (isDesktop) {\n    final isScreenshotSupported = bind.sessionGetCommonSync(\n        sessionId: sessionId, key: 'is_screenshot_supported', param: '');\n    if ('true' == isScreenshotSupported) {\n      v.add(TTextMenu(\n        child: Text(ffi.ffiModel.timerScreenshot != null\n            ? '${translate('Taking screenshot')} ...'\n            : translate('Take screenshot')),\n        onPressed: ffi.ffiModel.timerScreenshot != null\n            ? null\n            : () {\n                if (pi.currentDisplay == kAllDisplayValue) {\n                  msgBox(\n                      sessionId,\n                      'custom-nook-nocancel-hasclose-info',\n                      'Take screenshot',\n                      'screenshot-merged-screen-not-supported-tip',\n                      '',\n                      ffi.dialogManager);\n                } else {\n                  bind.sessionTakeScreenshot(\n                      sessionId: sessionId, display: pi.currentDisplay);\n                  ffi.ffiModel.timerScreenshot =\n                      Timer(Duration(seconds: 30), () {\n                    ffi.ffiModel.timerScreenshot = null;\n                  });\n                }\n              },\n      ));\n    }\n  }
 F:flutter/lib/common/widgets/peer_card.dart
 
 #EOF#
