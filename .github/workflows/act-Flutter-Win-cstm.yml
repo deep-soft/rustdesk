@@ -291,6 +291,7 @@ jobs:
           echo "REF: ${{ env.TAG_REF }}
           echo "BLD: ${{ env.TAG_BUILD }}
           echo "${{ env.TAG_NAME }}-${{ env.TAG_BUILD }}" > ${{ env.WORK_DIR_BASH }}/_version_.txt
+          echo "${{ env.PROG_NAME }}-${{ env.VERSION }}-${{ matrix.job.target }}-${{ matrix.job.os }}" >> ${{ env.WORK_DIR_BASH }}/_version_.txt
           echo "WORK_DIR_BASH=${{ env.WORK_DIR_BASH }}"
           echo "WORK_DIR_OS=${{ env.WORK_DIR_OS }}"
           echo GITHUB_WORKSPACE=$GITHUB_WORKSPACE
@@ -948,6 +949,7 @@ jobs:
             ${{ env.ASSET_SRC1 }}
             ${{ env.ASSET_SRC2 }}
             ${{ env.WORK_DIR_OS }}/_version_.txt
+            ${{ env.SHA_SUMS }}
 
       - name: Publish version build - Release
 #        continue-on-error: false
