@@ -2551,7 +2551,7 @@ impl LoginConfigHandler {
             }),
             ConnType::TERMINAL => {
                 let mut terminal = Terminal::new();
-                terminal.service_id = self.get_option("terminal-service-id");
+                terminal.service_id = self.get_option(self.get_key_terminal_service_id());
                 lr.set_terminal(terminal);
             }
             _ => {}
@@ -2601,6 +2601,14 @@ impl LoginConfigHandler {
 
     pub fn get_id(&self) -> &str {
         &self.id
+    }
+
+    pub fn get_key_terminal_service_id(&self) -> &'static str {
+        if self.is_terminal_admin {
+            "terminal-admin-service-id"
+        } else {
+            "terminal-service-id"
+        }
     }
 }
 
@@ -3685,7 +3693,7 @@ pub fn check_if_retry(msgtype: &str, title: &str, text: &str, retry_for_relay: b
         && title == "Connection Error"
         && ((text.contains("10054") || text.contains("104")) && retry_for_relay
             || (!text.to_lowercase().contains("offline")
-                && !text.to_lowercase().contains("exist")
+                && !text.to_lowercase().contains("not exist")
                 && !text.to_lowercase().contains("handshake")
                 && !text.to_lowercase().contains("failed")
                 && !text.to_lowercase().contains("resolve")

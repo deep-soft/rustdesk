@@ -461,7 +461,6 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("empty_favorite_tip", "Vēl nav iecienītākās sesijas?\nAtradīsim kādu, ar ko sazināties, un pievienosim to jūsu izlasei!"),
         ("empty_lan_tip", "Ak nē! Šķiet, ka mēs vēl neesam atklājuši nevienu sesiju."),
         ("empty_address_book_tip", "Ak vai, izskatās, ka jūsu adrešu grāmatā šobrīd nav neviena sesija."),
-        ("eg: admin", "piemēram: admin"),
         ("Empty Username", "Tukšs lietotājvārds"),
         ("Empty Password", "Tukša parole"),
         ("Me", "Es"),
@@ -709,6 +708,7 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("Incorrect username or password.", ""),
         ("The user is not an administrator.", ""),
         ("Failed to check if the user is an administrator.", ""),
-        ("Supported only by the installation version.", ""),
+        ("Supported only in the installed version.", ""),
+        ("elevation_username_tip", ""),
     ].iter().cloned().collect();
 }

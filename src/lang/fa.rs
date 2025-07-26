@@ -461,7 +461,6 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("empty_favorite_tip", "هنوز همتای مورد علاقه‌ای ندارید؟\nبیایید فردی را برای ارتباط پیدا کنیم و آن را به موارد دلخواه خود اضافه کنیم!"),
         ("empty_lan_tip", "اوه نه، به نظر می رسد که ما هنوز همتای خود را پیدا نکرده ایم"),
         ("empty_address_book_tip", "اوه ، به نظر می رسد که در حال حاضر هیچ همتایی در دفترچه آدرس شما وجود ندارد"),
-        ("eg: admin", "مثال : admin"),
         ("Empty Username", "نام کاربری خالی است"),
         ("Empty Password", "رمز عبور خالی است"),
         ("Me", "من"),
@@ -709,6 +708,7 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("Incorrect username or password.", ""),
         ("The user is not an administrator.", ""),
         ("Failed to check if the user is an administrator.", ""),
-        ("Supported only by the installation version.", ""),
+        ("Supported only in the installed version.", ""),
+        ("elevation_username_tip", ""),
     ].iter().cloned().collect();
 }
