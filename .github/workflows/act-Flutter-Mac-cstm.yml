@@ -371,7 +371,7 @@ jobs:
           toolchain: stable
           target: ${{ matrix.job.target }}
           # override: true
-          profile: minimal # minimal component installation (ie, no documentation)
+          # profile: minimal # minimal component installation (ie, no documentation)
 
       - uses: deep-soft/rust-cache@v2
         with:
@@ -511,5 +511,6 @@ jobs:
               ${{ env.ZIP_ARCHIVE_ALL }}
               ${{ env.WORK_DIR_OS }}/_version_.txt
 # zip release end
+
 
 
