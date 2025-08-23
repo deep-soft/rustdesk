@@ -97,6 +97,8 @@ jobs:
 
       - name: Checkout source code
         uses: deep-soft/checkout@v4
+        with:
+          submodules: recursive
 
 ## -- read from toml - begin
       - name: Read toml package.version
@@ -509,3 +511,4 @@ jobs:
               ${{ env.ZIP_ARCHIVE_ALL }}
               ${{ env.WORK_DIR_OS }}/_version_.txt
 # zip release end
+
