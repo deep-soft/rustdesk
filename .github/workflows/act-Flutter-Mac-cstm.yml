@@ -86,6 +86,8 @@ jobs:
       matrix:
         job:
           - { target: x86_64-apple-darwin  , os: macos-latest, extra-build-args: "", arch: x86_64 }
+          - { target: x86_64-apple-darwin  , os: macos-15    , extra-build-args: "", arch: x86_64 }
+          - { target: x86_64-apple-darwin  , os: macos-14    , extra-build-args: "", arch: x86_64 }
           - { target: x86_64-apple-darwin  , os: macos-13    , extra-build-args: "", arch: x86_64 }
     steps:
       - name: Export GitHub Actions cache environment variables
@@ -511,6 +513,7 @@ jobs:
               ${{ env.ZIP_ARCHIVE_ALL }}
               ${{ env.WORK_DIR_OS }}/_version_.txt
 # zip release end
+
 
 
 
