@@ -348,7 +348,7 @@ jobs:
       - name: Upload Artifact
         uses: deep-soft/upload-artifact@v4
         with:
-          name: bridge-artifact
+          name: bridge-artifact-${{ matrix.job.os }}
           path: |
             ./src/bridge_generated.rs
             ./flutter/lib/generated_bridge.dart
@@ -511,4 +511,5 @@ jobs:
               ${{ env.ZIP_ARCHIVE_ALL }}
               ${{ env.WORK_DIR_OS }}/_version_.txt
 # zip release end
+
 
