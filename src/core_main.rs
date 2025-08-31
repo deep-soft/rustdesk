@@ -574,6 +574,12 @@ pub fn core_main() -> Option<Vec<String>> {
                 crate::flutter::connection_manager::start_cm_no_ui();
             }
             return None;
+        } else if args[0] == "--whiteboard" {
+            #[cfg(any(target_os = "windows", target_os = "macos"))]
+            {
+                crate::whiteboard::run();
+            }
+            return None;
         } else if args[0] == "-gtk-sudo" {
             // rustdesk service kill `rustdesk --` processes
             #[cfg(target_os = "linux")]
