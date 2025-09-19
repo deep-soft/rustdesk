@@ -49,7 +49,9 @@ env:
   # vcpkg version: 2024.11.16
   # VCPKG_COMMIT_ID:             "b2cb0da531c2f1f740045bfe7c4dac59f0b2b69c"
   # vcpkg version: 2025.01.13
-  VCPKG_COMMIT_ID:             "6f29f12e82a8293156836ad81cc9bf5af41fe836"
+  # VCPKG_COMMIT_ID:             "6f29f12e82a8293156836ad81cc9bf5af41fe836"
+  # vcpkg version: 2025.08.27
+  VCPKG_COMMIT_ID:             "120deac3062162151622ca4860575a33844ba10b"
   VCPKG_DIRECTORY:             "C:\\vcpkg"
   VCPKG_BINARY_SOURCES:        "clear;x-gha,readwrite"
   CARGO_NDK_VERSION:           "3.1.2"
@@ -110,6 +112,8 @@ jobs:
 
       - name: Checkout source code
         uses: deep-soft/checkout@v4
+        with:
+          submodules: recursive
 
 ## -- read from toml - begin
       - name: Read toml package.version
@@ -233,10 +237,9 @@ jobs:
       - name: Install Rust toolchain
         uses: deep-soft/rust-toolchain@master
         with:
-          toolchain: stable
-          target: ${{ matrix.job.target }}
-          # override: true
-          # profile: minimal # minimal component installation (ie, no documentation)
+          toolchain: ${{ env.RUST_VERSION }}
+          targets: ${{ matrix.job.target }}
+          components: "rustfmt"
 
       - name: Save Rust toolchain version
         run: |
@@ -259,6 +262,7 @@ jobs:
         with:
           vcpkgDirectory: /opt/artifacts/vcpkg
           vcpkgGitCommitId: ${{ env.VCPKG_COMMIT_ID }}
+          doNotCache: false
 
       - name: Install vcpkg dependencies
         run: |
@@ -285,6 +289,7 @@ jobs:
             apt-get update -y
             echo -e "installing deps"
             apt-get install -y \
+               build-essential \
                clang \
                cmake \
                curl \
@@ -314,6 +319,7 @@ jobs:
                yasm \
                ninja-build \
                pkg-config \
+               python3 \
                rpm \
                unzip \
                tree \
@@ -352,7 +358,7 @@ jobs:
             
             echo "##@## cargo build lib"
             # cargo build --lib --features hwcodec,flutter,flutter_texture_render,${{ matrix.job.extra-build-features }},$DEFAULT_FEAT --release
-            cargo build --lib $JOBS --features hwcodec,flutter --release
+            cargo build --lib $JOBS --features hwcodec,flutter,unix-file-copy-paste --release
             #rm -rf target/release/deps target/release/build
             #rm -rf ~/.cargo
 
@@ -365,6 +371,12 @@ jobs:
             ls -l .
             export PATH=/opt/flutter/bin:$PATH
             flutter doctor -v
+
+            if [[ "3.24.5" == ${{ env.FLUTTER_VERSION }} ]]; then
+              pushd /opt/flutter
+              git apply ${{ github.workspace }}/.github/patches/flutter_3.24.4_dropdown_menu_enableFilter.diff
+              popd
+            fi
 
             # build flutter
             echo "##@## build flutter"
@@ -479,6 +491,8 @@ jobs:
     steps:
       - name: Checkout source code
         uses: deep-soft/checkout@v4
+        with:
+          submodules: recursive
 
 ## -- read from toml - begin
       - name: Read toml package.version
@@ -588,6 +602,8 @@ jobs:
     steps:
       - name: Checkout source code
         uses: deep-soft/checkout@v4
+        with:
+          submodules: recursive
 
 ## -- read from toml - begin
       - name: Read toml package.version
@@ -693,4 +709,5 @@ jobs:
           tag_name: ${{ env.TAG_NAME }}
           files: |
             flatpak/rustdesk-${{ env.VERSION }}-${{ matrix.job.arch }}${{ matrix.job.suffix }}.flatpak
+
 
