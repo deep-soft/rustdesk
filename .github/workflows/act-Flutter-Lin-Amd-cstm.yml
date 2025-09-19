@@ -299,7 +299,7 @@ jobs:
                libappindicator3-dev \
                libasound2-dev \
                libunwind-dev \
-               libclang-11-dev \
+               libclang-10-dev \
                libclang-dev \
                libgstreamer1.0-dev \
                libgstreamer-plugins-base1.0-dev \
@@ -313,7 +313,7 @@ jobs:
                libxcb-xfixes0-dev \
                libxdo-dev \
                libxfixes-dev \
-               llvm-11-dev \
+               llvm-10-dev \
                llvm-dev \
                nasm \
                yasm \
@@ -709,5 +709,6 @@ jobs:
           tag_name: ${{ env.TAG_NAME }}
           files: |
             flatpak/rustdesk-${{ env.VERSION }}-${{ matrix.job.arch }}${{ matrix.job.suffix }}.flatpak
+
 
 
