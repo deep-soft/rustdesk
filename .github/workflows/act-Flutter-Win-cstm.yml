@@ -1,5 +1,5 @@
 # act-Flutter-Win-cstm.yml
-# 2025-03-23 12:30
+# 2025-09-20 08:00
 # submodules: recursive, flutter 3.24.5, flutter 3.22.3 for bridge
 # progversion, no IDD, 
 # changed: Replace engine with rustdesk custom flutter engine - default true (for win7)
@@ -31,6 +31,7 @@ env:
   RDSK_PCH_SH_CLN:             '${{ secrets.RDSK_PCH_SH_CLN   }}'
   RUST_VERSION:                "1.75" # was "rust-1.76.0"
   WIN_RUST_VERSION:            "1.75"
+  MAC_RUST_VERSION:            "1.81"
   LLVM_VERSION:                "15.0.6"
 #  FLUTTER_VERSION:             "3.16.9"
 #  FLUTTER_VERSION:             "3.19.6"
@@ -50,11 +51,13 @@ env:
   # vcpkg version: 2024.11.16
   # VCPKG_COMMIT_ID:             "b2cb0da531c2f1f740045bfe7c4dac59f0b2b69c"
   # vcpkg version: 2025.01.13
-  VCPKG_COMMIT_ID:             "6f29f12e82a8293156836ad81cc9bf5af41fe836"
+  # VCPKG_COMMIT_ID:             "6f29f12e82a8293156836ad81cc9bf5af41fe836"
+  # vcpkg version: 2025.08.27
+  VCPKG_COMMIT_ID:             "120deac3062162151622ca4860575a33844ba10b"
   VCPKG_DIRECTORY:             "C:\\vcpkg"
   VCPKG_BINARY_SOURCES:        "clear;x-gha,readwrite"
   CARGO_NDK_VERSION:           "3.1.2"
-  NDK_VERSION:                 "r27c" # was "r27"
+  NDK_VERSION:                 "r27c" # was "r27", "r26b", "r26d"
   #signing keys env variable checks
   ANDROID_SIGNING_KEY:         '${{ secrets.ANDROID_SIGNING_KEY }}'
   #  signingKeyBase64:         '${{ secrets.ANDROID_SIGNING_KEY }}'
@@ -785,6 +788,36 @@ jobs:
           Expand-Archive usbmmidd_v2.zip -DestinationPath .
           Remove-Item -Path usbmmidd_v2\Win32 -Recurse
           mv -Force .\usbmmidd_v2 .\flutter\build\windows\x64\runner\Release
+
+      - name: Add printer driver
+        continue-on-error: true
+        run: |
+          # Download printer driver files and extract them to ./rustdesk
+          try {
+            Invoke-WebRequest -Uri https://github.com/rustdesk/hbb_common/releases/download/driver/rustdesk_printer_driver_v4-1.4.zip -OutFile rustdesk_printer_driver_v4-1.4.zip
+            Invoke-WebRequest -Uri https://github.com/rustdesk/hbb_common/releases/download/driver/printer_driver_adapter.zip -OutFile printer_driver_adapter.zip
+            Invoke-WebRequest -Uri https://github.com/rustdesk/hbb_common/releases/download/driver/sha256sums -OutFile sha256sums
+
+            # Check and move the files
+            $checksum_driver = (Select-String -Path .\sha256sums -Pattern '^([a-fA-F0-9]{64}) \*rustdesk_printer_driver_v4-1.4\.zip$').Matches.Groups[1].Value
+            $downloadsum_driver = Get-FileHash -Path rustdesk_printer_driver_v4-1.4.zip -Algorithm SHA256
+            $checksum_adapter = (Select-String -Path .\sha256sums -Pattern '^([a-fA-F0-9]{64}) \*printer_driver_adapter\.zip$').Matches.Groups[1].Value
+            $downloadsum_adapter = Get-FileHash -Path printer_driver_adapter.zip -Algorithm SHA256
+            if ($checksum_driver -eq $downloadsum_driver.Hash -and $checksum_adapter -eq $downloadsum_adapter.Hash) {
+                Write-Output "rustdesk_printer_driver_v4-1.4, checksums match, extract the file."
+                Expand-Archive rustdesk_printer_driver_v4-1.4.zip -DestinationPath .
+                mkdir ./rustdesk/drivers
+                mv -Force .\rustdesk_printer_driver_v4-1.4 ./rustdesk/drivers/RustDeskPrinterDriver
+                Expand-Archive printer_driver_adapter.zip -DestinationPath .
+                mv -Force .\printer_driver_adapter.dll ./rustdesk
+            } elseif ($checksum_driver -ne $downloadsum_driver.Hash) {
+                Write-Output "rustdesk_printer_driver_v4-1.4, checksums do not match, ignore the file."
+            } else {
+                Write-Output "printer_driver_adapter.dll, checksums do not match, ignore the file."
+            }
+          } catch {
+              Write-Host "Ingore the printer driver error."
+          }
 
       - name: Sign rustdesk files
         continue-on-error: true

@@ -1,5 +1,5 @@
 # act-Flutter-Win-And-Lin-Mac-cstm.yml
-# 2024-12-16 22:30
+# 2025-09-20 08:00
 # flutter 3.24.5, generate_bridge on linux
 # progversion, no IDD, 
 # changed: Replace engine with rustdesk custom flutter engine - default true (for win7)
@@ -27,9 +27,11 @@ env:
   RDSK_PCH_HL:                 '${{ secrets.RDSK_PCH_HL       }}'
   RDSK_PCH_SH2:                '${{ secrets.RDSK_PCH_SH2      }}'
   RDSK_PCH_SH4:                '${{ secrets.RDSK_PCH_SH4      }}'
+  RDSK_PCH_SH4B:               '${{ secrets.RDSK_PCH_SH4B     }}'
   RDSK_PCH_SH_CLN:             '${{ secrets.RDSK_PCH_SH_CLN   }}'
   RUST_VERSION:                "1.75" # was "rust-1.76.0"
   WIN_RUST_VERSION:            "1.75"
+  MAC_RUST_VERSION:            "1.81"
   LLVM_VERSION:                "15.0.6"
 #  FLUTTER_VERSION:             "3.16.9"
 #  FLUTTER_VERSION:             "3.19.6"
@@ -47,11 +49,15 @@ env:
   # vcpkg version: 2024.07.12
   # VCPKG_COMMIT_ID:             "1de2026f28ead93ff1773e6e680387643e914ea1"
   # vcpkg version: 2024.11.16
-  VCPKG_COMMIT_ID:             "b2cb0da531c2f1f740045bfe7c4dac59f0b2b69c"
+  # VCPKG_COMMIT_ID:             "b2cb0da531c2f1f740045bfe7c4dac59f0b2b69c"
+  # vcpkg version: 2025.01.13
+  # VCPKG_COMMIT_ID:             "6f29f12e82a8293156836ad81cc9bf5af41fe836"
+  # vcpkg version: 2025.08.27
+  VCPKG_COMMIT_ID:             "120deac3062162151622ca4860575a33844ba10b"
   VCPKG_DIRECTORY:             "C:\\vcpkg"
   VCPKG_BINARY_SOURCES:        "clear;x-gha,readwrite"
   CARGO_NDK_VERSION:           "3.1.2"
-  NDK_VERSION:                 "r27c" # was "r27"
+  NDK_VERSION:                 "r27c" # was "r27", "r26b", "r26d"
   #signing keys env variable checks
   ANDROID_SIGNING_KEY:         '${{ secrets.ANDROID_SIGNING_KEY }}'
   #  signingKeyBase64:         '${{ secrets.ANDROID_SIGNING_KEY }}'
