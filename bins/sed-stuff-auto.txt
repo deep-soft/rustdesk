@@ -1,5 +1,5 @@
 #BOF#
-# 2024.08.30 23:10
+# 2025.11.09 11:20
 
 #8
 S:print(f'{feat} download end. extract bein')
@@ -9,6 +9,11 @@ F:build.py
 #9
 S:menuItems.add(_rdpAction(context, peer.id));
 R:menuItems.add(_rdpAction(context, peer.id));\n      menuItems.add(_wolAction(peer.id));
+F:flutter/lib/common/widgets/peer_card.dart
+
+#10
+S:if (isWindows) {
+R:    menuItems.add(_wolAction(peer.id));\n    if (isWindows) {
 F:flutter/lib/common/widgets/peer_card.dart
 
 #EOF#
