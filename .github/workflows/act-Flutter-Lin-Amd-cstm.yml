@@ -1,5 +1,5 @@
 # act-Flutter-Lin-Amd-cstm.yml
-# 2025-11-17 20:30
+# 2025-09-20 08:00
 # ubuntu-22.04, flutter 3.24.5, generate_bridge on linux
 # progversion, no IDD, 
 # changed: Replace engine with rustdesk custom flutter engine - default true (for win7)
@@ -236,14 +236,6 @@ jobs:
           df -h
           free -m
 
-      - name: set work_space var
-        continue-on-error: true
-        shell: bash
-        run: |
-          WORK_SPACE=$(pwd);
-          echo $WORK_SPACE;
-          echo "WORK_SPACE=$WORK_SPACE" >> $GITHUB_ENV
-
       - name: Install Rust toolchain
         uses: deep-soft/rust-toolchain@master
         with:
@@ -280,27 +272,25 @@ jobs:
           $VCPKG_ROOT/vcpkg install --triplet ${{ matrix.job.vcpkg-triplet }} --x-install-root="$VCPKG_ROOT/installed"
         shell: bash
 
-#      - uses: deep-soft/run-on-arch-action@amd64-support
-      - name: Build rustdesk for ${{ matrix.job.arch }}
+      - uses: deep-soft/run-on-arch-action@amd64-support
         continue-on-error: true
+        name: Build rustdesk for ${{ matrix.job.arch }}
         id: build_rustdesk
-#        with:
-#          arch: ${{ matrix.job.arch }}
-#          distro: ${{ matrix.job.distro }}
-#          githubToken: ${{ github.token }}
-#          setup: |
-#            ls -l "${PWD}"
-#            ls -l /opt/artifacts/vcpkg/installed
-#          dockerRunArgs: |
-#            --volume "${PWD}:/workspace"
-#            --volume "/opt/artifacts:/opt/artifacts"
-#          shell: /bin/bash
-#          install: |
-        shell: bash
-        run: |
-            sudo apt-get update -y
+        with:
+          arch: ${{ matrix.job.arch }}
+          distro: ${{ matrix.job.distro }}
+          githubToken: ${{ github.token }}
+          setup: |
+            ls -l "${PWD}"
+            ls -l /opt/artifacts/vcpkg/installed
+          dockerRunArgs: |
+            --volume "${PWD}:/workspace"
+            --volume "/opt/artifacts:/opt/artifacts"
+          shell: /bin/bash
+          install: |
+            apt-get update -y
             echo -e "installing deps"
-            sudo apt-get install -y \
+            apt-get install -y \
                build-essential \
                clang \
                cmake \
@@ -337,15 +327,11 @@ jobs:
                tree \
                wget
             # we have libopus compiled by us.
-            sudo apt-get remove -y libopus-dev || true
+            apt-get remove -y libopus-dev || true
             # output devs
             ls -l ./
             tree -L 3 /opt/artifacts/vcpkg/installed
-
-      - name: Build rustdesk, step 2,  for ${{ matrix.job.arch }}
-        continue-on-error: true
-        shell: bash
-        run: |
+          run: |
             # disable git safe.directory
             git config --global --add safe.directory "*"
 
@@ -354,7 +340,7 @@ jobs:
             # do not use rustup, because memory overflow in qemu
             wget -O rust.tar.gz https://static.rust-lang.org/dist/rust-${{env.RUST_TOOLCHAIN_VERSION}}-${{ matrix.job.target }}.tar.gz
             tar -zxvf rust.tar.gz > /dev/null && rm rust.tar.gz
-            cd rust-${{env.RUST_TOOLCHAIN_VERSION}}-${{ matrix.job.target }} && sudo ./install.sh
+            cd rust-${{env.RUST_TOOLCHAIN_VERSION}}-${{ matrix.job.target }} && ./install.sh
             rm -rf rust-${{env.RUST_TOOLCHAIN_VERSION}}-${{ matrix.job.target }}
 
             # edit config
@@ -367,8 +353,7 @@ jobs:
 
             # start build
             echo "##@## start build"
-            #pushd /workspace
-            pushd ${{ env.WORK_SPACE }}
+            pushd /workspace
             export VCPKG_ROOT=/opt/artifacts/vcpkg
             export JOBS=""
             echo $JOBS
@@ -383,22 +368,21 @@ jobs:
             echo "##@## setup flutter"
             # Setup Flutter
             pushd /opt
-            sudo wget https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_${{ env.FLUTTER_VERSION }}-stable.tar.xz
-            sudo tar xf flutter_linux_${{ env.FLUTTER_VERSION }}-stable.tar.xz
+            wget https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_${{ env.FLUTTER_VERSION }}-stable.tar.xz
+            tar xf flutter_linux_${{ env.FLUTTER_VERSION }}-stable.tar.xz
             ls -l .
             export PATH=/opt/flutter/bin:$PATH
             flutter doctor -v
 
             if [[ "3.24.5" == ${{ env.FLUTTER_VERSION }} ]]; then
               pushd /opt/flutter
-              sudo git apply ${{ github.workspace }}/.github/patches/flutter_3.24.4_dropdown_menu_enableFilter.diff
+              git apply ${{ github.workspace }}/.github/patches/flutter_3.24.4_dropdown_menu_enableFilter.diff
               popd
             fi
 
             # build flutter
             echo "##@## build flutter"
-            #pushd /workspace
-            pushd ${{ env.WORK_SPACE }}
+            pushd /workspace
             export CARGO_INCREMENTAL=0
             export DEB_ARCH=${{ matrix.job.deb_arch }}
             python3 ./build.py --flutter --skip-cargo
@@ -409,8 +393,7 @@ jobs:
             if [[ "${{ inputs.other_packages }}" == "true" ]]; then
               # rpm package
               echo "##@## rpm package"
-              #pushd /workspace
-              pushd ${{ env.WORK_SPACE }}
+              pushd /workspace
               HBB=`pwd` rpmbuild ./res/rpm-flutter.spec -bb
               pushd ~/rpmbuild/RPMS/${{ matrix.job.arch }}
               mkdir -p /opt/artifacts/rpm
@@ -420,13 +403,12 @@ jobs:
 
               # rpm suse package
               echo "##@## rpm suse package"
-              #pushd /workspace
-              pushd ${{ env.WORK_SPACE }}
+              pushd /workspace
               HBB=`pwd` rpmbuild ./res/rpm-flutter-suse.spec -bb
               pushd ~/rpmbuild/RPMS/${{ matrix.job.arch }}
-              sudo mkdir -p /opt/artifacts/rpm
+              mkdir -p /opt/artifacts/rpm
               for name in rustdesk*??.rpm; do
-                  sudo mv "$name" "/opt/artifacts/rpm/${name%%.rpm}-suse.rpm"
+                  mv "$name" "/opt/artifacts/rpm/${name%%.rpm}-suse.rpm"
               done
             fi
 
@@ -483,7 +465,7 @@ jobs:
         continue-on-error: true
         uses: deep-soft/arch-makepkg-action@master
         with:
-          #packages:
+          packages:
           scripts: |
             cd res && HBB=`pwd`/.. FLUTTER=1 makepkg -f
 
@@ -507,7 +489,7 @@ jobs:
       fail-fast: false
       matrix:
         job:
-          - { arch: x86_64, target: x86_64-unknown-linux-gnu  , os: ubuntu-22.04, vcpkg-triplet: x64-linux , distro: ubuntu22.04, deb_arch: amd64, suffix: "", }
+          - { arch: x86_64, target: x86_64-unknown-linux-gnu  , os: ubuntu-22.04, vcpkg-triplet: x64-linux , distro: ubuntu18.04, deb_arch: amd64, suffix: "", }
     steps:
       - name: Checkout source code
         uses: deep-soft/checkout@v4
@@ -589,15 +571,16 @@ jobs:
         run: |
           # install libarchive-tools for bsdtar command used in AppImageBuilder.yml
           sudo apt-get update -y
-          # https://github.com/AppImage/AppImageKit/wiki/FUSE
-          sudo apt-get install -y libarchive-tools libfuse2
+          sudo apt-get install -y libarchive-tools
           # set-up appimage-builder
-          # https://github.com/AppImage/AppImageKit/issues/1395
-          sudo pip3 install git+https://github.com/rustdesk-org/appimage-builder.git
+          pushd /tmp
+          wget -O appimage-builder-x86_64.AppImage https://github.com/AppImageCrafters/appimage-builder/releases/download/v1.1.0/appimage-builder-1.1.0-x86_64.AppImage
+          chmod +x appimage-builder-x86_64.AppImage
+          sudo mv appimage-builder-x86_64.AppImage /usr/local/bin/appimage-builder
+          popd
           # run appimage-builder
           pushd appimage
           sudo appimage-builder --skip-tests --recipe ./AppImageBuilder-${{ matrix.job.arch }}.yml
-
 
       - name: Publish appimage package
         uses: deep-soft/action-gh-release@v2.1
@@ -617,7 +600,7 @@ jobs:
       fail-fast: false
       matrix:
         job:
-          - { arch: x86_64, target: x86_64-unknown-linux-gnu  , os: ubuntu-22.04, vcpkg-triplet: x64-linux , distro: ubuntu22.04, deb_arch: amd64, suffix: "", }
+          - { arch: x86_64, target: x86_64-unknown-linux-gnu  , os: ubuntu-22.04, vcpkg-triplet: x64-linux , distro: ubuntu18.04, deb_arch: amd64, suffix: "", }
     steps:
       - name: Checkout source code
         uses: deep-soft/checkout@v4
@@ -728,11 +711,5 @@ jobs:
           tag_name: ${{ env.TAG_NAME }}
           files: |
             flatpak/rustdesk-${{ env.VERSION }}-${{ matrix.job.arch }}${{ matrix.job.suffix }}.flatpak
-
-
-
-
-
-
 
 
