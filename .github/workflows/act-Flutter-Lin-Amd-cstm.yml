@@ -290,9 +290,9 @@ jobs:
 #          install: |
         shell: bash
         run: |
-            apt-get update -y
+            sudo apt-get update -y
             echo -e "installing deps"
-            apt-get install -y \
+            sudo apt-get install -y \
                build-essential \
                clang \
                cmake \
@@ -329,7 +329,7 @@ jobs:
                tree \
                wget
             # we have libopus compiled by us.
-            apt-get remove -y libopus-dev || true
+            sudo apt-get remove -y libopus-dev || true
             # output devs
             ls -l ./
             tree -L 3 /opt/artifacts/vcpkg/installed
@@ -346,7 +346,7 @@ jobs:
             # do not use rustup, because memory overflow in qemu
             wget -O rust.tar.gz https://static.rust-lang.org/dist/rust-${{env.RUST_TOOLCHAIN_VERSION}}-${{ matrix.job.target }}.tar.gz
             tar -zxvf rust.tar.gz > /dev/null && rm rust.tar.gz
-            cd rust-${{env.RUST_TOOLCHAIN_VERSION}}-${{ matrix.job.target }} && ./install.sh
+            cd rust-${{env.RUST_TOOLCHAIN_VERSION}}-${{ matrix.job.target }} && sudo ./install.sh
             rm -rf rust-${{env.RUST_TOOLCHAIN_VERSION}}-${{ matrix.job.target }}
 
             # edit config
@@ -374,15 +374,15 @@ jobs:
             echo "##@## setup flutter"
             # Setup Flutter
             pushd /opt
-            wget https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_${{ env.FLUTTER_VERSION }}-stable.tar.xz
-            tar xf flutter_linux_${{ env.FLUTTER_VERSION }}-stable.tar.xz
+            sudo wget https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_${{ env.FLUTTER_VERSION }}-stable.tar.xz
+            sudo tar xf flutter_linux_${{ env.FLUTTER_VERSION }}-stable.tar.xz
             ls -l .
             export PATH=/opt/flutter/bin:$PATH
             flutter doctor -v
 
             if [[ "3.24.5" == ${{ env.FLUTTER_VERSION }} ]]; then
               pushd /opt/flutter
-              git apply ${{ github.workspace }}/.github/patches/flutter_3.24.4_dropdown_menu_enableFilter.diff
+              sudo git apply ${{ github.workspace }}/.github/patches/flutter_3.24.4_dropdown_menu_enableFilter.diff
               popd
             fi
 
@@ -412,9 +412,9 @@ jobs:
               pushd /workspace
               HBB=`pwd` rpmbuild ./res/rpm-flutter-suse.spec -bb
               pushd ~/rpmbuild/RPMS/${{ matrix.job.arch }}
-              mkdir -p /opt/artifacts/rpm
+              sudo mkdir -p /opt/artifacts/rpm
               for name in rustdesk*??.rpm; do
-                  mv "$name" "/opt/artifacts/rpm/${name%%.rpm}-suse.rpm"
+                  sudo mv "$name" "/opt/artifacts/rpm/${name%%.rpm}-suse.rpm"
               done
             fi
 
@@ -716,6 +716,7 @@ jobs:
           tag_name: ${{ env.TAG_NAME }}
           files: |
             flatpak/rustdesk-${{ env.VERSION }}-${{ matrix.job.arch }}${{ matrix.job.suffix }}.flatpak
+
 
 
 
