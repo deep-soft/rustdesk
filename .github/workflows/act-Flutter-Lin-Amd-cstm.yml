@@ -1,5 +1,5 @@
 # act-Flutter-Lin-Amd-cstm.yml
-# 2025-09-20 08:00
+# 2025-11-17 20:30
 # ubuntu-22.04, flutter 3.24.5, generate_bridge on linux
 # progversion, no IDD, 
 # changed: Replace engine with rustdesk custom flutter engine - default true (for win7)
@@ -272,22 +272,24 @@ jobs:
           $VCPKG_ROOT/vcpkg install --triplet ${{ matrix.job.vcpkg-triplet }} --x-install-root="$VCPKG_ROOT/installed"
         shell: bash
 
-      - uses: deep-soft/run-on-arch-action@amd64-support
+#      - uses: deep-soft/run-on-arch-action@amd64-support
+      - name: Build rustdesk for ${{ matrix.job.arch }}
         continue-on-error: true
-        name: Build rustdesk for ${{ matrix.job.arch }}
         id: build_rustdesk
-        with:
-          arch: ${{ matrix.job.arch }}
-          distro: ${{ matrix.job.distro }}
-          githubToken: ${{ github.token }}
-          setup: |
-            ls -l "${PWD}"
-            ls -l /opt/artifacts/vcpkg/installed
-          dockerRunArgs: |
-            --volume "${PWD}:/workspace"
-            --volume "/opt/artifacts:/opt/artifacts"
-          shell: /bin/bash
-          install: |
+#        with:
+#          arch: ${{ matrix.job.arch }}
+#          distro: ${{ matrix.job.distro }}
+#          githubToken: ${{ github.token }}
+#          setup: |
+#            ls -l "${PWD}"
+#            ls -l /opt/artifacts/vcpkg/installed
+#          dockerRunArgs: |
+#            --volume "${PWD}:/workspace"
+#            --volume "/opt/artifacts:/opt/artifacts"
+#          shell: /bin/bash
+#          install: |
+        shell: bash
+        run: |
             apt-get update -y
             echo -e "installing deps"
             apt-get install -y \
@@ -331,7 +333,11 @@ jobs:
             # output devs
             ls -l ./
             tree -L 3 /opt/artifacts/vcpkg/installed
-          run: |
+
+      - name: Build rustdesk, step 2,  for ${{ matrix.job.arch }}
+        continue-on-error: true
+        shell: bash
+        run: |
             # disable git safe.directory
             git config --global --add safe.directory "*"
 
@@ -465,7 +471,7 @@ jobs:
         continue-on-error: true
         uses: deep-soft/arch-makepkg-action@master
         with:
-          packages:
+          #packages:
           scripts: |
             cd res && HBB=`pwd`/.. FLUTTER=1 makepkg -f
 
@@ -489,7 +495,7 @@ jobs:
       fail-fast: false
       matrix:
         job:
-          - { arch: x86_64, target: x86_64-unknown-linux-gnu  , os: ubuntu-22.04, vcpkg-triplet: x64-linux , distro: ubuntu18.04, deb_arch: amd64, suffix: "", }
+          - { arch: x86_64, target: x86_64-unknown-linux-gnu  , os: ubuntu-22.04, vcpkg-triplet: x64-linux , distro: ubuntu22.04, deb_arch: amd64, suffix: "", }
     steps:
       - name: Checkout source code
         uses: deep-soft/checkout@v4
@@ -710,6 +716,7 @@ jobs:
           tag_name: ${{ env.TAG_NAME }}
           files: |
             flatpak/rustdesk-${{ env.VERSION }}-${{ matrix.job.arch }}${{ matrix.job.suffix }}.flatpak
+
 
 
 
