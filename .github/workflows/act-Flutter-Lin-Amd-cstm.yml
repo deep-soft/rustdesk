@@ -599,7 +599,7 @@ jobs:
       fail-fast: false
       matrix:
         job:
-          - { arch: x86_64, target: x86_64-unknown-linux-gnu  , os: ubuntu-22.04, vcpkg-triplet: x64-linux , distro: ubuntu18.04, deb_arch: amd64, suffix: "", }
+          - { arch: x86_64, target: x86_64-unknown-linux-gnu  , os: ubuntu-22.04, vcpkg-triplet: x64-linux , distro: ubuntu22.04, deb_arch: amd64, suffix: "", }
     steps:
       - name: Checkout source code
         uses: deep-soft/checkout@v4
@@ -710,6 +710,7 @@ jobs:
           tag_name: ${{ env.TAG_NAME }}
           files: |
             flatpak/rustdesk-${{ env.VERSION }}-${{ matrix.job.arch }}${{ matrix.job.suffix }}.flatpak
+
 
 
 
