@@ -236,6 +236,14 @@ jobs:
           df -h
           free -m
 
+      - name: set work_space var
+        continue-on-error: true
+        shell: bash
+        run: |
+          WORK_SPACE=$(pwd);
+          echo $WORK_SPACE;
+          echo "WORK_SPACE=$WORK_SPACE" >> $GITHUB_ENV
+
       - name: Install Rust toolchain
         uses: deep-soft/rust-toolchain@master
         with:
@@ -359,7 +367,8 @@ jobs:
 
             # start build
             echo "##@## start build"
-            pushd /workspace
+            #pushd /workspace
+            pushd ${{ env.WORK_SPACE }}
             export VCPKG_ROOT=/opt/artifacts/vcpkg
             export JOBS=""
             echo $JOBS
@@ -388,7 +397,8 @@ jobs:
 
             # build flutter
             echo "##@## build flutter"
-            pushd /workspace
+            #pushd /workspace
+            pushd ${{ env.WORK_SPACE }}
             export CARGO_INCREMENTAL=0
             export DEB_ARCH=${{ matrix.job.deb_arch }}
             python3 ./build.py --flutter --skip-cargo
@@ -399,7 +409,8 @@ jobs:
             if [[ "${{ inputs.other_packages }}" == "true" ]]; then
               # rpm package
               echo "##@## rpm package"
-              pushd /workspace
+              #pushd /workspace
+              pushd ${{ env.WORK_SPACE }}
               HBB=`pwd` rpmbuild ./res/rpm-flutter.spec -bb
               pushd ~/rpmbuild/RPMS/${{ matrix.job.arch }}
               mkdir -p /opt/artifacts/rpm
@@ -409,7 +420,8 @@ jobs:
 
               # rpm suse package
               echo "##@## rpm suse package"
-              pushd /workspace
+              #pushd /workspace
+              pushd ${{ env.WORK_SPACE }}
               HBB=`pwd` rpmbuild ./res/rpm-flutter-suse.spec -bb
               pushd ~/rpmbuild/RPMS/${{ matrix.job.arch }}
               sudo mkdir -p /opt/artifacts/rpm
@@ -716,6 +728,7 @@ jobs:
           tag_name: ${{ env.TAG_NAME }}
           files: |
             flatpak/rustdesk-${{ env.VERSION }}-${{ matrix.job.arch }}${{ matrix.job.suffix }}.flatpak
+
 
 
 
