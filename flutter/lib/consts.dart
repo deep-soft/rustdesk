@@ -50,6 +50,7 @@ const String kAppTypeDesktopPortForward = "port forward";
 const String kAppTypeDesktopTerminal = "terminal";
 
 const String kWindowMainWindowOnTop = "main_window_on_top";
+const String kWindowRefreshCurrentUser = "refresh_current_user";
 const String kWindowGetWindowInfo = "get_window_info";
 const String kWindowGetScreenList = "get_screen_list";
 // This method is not used, maybe it can be removed.
@@ -162,6 +163,7 @@ const String kOptionShowVirtualMouse = "show-virtual-mouse";
 const String kOptionVirtualMouseScale = "virtual-mouse-scale";
 const String kOptionShowVirtualJoystick = "show-virtual-joystick";
 const String kOptionAllowAskForNoteAtEndOfConnection = "allow-ask-for-note";
+const String kOptionEnableShowTerminalExtraKeys = "enable-show-terminal-extra-keys";
 
 // network options
 const String kOptionAllowWebSocket = "allow-websocket";
