@@ -1,5 +1,5 @@
 #BOF#
-# 2025.11.09 11:20
+# 2025.12.31 10:40
 
 #8
 S:print(f'{feat} download end. extract bein')
@@ -15,5 +15,10 @@ F:flutter/lib/common/widgets/peer_card.dart
 S:if (isWindows) {
 R:    menuItems.add(_wolAction(peer.id));\n    if (isWindows) {
 F:flutter/lib/common/widgets/peer_card.dart
+
+#11
+S:alignment: Alignment.topCenter,
+R:alignment: FractionalOffset(_fractionX.value, 0),
+F:flutter/lib/desktop/widgets/remote_toolbar.dart
 
 #EOF#
