@@ -71,11 +71,26 @@ on:
   workflow_call:
   workflow_dispatch:
     inputs:
+      patch_4b:
+        description: patch 4b
+        type: boolean
+        default: false
+        required: true    
+      SED_STUFF:
+        description: SED_STUFF
+        type: boolean
+        default: false
+        required: true
+      SED_STUFF_PARAMS:
+        description: SED_STUFF_PARAMS
+        default: "build.py"
+        required: true
       archive_ALL:
         description: Archive ALL
         type: boolean
         default: false
         required: true
+
 
 #  schedule:
 #    # schedule build every night
@@ -231,12 +246,58 @@ jobs:
             pwd
           fi
 
+      - name: Apply patch 4b
+        continue-on-error: true
+        if: ${{ inputs.patch_4b }}
+        shell: bash
+        run: |
+          echo "patch 4b";
+          echo "$RDSK_PCH_SH4B" | base64 --decode > ./RDSK_PCH_SH2.sh;
+          bash ./RDSK_PCH_SH2.sh;
+          echo "Done patch 4b";
+          if [ "${{ env.DEBUG_LS }}" = "yes" ]; then
+            ls -l;
+            pwd;
+          fi
+
       - name: Cleanup after patch
         continue-on-error: true
         shell: bash
         run: |
           echo "$RDSK_PCH_SH_CLN" | base64 --decode > ./RDSK_PCH_SH_CLN.sh
           bash ./RDSK_PCH_SH_CLN.sh
+
+      - name: patch src/lang.rs
+        continue-on-error: true
+        shell: bash
+        run: |
+          if [[ -f bins/lang.rs ]]; then
+            cp -f -p bins/lang.rs src/lang.rs;
+            echo "cat src/lang.rs - begin";
+            cat src/lang.rs;
+            echo "cat src/lang.rs - end";
+          fi
+
+      - name: sed-stuff-auto
+        continue-on-error: true
+        shell: bash
+        env:
+          DEBUG_MODE_1: ${{ inputs.DEBUG_MODE }}
+          DEBUG_MODE_2: ${{ inputs.DEBUG_MODE }}
+        run: |
+          if [[ -f bins/sed-stuff-auto.txt ]]; then
+            bash bins/sed-stuff.sh "bins/sed-stuff-auto.txt" "${{ inputs.SED_STUFF_PARAMS }}"
+          fi
+
+      - name: sed-stuff
+        if: ${{ inputs.SED_STUFF }}
+        continue-on-error: true
+        shell: bash
+        env:
+          DEBUG_MODE_1: ${{ inputs.DEBUG_MODE }}
+          DEBUG_MODE_2: ${{ inputs.DEBUG_MODE }}
+        run: |
+          bash bins/sed-stuff.sh "_" "${{ inputs.SED_STUFF_PARAMS }}"
 
       - name: Create source archive 1
         continue-on-error: true
@@ -517,6 +578,7 @@ jobs:
               ${{ env.ZIP_ARCHIVE_ALL }}
               ${{ env.WORK_DIR_OS }}/_version_.txt
 # zip release end
+
 
 
 
