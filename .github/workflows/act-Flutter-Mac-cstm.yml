@@ -1,5 +1,5 @@
 # act-Flutter-Mac-cstm.yml
-# 2025-10-18 17:30
+# 2026-02-04 22:20
 # flutter 3.24.5, flutter 3.22.3 for bridge
 # progversion, no IDD, 
 # changed: Replace engine with rustdesk custom flutter engine - default true (for win7)
@@ -89,10 +89,10 @@ jobs:
       fail-fast: false
       matrix:
         job:
-          - { target: x86_64-apple-darwin  , os: macos-latest  , extra-build-args: "", arch: x86_64 }   #// arm64 only
-          - { target: x86_64-apple-darwin  , os: macos-15-intel, extra-build-args: "", arch: x86_64 }   #// intel last
-          - { target: x86_64-apple-darwin  , os: macos-13      , extra-build-args: "", arch: x86_64 }   #// intel oldest
-          # - { target: x86_64-apple-darwin  , os: macos-14      , extra-build-args: "", arch: x86_64 } #// arm64 only
+          - { target: x86_64-apple-darwin  , os: macos-13      , arch: x86_64,   vcpkg-triplet: x64-osx   , extra-build-args: ""                   }  #// intel oldest
+          - { target: x86_64-apple-darwin  , os: macos-15-intel, arch: x86_64,   vcpkg-triplet: x64-osx   , extra-build-args: ""                   }  #// intel last
+          - { target: aarch64-apple-darwin , os: macos-14      , arch: aarch64,  vcpkg-triplet: arm64-osx , extra-build-args: "--screencapturekit" }  #// arm64 only
+          - { target: aarch64-apple-darwin , os: macos-latest  , arch: x86_64,   vcpkg-triplet: x64-osx   , extra-build-args: ""                   }  #// arm64 only
     steps:
       - name: Export GitHub Actions cache environment variables
         uses: actions/github-script@v7
@@ -517,6 +517,7 @@ jobs:
               ${{ env.ZIP_ARCHIVE_ALL }}
               ${{ env.WORK_DIR_OS }}/_version_.txt
 # zip release end
+
 
 
 
