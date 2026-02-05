@@ -736,6 +736,8 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("rel-mouse-lock-failed-tip", "커서 잠금에 실패했습니다. 상대 마우스 모드가 비활성화되었습니다"),
         ("rel-mouse-exit-{}-tip", "종료하려면 {}을(를) 누르세요."),
         ("rel-mouse-permission-lost-tip", "키보드 권한이 취소되었습니다. 상대 마우스 모드가 비활성화되었습니다."),
-        ("Changelog", ""변경 기록),
+        ("Changelog", "변경 기록"),
+        ("keep-awake-during-outgoing-sessions-label", "발신 세션 중 화면 켜짐 유지"),
+        ("keep-awake-during-incoming-sessions-label", "수신 세션 중 화면 켜짐 유지"),
     ].iter().cloned().collect();
 }
