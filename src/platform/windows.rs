@@ -107,9 +107,9 @@ pub fn get_focused_display(displays: Vec<DisplayInfo>) -> Option<usize> {
             let center_x = rect.left + (rect.right - rect.left) / 2;
             let center_y = rect.top + (rect.bottom - rect.top) / 2;
             center_x >= display.x
-                && center_x <= display.x + display.width
+                && center_x < display.x + display.width
                 && center_y >= display.y
-                && center_y <= display.y + display.height
+                && center_y < display.y + display.height
         })
     }
 }
@@ -527,6 +527,7 @@ const SERVICE_TYPE: ServiceType = ServiceType::OWN_PROCESS;
 
 extern "C" {
     fn get_current_session(rdp: BOOL) -> DWORD;
+    fn is_session_locked(include_rdp: BOOL) -> BOOL;
     fn LaunchProcessWin(
         cmd: *const u16,
         session_id: DWORD,
@@ -1127,6 +1128,10 @@ pub fn is_prelogin() -> bool {
         return false;
     };
     username.is_empty() || username == "SYSTEM"
+}
+
+pub fn is_locked() -> bool {
+    unsafe { is_session_locked(share_rdp()) == TRUE }
 }
 
 // `is_logon_ui()` is regardless of multiple sessions now.
