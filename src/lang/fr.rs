@@ -379,7 +379,7 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("Screen Share", "Partage d’écran"),
         ("ubuntu-21-04-required", "Wayland nécessite Ubuntu 21.04 ou une version ultérieure."),
         ("wayland-requires-higher-linux-version", "Wayland nécessite une version ultérieure de votre distribution Linux. Veuillez essayer le bureau X11 ou changer de système d’exploitation."),
-        ("xdp-portal-unavailable", ""),
+        ("xdp-portal-unavailable", "Échec de la capture de l’écran Wayland. Le portail de bureau XDG a peut-être planté ou n’est pas disponible. Essayez de le redémarrer avec la commande `systemctl --user restart xdg-desktop-portal`."),
         ("JumpLink", "Afficher"),
         ("Please Select the screen to be shared(Operate on the peer side).", "Veuillez sélectionner l’écran à partager (côté appareil distant)."),
         ("Show RustDesk", "Afficher RustDesk"),
@@ -741,5 +741,7 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("keep-awake-during-incoming-sessions-label", "Maintenir l’écran allumé lors des sessions entrantes"),
         ("Continue with {}", "Continuer avec {}"),
         ("Display Name", "Nom d’affichage"),
+        ("password-hidden-tip", ""),
+        ("preset-password-in-use-tip", ""),
     ].iter().cloned().collect();
 }
