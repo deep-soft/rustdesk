@@ -1,0 +1,15 @@
+#BOF#
+# 2026.04.20 21:10
+# bins/sed-stuff-pre.txt
+
+#12
+S:&& !ip.is_unicast_link_local()
+R:// && !ip.is_unicast_link_local()
+F:src/common.rs
+
+#13
+S:pub const RENDEZVOUS_PORT:
+R:pub const RENDEZVOUS_SERVERS: &[&str] = &["rs-ny.rustdesk.com"];\n pub const RS_PUB_KEY: &str = "OeVuKk5nlHiXp+APNn0Y3pC1Iwpwn44JGqrQCsWqmBw=";\n\n pub const RENDEZVOUS_PORT:
+F:libs/hbb_common/src/config.rs
+
+#EOF#
