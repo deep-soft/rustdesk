@@ -1,6 +1,6 @@
 # act-Flutter-Win-cstm.yml
-# 2025-09-20 08:00
-# submodules: recursive, flutter 3.24.5, flutter 3.22.3 for bridge
+# 2026-05-03 09:00
+# FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true, submodules: recursive, flutter 3.24.5, flutter 3.22.3 for bridge
 # progversion, no IDD, 
 # changed: Replace engine with rustdesk custom flutter engine - default true (for win7)
 # changed: Install Rust toolchain. uses: deep-soft/rust-toolchain@master
@@ -66,6 +66,7 @@ env:
   #  keyPassword:              '${{ secrets.ANDROID_KEY_PASSWORD }}'
   MACOS_P12_BASE64:            '${{ secrets.MACOS_P12_BASE64 }}'
   cargo_clippy_log:            "cargo-clippy.log"
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 on:
 #  schedule:
@@ -161,6 +162,13 @@ jobs:
             core.exportVariable('ACTIONS_CACHE_URL',     process.env.ACTIONS_CACHE_URL     || '');
             core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
 
+      - name: Export GitHub Actions node24 variable
+        continue-on-error: true
+        uses: deep-soft/github-script@v9
+        with:
+          script: |
+            core.exportVariable('FORCE_JAVASCRIPT_ACTIONS_TO_NODE24', true || '');
+
       - name: set flutter version
         shell: bash
         run: |
@@ -176,7 +184,7 @@ jobs:
           echo "FLUTTER_VERSION = ${{ env.FLUTTER_VERSION }}";
 
       - name: Checkout source code
-        uses: deep-soft/checkout@v4
+        uses: deep-soft/checkout@v6
         with:
           submodules: recursive
 
@@ -206,7 +214,7 @@ jobs:
 
 ## -- read from toml - begin
       - name: Read toml package.version
-        uses: deep-soft/toml-action@v1.0.3
+        uses: deep-soft/toml-action@v2
         id: read_toml_version
         with:
           file: 'Cargo.toml'
@@ -301,7 +309,7 @@ jobs:
 
       - name: Create source archive
         continue-on-error: true
-        uses: deep-soft/zip-release@v3
+        uses: deep-soft/zip-release@v5
         with:
           type: 'tar.xz'
           filename: "${{ env.PROG_NAME }}-src-${{ env.VERSION }}-${{ matrix.job.target }}-${{ matrix.job.extra-build-features }}-${{ env.GUI }}-${{ matrix.job.os }}"
@@ -538,7 +546,7 @@ jobs:
 
       - name: Create source archive 1
         continue-on-error: true
-        uses: deep-soft/zip-release@v3
+        uses: deep-soft/zip-release@v5
         with:
           type: 'tar.xz'
           filename: "${{ env.PROG_NAME }}-src1-${{ env.VERSION }}-${{ matrix.job.target }}-${{ matrix.job.extra-build-features }}-${{ env.GUI }}-${{ matrix.job.os }}"
@@ -551,7 +559,7 @@ jobs:
 
       - name: Publish src archives
         continue-on-error: true
-        uses: deep-soft/action-gh-release@v2.1
+        uses: deep-soft/action-gh-release@v3
         with:
           draft: true
           tag_name: ${{ env.TAG_NAME }}
@@ -606,7 +614,7 @@ jobs:
           # pushd flutter && sed -i -e 's/extended_text: 13.0.0/extended_text: 14.0.0/g' pubspec.yaml && flutter pub get && popd
 
       - name: Upload Artifact
-        uses: deep-soft/upload-artifact@v4
+        uses: deep-soft/upload-artifact@v7
         with:
           name: bridge-artifact
           path: |
@@ -714,7 +722,7 @@ jobs:
 #          exclusions: ''
 #          recursive_exclusions: ''
 #          path: '.'
-        uses: deep-soft/zip-release@v3
+        uses: deep-soft/zip-release@v5
         with:
           type: 'tar.xz'
           filename: '${{ env.WORK_DIR_OS }}/vcpkg-installed-${{ env.VERSION }}-${{ matrix.job.target }}-${{ env.GUI }}-${{ matrix.job.os }}'
@@ -728,7 +736,7 @@ jobs:
       - name: Publish vcpkg-installed archive
         if: ${{ inputs.vpkg_installed }}
         continue-on-error: true
-        uses: deep-soft/action-gh-release@v2.1
+        uses: deep-soft/action-gh-release@v3
         with:
           draft: true
           tag_name: vcpkg-installed-${{ env.VERSION }}-${{ matrix.job.target }}-${{ env.GUI }}
@@ -821,7 +829,7 @@ jobs:
 
       - name: Sign rustdesk files
         continue-on-error: true
-        uses: deep-soft/code-sign-action@v10
+        uses: deep-soft/code-sign-action@v11
         with:
           certificate: '${{ secrets.WINDOWS_PFX_BASE64 }}'
           password: '${{ secrets.WINDOWS_PFX_PASSWORD }}'
@@ -870,7 +878,7 @@ jobs:
 
       - name: Create Release zip portable
         continue-on-error: true
-        uses: deep-soft/zip-release@v3
+        uses: deep-soft/zip-release@v5
         with:
           type: 'zip'
           filename: "${{ env.WORK_DIR_OS }}/${{ env.PROG_NAME }}-${{ env.VERSION }}-${{ matrix.job.target }}-${{ matrix.job.os }}"
@@ -883,7 +891,7 @@ jobs:
 
       - name: Publish Release zip portable
         continue-on-error: true
-        uses: deep-soft/action-gh-release@v2.1
+        uses: deep-soft/action-gh-release@v3
         with:
           draft: true
           tag_name: ${{ env.TAG_NAME }}
@@ -933,7 +941,7 @@ jobs:
 
       - name: Sign rustdesk self-extracted file
         continue-on-error: true
-        uses: deep-soft/code-sign-action@v10
+        uses: deep-soft/code-sign-action@v11
         with:
           certificate: '${{ secrets.WINDOWS_PFX_BASE64 }}'
           password: '${{ secrets.WINDOWS_PFX_PASSWORD }}'
@@ -956,7 +964,7 @@ jobs:
       - name: Create source archive 2
         if: ${{ inputs.archive_SRC2 }}
         continue-on-error: true
-        uses: deep-soft/zip-release@v3
+        uses: deep-soft/zip-release@v5
         with:
           type: 'tar.xz'
           filename: "${{ env.PROG_NAME }}-src2-${{ env.VERSION }}-${{ matrix.job.target }}-${{ matrix.job.extra-build-features }}-${{ env.GUI }}-${{ matrix.job.os }}"
@@ -969,7 +977,7 @@ jobs:
 
       - name: Publish Release
         continue-on-error: true
-        uses: deep-soft/action-gh-release@v2.1
+        uses: deep-soft/action-gh-release@v3
         with:
           draft: true
           tag_name: ${{ env.TAG_NAME }}
@@ -987,7 +995,7 @@ jobs:
       - name: Publish version build - Release
 #        continue-on-error: false
         continue-on-error: true
-        uses: deep-soft/action-gh-release@v2.1
+        uses: deep-soft/action-gh-release@v3
         with:
           draft: true
           tag_name: ${{ env.TAG_VERSION }}${{ env.TAG_BUILD }}
@@ -1003,7 +1011,7 @@ jobs:
       - name: Create Archive ALL
         id: zip_archive_all
         if:  ${{ inputs.archive_ALL}}
-        uses: deep-soft/zip-release@v3
+        uses: deep-soft/zip-release@v5
         continue-on-error: true
         with:
           type: '7z'
@@ -1018,7 +1026,7 @@ jobs:
       - name: Publish Archive ALL
         if:  ${{ inputs.archive_ALL}}
         continue-on-error: true
-        uses: deep-soft/action-gh-release@v2.1
+        uses: deep-soft/action-gh-release@v3
         with:
           draft: true
           tag_name: ${{ env.TAG_VERSION }}${{ env.TAG_BUILD }}-ALL
@@ -1033,7 +1041,7 @@ jobs:
         id: vcpkg_archive_all
         if: ${{ inputs.vpkg_installed }}
         continue-on-error: true
-        uses: deep-soft/zip-release@v3
+        uses: deep-soft/zip-release@v5
         # volume_size: '2g'
         with:
           type: 'zip'
@@ -1048,7 +1056,7 @@ jobs:
       - name: Publish vcpkg_all archive
         if: ${{ inputs.vpkg_installed }}
         continue-on-error: true
-        uses: deep-soft/action-gh-release@v2.1
+        uses: deep-soft/action-gh-release@v3
         with:
           draft: true
           tag_name: vcpkg-ALL-${{ env.VERSION }}-${{ matrix.job.target }}-${{ env.GUI }}
