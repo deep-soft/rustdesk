@@ -2,7 +2,7 @@ name: act-Windows flutter build
 # 2026-06-07
 
 on:
-  workflow_call:
+  workflow_dispatch:
     inputs:
       upload-artifact:
         type: boolean
