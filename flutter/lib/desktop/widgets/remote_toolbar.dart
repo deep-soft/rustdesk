@@ -807,8 +807,9 @@ class _RemoteToolbarState extends State<RemoteToolbar> {
     final List<Widget> toolbarItems = [];
     toolbarItems.add(_PinMenu(state: widget.state));
     toolbarItems.add(Obx(() {
-      if ((PrivacyModeState.find(widget.id).isEmpty ||
-              allowDisplaySwitchInPrivacyMode(pi)) &&
+      final privacyModeState = PrivacyModeState.find(widget.id);
+      if ((privacyModeState.isEmpty ||
+              allowDisplaySwitchInPrivacyMode(pi, privacyModeState.value)) &&
           pi.displaysCount.value > 1 &&
           mainGetLocalBoolOptionSync(kOptionAllowMonitorSwitchMainToolbar)) {
         return _MainMonitorSwitchButton(id: widget.id, ffi: widget.ffi);
@@ -993,7 +994,15 @@ class _MonitorCycle {
     final t = total;
     if (t < 2) return;
     final from = _inRange ? _current : -1;
-    openMonitorInTheSameTab((from + 1) % t, ffi, _pi, updateCursorPos: false);
+    final target = (from + 1) % t;
+    final isChooseDisplayToOpenInNewWindow = _pi.isSupportMultiDisplay &&
+        bind.sessionGetDisplaysAsIndividualWindows(sessionId: ffi.sessionId) ==
+            'Y';
+    if (isChooseDisplayToOpenInNewWindow) {
+      openMonitorInNewTabOrWindow(target, ffi.id, _pi);
+    } else {
+      openMonitorInTheSameTab(target, ffi, _pi, updateCursorPos: false);
+    }
   }
 }
 
@@ -3518,12 +3527,15 @@ class _MinimizedMonitorSwitchButton extends StatelessWidget {
 
     return Obx(() {
       final label = cycle.label;
-      if (!mainGetLocalBoolOptionSync(kOptionAllowMonitorSwitchMinToolbar)) {
+      if (!mainGetLocalBoolOptionSync(kOptionAllowMonitorSwitchMainToolbar) ||
+          !mainGetLocalBoolOptionSync(kOptionAllowMonitorSwitchMinToolbar)) {
         return const Offstage();
       }
       if (cycle.total < 2) return const Offstage();
-      if (PrivacyModeState.find(id).isNotEmpty &&
-          !allowDisplaySwitchInPrivacyMode(ffi.ffiModel.pi)) {
+      final privacyModeState = PrivacyModeState.find(id);
+      if (privacyModeState.isNotEmpty &&
+          !allowDisplaySwitchInPrivacyMode(
+              ffi.ffiModel.pi, privacyModeState.value)) {
         return const Offstage();
       }
 
