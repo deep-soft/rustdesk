@@ -1,5 +1,5 @@
 # act-Flutter-Win-cstm.yml
-# 2026-05-03 09:00
+# 2026-06-19 06:30
 # FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true, submodules: recursive, flutter 3.24.5, flutter 3.22.3 for bridge
 # progversion, no IDD, 
 # changed: Replace engine with rustdesk custom flutter engine - default true (for win7)
@@ -155,19 +155,19 @@ jobs:
           - { target: x86_64-pc-windows-msvc, os: windows-2022, arch: x86_64, vcpkg-triplet: x64-windows-static }
 #          - { target: x86_64-pc-windows-msvc      , os: windows-2022 }
     steps:
-      - name: Export GitHub Actions cache environment variables
-        uses: deep-soft/github-script@v7
-        with:
-          script: |
-            core.exportVariable('ACTIONS_CACHE_URL',     process.env.ACTIONS_CACHE_URL     || '');
-            core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
-
       - name: Export GitHub Actions node24 variable
         continue-on-error: true
         uses: deep-soft/github-script@v9
         with:
           script: |
             core.exportVariable('FORCE_JAVASCRIPT_ACTIONS_TO_NODE24', true || '');
+
+      - name: Export GitHub Actions cache environment variables
+        uses: deep-soft/github-script@v7
+        with:
+          script: |
+            core.exportVariable('ACTIONS_CACHE_URL',     process.env.ACTIONS_CACHE_URL     || '');
+            core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
 
       - name: set flutter version
         shell: bash
