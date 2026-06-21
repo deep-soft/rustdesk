@@ -1,6 +1,6 @@
 # act-Flutter-Win-cstm.yml
-# 2026-06-19 06:30
-# FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true, submodules: recursive, flutter 3.24.5, flutter 3.22.3 for bridge
+# 2026-06-21 13:20
+# neofetch, FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true, submodules: recursive, flutter 3.24.5, flutter 3.22.3 for bridge
 # progversion, no IDD, 
 # changed: Replace engine with rustdesk custom flutter engine - default true (for win7)
 # changed: Install Rust toolchain. uses: deep-soft/rust-toolchain@master
@@ -155,6 +155,16 @@ jobs:
           - { target: x86_64-pc-windows-msvc, os: windows-2022, arch: x86_64, vcpkg-triplet: x64-windows-static }
 #          - { target: x86_64-pc-windows-msvc      , os: windows-2022 }
     steps:
+      - name: run action
+        continue-on-error: true
+        uses: deep-soft/neofetch-action@main
+        id: systeminfo_action
+        # verbose: ${{ inputs.VERBOSE }}
+        # debug: ${{ inputs.DEBUG_MODE }}
+        with:
+          verbose: true
+          debug: false
+
       - name: Export GitHub Actions node24 variable
         continue-on-error: true
         uses: deep-soft/github-script@v9
