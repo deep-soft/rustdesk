@@ -772,7 +772,8 @@ jobs:
         run: |
           git clone https://github.com/rustdesk-org/RustDeskTempTopMostWindow RustDeskTempTopMostWindow
           pushd RustDeskTempTopMostWindow
-          git checkout 53b548a5398624f7149a382000397993542ad796
+          # git checkout 53b548a5398624f7149a382000397993542ad796
+          git checkout ecd8d6a139eee76845ea66423fb739af450fda90
           popd
           
       - name: Build RustDeskTempTopMostWindow
