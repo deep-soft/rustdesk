@@ -1,6 +1,6 @@
 # act-Flutter-Win-cstm.yml
-# 2026-06-21 13:20
-# neofetch, FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true, submodules: recursive, flutter 3.24.5, flutter 3.22.3 for bridge
+# 2026-08-25 20:30
+# vcpkg, neofetch, FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true, submodules: recursive, flutter 3.24.5, flutter 3.22.3 for bridge
 # progversion, no IDD, 
 # changed: Replace engine with rustdesk custom flutter engine - default true (for win7)
 # changed: Install Rust toolchain. uses: deep-soft/rust-toolchain@master
@@ -41,19 +41,13 @@ env:
   FLUTTER_RUST_BRIDGE_VERSION: "1.80.1"
   FLUTTER_ELINUX_VERSION:      "3.16.9"
   FLUTTER_ELINUX_COMMIT_ID:    "c02bd16e1630f5bd690b85c5c2456ac1920e25af"
-  # vcpkg version: 2023.10.19
-  # for multiarch gcc compatibility
-  # VCPKG_COMMIT_ID:             "8eb57355a4ffb410a2e94c07b4dca2dffbee8e50"
-  # vcpkg version: 2024.06.15
-  # VCPKG_COMMIT_ID:             "f7423ee180c4b7f40d43402c2feb3859161ef625"
-  # vcpkg version: 2024.07.12
-  # VCPKG_COMMIT_ID:             "1de2026f28ead93ff1773e6e680387643e914ea1"
-  # vcpkg version: 2024.11.16
-  # VCPKG_COMMIT_ID:             "b2cb0da531c2f1f740045bfe7c4dac59f0b2b69c"
-  # vcpkg version: 2025.01.13
-  # VCPKG_COMMIT_ID:             "6f29f12e82a8293156836ad81cc9bf5af41fe836"
-  # vcpkg version: 2025.08.27
-  VCPKG_COMMIT_ID:             "120deac3062162151622ca4860575a33844ba10b"
+  # VCPKG_COMMIT_ID:             "8eb57355a4ffb410a2e94c07b4dca2dffbee8e50"  # vcpkg version: 2023.10.19 # for multiarch gcc compatibility
+  # VCPKG_COMMIT_ID:             "f7423ee180c4b7f40d43402c2feb3859161ef625"  # vcpkg version: 2024.06.15
+  # VCPKG_COMMIT_ID:             "1de2026f28ead93ff1773e6e680387643e914ea1"  # vcpkg version: 2024.07.12
+  # VCPKG_COMMIT_ID:             "b2cb0da531c2f1f740045bfe7c4dac59f0b2b69c"  # vcpkg version: 2024.11.16
+  # VCPKG_COMMIT_ID:             "6f29f12e82a8293156836ad81cc9bf5af41fe836"  # vcpkg version: 2025.01.13
+  # VCPKG_COMMIT_ID:             "120deac3062162151622ca4860575a33844ba10b"  # vcpkg version: 2025.08.27
+  VCPKG_COMMIT_ID:             "9e593bb18ea69cc5095e012465dcd675a822ed0d"  # vcpkg version: 2026.07.29
   VCPKG_DIRECTORY:             "C:\\vcpkg"
   VCPKG_BINARY_SOURCES:        "clear;x-gha,readwrite"
   CARGO_NDK_VERSION:           "3.1.2"
