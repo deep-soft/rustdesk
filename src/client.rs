@@ -30,9 +30,10 @@ use uuid::Uuid;
 use crate::{
     check_port,
     common::input::{MOUSE_BUTTON_LEFT, MOUSE_BUTTON_RIGHT, MOUSE_TYPE_DOWN, MOUSE_TYPE_UP},
-    create_symmetric_key_msg, decode_id_pk, decode_id_pk_dtls, get_rs_pk, is_keyboard_mode_supported,
+    create_symmetric_key_msg, decode_id_pk, decode_id_pk_dtls, dtls_fingerprint_bound, get_rs_pk,
+    is_keyboard_mode_supported,
     kcp_stream::KcpStream,
-    secure_tcp,
+    secure_tcp, secure_tcp_required,
     ui_interface::{get_builtin_option, resolve_avatar_url, use_texture_render},
     ui_session_interface::{InvokeUiSession, Session},
 };
@@ -95,7 +96,10 @@ pub use super::lang::*;
 
 #[cfg(not(target_os = "linux"))]
 mod audio_playback;
+#[cfg(target_os = "windows")]
+mod audio_playback_recovery;
 #[cfg(all(test, not(target_os = "linux")))]
+#[path = "client/tests/audio_state_tests.rs"]
 mod audio_state_tests;
 pub mod file_trait;
 pub mod helper;
@@ -573,7 +577,7 @@ impl Client {
             return race_transports_prefer_webrtc(
                 preferred_fut,
                 vec![fallback_fut],
-                Self::WEBRTC_PREFER_WINDOW_MS,
+                Self::relay_fallback_delay_ms(),
                 |result| result.0 .1,
             )
             .await;
@@ -614,11 +618,27 @@ impl Client {
     /// ones that traverse NAT.
     const MAX_PENDING_WEBRTC_ICE: usize = 64;
 
-    /// Prefer-P2P window: how long a WebRTC attempt outranks an already-established relay
-    /// result, and the floor for a punch-path WebRTC attempt whose race timeout is tuned for a
-    /// raw TCP SYN. Long enough for candidate trickle + ICE checks + DTLS on high-latency
-    /// links; short enough that UDP-blocked networks settle on relay without a noticeable wait.
-    const WEBRTC_PREFER_WINDOW_MS: u64 = 2500;
+    /// Default relay fallback delay: how long an already-established relay result is held back
+    /// while a WebRTC attempt is still in flight, and the floor for a punch-path WebRTC attempt
+    /// whose race timeout is tuned for a raw TCP SYN. Long enough for candidate trickle + ICE
+    /// checks + DTLS on high-latency links; short enough that UDP-blocked networks settle on
+    /// relay without a noticeable wait. The same role RFC 8305 calls a connection attempt delay.
+    const RELAY_FALLBACK_DELAY_MS: u64 = 2500;
+
+    /// The delay as the user configured it, falling back to `RELAY_FALLBACK_DELAY_MS`. The
+    /// settings field holds seconds, which is what a user reasons about; everything here is
+    /// milliseconds. Unparseable, zero or negative all mean "unset", so clearing the field
+    /// restores the default instead of collapsing the delay and handing every race to the
+    /// relay.
+    fn relay_fallback_delay_ms() -> u64 {
+        match LocalConfig::get_option(keys::OPTION_RELAY_FALLBACK_DELAY)
+            .trim()
+            .parse::<f64>()
+        {
+            Ok(secs) if secs.is_finite() && secs > 0.0 => (secs * 1000.0).round() as u64,
+            _ => Self::RELAY_FALLBACK_DELAY_MS,
+        }
+    }
 
     /// UDP-NAT-test wait when the TCP clock is implausible (see TCP_RTT_PLAUSIBLE_MIN). The
     /// normal bound is `rtt / 2`: the test has been running since before the TCP connect, so on
@@ -813,7 +833,7 @@ impl Client {
         }
         log::info!("rendezvous server: {}", rendezvous_server);
         let mut socket = socket?;
-        let my_addr = socket.local_addr();
+        let mut my_addr = socket.local_addr();
         let mut signed_id_pk = Vec::new();
         let mut relay_server = "".to_owned();
         let mut peer_addr = Config::get_any_listen_addr(true);
@@ -829,12 +849,44 @@ impl Client {
         };
 
         let switch_code = interface.get_switch_code();
-        if !key.is_empty() && (!token.is_empty() || !switch_code.is_empty()) {
+        let legacy_secure = !key.is_empty() && (!token.is_empty() || !switch_code.is_empty());
+        let carries_offer = webrtc_offerer.as_ref().and_then(|g| g.stream()).is_some();
+        // Counted from before the key exchange, so the exchange spends the UDP NAT test's own
+        // wait rather than replacing it: the test runs beside both.
+        let udp_nat_wait_from = Instant::now();
+        let mut exchanged = false;
+        if carries_offer {
+            // An offer puts both sides' ICE candidates, every interface address of both
+            // machines, on this socket, so it goes out only once the server's key exchange has
+            // encrypted it. When the server does not complete one, an hbbs from before the
+            // exchange, the offer is dropped and this becomes a punch without WebRTC, on a fresh
+            // socket since the failed exchange may have consumed a message on this one. Degrade
+            // to no WebRTC, never to WebRTC signalling in the clear.
+            match secure_tcp_required(&mut socket, &key).await {
+                Ok(()) => exchanged = true,
+                Err(err) => {
+                    log::warn!(
+                        "WebRTC signalling to {} cannot be encrypted, punching without WebRTC: {}",
+                        rendezvous_server,
+                        err
+                    );
+                    webrtc_offerer = None;
+                    socket = connect_tcp(&*rendezvous_server, CONNECT_TIMEOUT).await?;
+                    my_addr = socket.local_addr();
+                }
+            }
+        }
+        if !exchanged && legacy_secure {
             secure_tcp(&mut socket, &key)
                 .await
                 .map_err(|e| anyhow!("Failed to secure tcp: {}", e))?;
-        } else if let Some(udp) = udp.1.as_ref() {
-            let tm = Instant::now();
+        }
+        // A token or switch code has always taken this socket straight to the punch without
+        // waiting for the UDP NAT test. The WebRTC exchange does not replace that wait, it only
+        // spends part of the same budget, so what is left of it is waited out here and a result
+        // that has already arrived is taken at once.
+        if let Some(udp) = udp.1.as_ref().filter(|_| !legacy_secure) {
+            let tm = udp_nat_wait_from;
             // rtt is the TCP connect time. When it is too short to be a real WAN round trip it
             // says nothing about the UDP path (a TUN VPN or the LAN gateway answered the
             // handshake, not the server), so fall back to the flat grace; otherwise trust it.
@@ -1118,7 +1170,7 @@ impl Client {
                                 race_transports_prefer_webrtc(
                                     webrtc_fut,
                                     connect_futures,
-                                    Self::WEBRTC_PREFER_WINDOW_MS,
+                                    Self::relay_fallback_delay_ms(),
                                     |result| result.3,
                                 )
                                 .await
@@ -1446,7 +1498,7 @@ impl Client {
                 // so a viable P2P path is not abandoned before it can complete; TCP/UDP keep the
                 // tighter timeout, so a working direct connection still wins immediately, and the
                 // relay fallback only waits the extra time when direct attempts all failed.
-                let webrtc_timeout = connect_timeout.max(Self::WEBRTC_PREFER_WINDOW_MS);
+                let webrtc_timeout = connect_timeout.max(Self::relay_fallback_delay_ms());
                 async move {
                     raced.wait_connected(webrtc_timeout).await?;
                     // Resolve the pair here: a TURN win is relayed, not direct, and must be held
@@ -1464,7 +1516,7 @@ impl Client {
                 race_transports_prefer_webrtc(
                     webrtc_fut,
                     direct_futures,
-                    Self::WEBRTC_PREFER_WINDOW_MS,
+                    Self::relay_fallback_delay_ms(),
                     |r| r.3,
                 )
                 .await
@@ -1652,7 +1704,7 @@ impl Client {
                                     let actual_fp = conn.dtls_fingerprint(false).await.ok_or_else(
                                         || anyhow!("WebRTC DTLS fingerprint unavailable"),
                                     )?;
-                                    if signed_fp.is_empty() || signed_fp != actual_fp {
+                                    if !dtls_fingerprint_bound(&signed_fp, &actual_fp) {
                                         bail!("WebRTC DTLS fingerprint not bound to peer identity (possible MITM)");
                                     }
                                 }
@@ -2067,6 +2119,8 @@ pub struct AudioHandler {
     device_channel: u16,
     #[cfg(not(target_os = "linux"))]
     playback_status: Arc<audio_playback::AudioPlaybackStatus>,
+    #[cfg(target_os = "windows")]
+    playback_recovery: audio_playback_recovery::PlaybackRecovery,
 }
 
 #[cfg(not(target_os = "linux"))]
@@ -2234,7 +2288,9 @@ impl AudioBuffer {
         let occupied = lock.occupied_len();
         drop(lock);
         if let Some((discarded, generation)) = discard {
-            log::debug!(
+            hbb_common::throttled_log!(
+                audio_playback::AUDIO_PLAYBACK_LOG_INTERVAL,
+                debug,
                 "Audio buffer capacity discard: samples={discarded}, generation={generation}"
             );
         }
@@ -2331,9 +2387,9 @@ impl AudioHandler {
         log::info!("Remote input format: {:?}", format0);
         #[allow(unused_mut)]
         let mut config: StreamConfig = config.into();
-        #[cfg(not(target_os = "ios"))]
+        #[cfg(not(any(target_os = "android", target_os = "ios")))]
         {
-            // this makes ios audio output not work
+            // this makes ios and android audio output not work
             config.buffer_size = cpal::BufferSize::Fixed(64);
         }
 
@@ -2372,22 +2428,53 @@ impl AudioHandler {
 
     /// Handle audio format and create an audio decoder.
     pub fn handle_format(&mut self, f: AudioFormat) {
+        self.handle_format_with_start(f, Self::start_audio);
+    }
+
+    fn handle_format_with_start(
+        &mut self,
+        f: AudioFormat,
+        start: impl FnOnce(&mut Self, AudioFormat) -> ResultType<()>,
+    ) {
         if !is_supported_audio_channel_count(f.channels) {
             log::error!("Unsupported audio channel count: {}", f.channels);
             return;
         }
         match AudioDecoder::new(f.sample_rate, if f.channels > 1 { Stereo } else { Mono }) {
             Ok(d) => {
+                #[cfg(target_os = "windows")]
+                let playback_failed = self.cancel_pending_playback();
                 #[cfg(target_os = "linux")]
                 let keep_existing_stream = self.simple.is_some()
                     && self.sample_rate.0 == f.sample_rate
                     && u32::from(self.channels) == f.channels;
                 #[cfg(not(target_os = "linux"))]
-                let keep_existing_stream = false;
+                let keep_existing_stream = self.audio_stream.is_some()
+                    && self.sample_rate.0 == f.sample_rate
+                    && u32::from(self.channels) == f.channels;
                 let buffer = vec![0.; f.sample_rate as usize * f.channels as usize];
+                #[cfg(not(target_os = "linux"))]
+                let mut previous = std::mem::take(self);
+                #[cfg(target_os = "windows")]
+                self.prepare_playback(&f);
                 self.audio_decoder = Some((d, buffer));
                 self.channels = f.channels as _;
-                let result = self.start_audio(f);
+                let result = start(self, f);
+                #[cfg(target_os = "windows")]
+                let keep_existing_stream = keep_existing_stream
+                    && !playback_failed
+                    && !previous.playback_recovery.report_pending();
+                #[cfg(not(target_os = "linux"))]
+                if result.is_err() && keep_existing_stream {
+                    // The restarted capture has new Opus history even when output startup fails.
+                    previous.audio_decoder = self.audio_decoder.take();
+                    *self = previous;
+                    self.handle_audio_start_result(result, true);
+                    return;
+                }
+                #[cfg(target_os = "windows")]
+                self.finish_playback_replacement(result, keep_existing_stream.then_some(previous));
+                #[cfg(not(target_os = "windows"))]
                 self.handle_audio_start_result(result, keep_existing_stream);
             }
             Err(err) => {
@@ -2425,7 +2512,7 @@ impl AudioHandler {
         }
         #[cfg(target_os = "linux")]
         if self.simple.is_none() {
-            log::debug!("PulseAudio simple binding does not exists");
+            log::trace!("PulseAudio simple binding does not exists");
             return;
         }
         self.audio_decoder.as_mut().map(|(d, buffer)| {
@@ -2475,6 +2562,9 @@ impl AudioHandler {
         device: &Device,
     ) -> ResultType<()> {
         self.device_channel = config.channels;
+        #[cfg(target_os = "windows")]
+        let err_fn = self.playback_recovery.new_error_callback();
+        #[cfg(not(target_os = "windows"))]
         let err_fn = move |err| {
             // too many errors, will improve later
             log::trace!("an error occurred on stream: {}", err);
@@ -4047,7 +4137,11 @@ pub fn start_audio_thread() -> MediaSender {
     std::thread::spawn(move || {
         let mut audio_handler = AudioHandler::default();
         loop {
-            if let Ok(data) = audio_receiver.recv() {
+            #[cfg(target_os = "windows")]
+            let received = audio_handler.receive_audio(&audio_receiver);
+            #[cfg(not(target_os = "windows"))]
+            let received = audio_receiver.recv();
+            if let Ok(data) = received {
                 match data {
                     MediaData::AudioFrame(af) => {
                         audio_handler.handle_frame(*af);
