@@ -93,6 +93,14 @@ const MAX_UNAUTHORIZED_CONNS: usize = 64;
 /// of addresses passes it, and the bound above is what holds. Meaningful only while the
 /// address is the controller's own, which punch and relay messages carry today.
 const MAX_UNAUTHORIZED_CONNS_PER_ADDR: usize = 16;
+/// The largest message a connection may send before it authorizes. Until then a peer sends only
+/// a public key, a login request, a test delay and a close reason, none of which carries an
+/// unbounded field - a server hands the login request's avatar out as a URL, and only a custom
+/// client that inlines an image into the avatar option instead reaches this. Sized to the read
+/// buffer tungstenite allocates per WebSocket connection regardless, so there the cap costs
+/// nothing beyond a floor already paid; with MAX_UNAUTHORIZED_CONNS it holds them to 8 MiB in
+/// all, against the 1 GiB a single one could make us hold before.
+pub const MAX_UNAUTHORIZED_MESSAGE: usize = 128 * 1024;
 
 /// A place among the unauthorized connections, taken before the identity handshake and given
 /// back on drop: at authorization, or when the connection ends first. The count of live
@@ -906,6 +914,11 @@ impl Connection {
                             if !conn.is_remote() {
                                 continue;
                             }
+                            // The CM can send MonitorReady before this connection is authorized.
+                            if !conn.authorized {
+                                log::debug!("Discarding file clipboard message before authorization");
+                                continue;
+                            }
                             match clip {
                                 clipboard::ClipboardFile::Files { files } => {
                                     let files = files.into_iter().map(|(f, s)| {
@@ -1206,9 +1219,6 @@ impl Connection {
             }
         }
         video_service::notify_video_frame_fetched_by_conn_id(id, None);
-        if conn.authorized {
-            password::update_temporary_password();
-        }
         if let Err(err) = conn.try_port_forward_loop(&mut rx_from_cm).await {
             conn.on_close(&err.to_string(), false).await;
             raii::AuthedConnID::check_remove_session(conn.inner.id(), conn.session_key());
@@ -1871,11 +1881,19 @@ impl Connection {
         if let Some(keep_alive) = self.prepare_terminal_login_for_authorization().await {
             return keep_alive;
         }
+        // Lifted here rather than below with the rest of authorization: a multiplexed tunnel
+        // narrows it again for its own framing (`port_forward_mux::cap_packet_size`), so that
+        // call has to come after this one, not before.
+        self.stream.set_max_packet_length(usize::MAX);
         if !self.connect_port_forward_if_needed().await {
             return false;
         }
         self.authorized = true;
         self.unauthorized_id = None;
+        // One-time means gone once it has let a peer in, not once that peer
+        // leaves. This session's later logins come in on the password the
+        // session remembers, so they are not affected.
+        password::update_temporary_password();
         // Releases the budget `check_id_whitelist` charges against this address: only a peer
         // that got this far proved more than a self-reported id.
         self.clear_id_whitelist_failures();
@@ -3374,13 +3392,19 @@ impl Connection {
                                 .collect::<Vec<(String, i64)>>(),
                             json!({}),
                         );
+                    } else if is_file_data_request(&clip)
+                        && crate::get_builtin_option(keys::OPTION_ONE_WAY_FILE_TRANSFER) == "Y"
+                    {
+                        // One-way file transfer: never serve this side's clipboard files to the peer.
                     } else if let Some(clip) = msg_2_clip(clip) {
                         #[cfg(target_os = "windows")]
                         {
                             self.send_to_cm(ipc::Data::ClipboardFile(clip));
                         }
                         #[cfg(feature = "unix-file-copy-paste")]
-                        if crate::is_support_file_copy_paste(&self.lr.version) {
+                        if crate::is_support_file_copy_paste(&self.lr.version)
+                            && self.file_transfer_enabled()
+                        {
                             let mut out_msgs = vec![];
 
                             #[cfg(target_os = "macos")]
@@ -3975,6 +3999,17 @@ impl Connection {
                             self.video_source(),
                         ) {
                             self.send(msg_out).await;
+                        }
+                    }
+                    // Only to a connection the cursor service would send the shape to.
+                    #[cfg(not(any(target_os = "android", target_os = "ios")))]
+                    Some(misc::Union::RequestCursorData(id)) => {
+                        if self.is_remote()
+                            && (self.peer_keyboard_enabled() || self.show_remote_cursor)
+                        {
+                            if let Some(msg) = input_service::cursor_data_message(id) {
+                                self.send((*msg).clone()).await;
+                            }
                         }
                     }
                     _ => {}
@@ -6095,6 +6130,10 @@ impl Connection {
 
     #[cfg(feature = "unix-file-copy-paste")]
     async fn handle_file_clip(&mut self, clip: clipboard::ClipboardFile) {
+        if !self.authorized {
+            log::debug!("Discarding file clipboard message before authorization");
+            return;
+        }
         let is_stopping_allowed = clip.is_stopping_allowed();
         let file_transfer_enabled = self.file_transfer_enabled();
         let stop = is_stopping_allowed && !file_transfer_enabled;
@@ -7237,6 +7276,41 @@ mod test {
             );
         }
         assert_eq!(unauthorized_count(), 0, "no handshake outlives the test");
+    }
+
+    // The cap is on before the identity handshake reads. A header declaring one byte over it,
+    // written to the wire as the codec would read it, ends the handshake on the header alone -
+    // the payload is neither waited for nor read - and releases the place the connection held.
+    #[tokio::test]
+    async fn test_unauthorized_frame_is_refused_on_its_header() {
+        use hbb_common::tokio::io::AsyncWriteExt;
+        let _serial = UNAUTHORIZED_TESTS.lock().unwrap_or_else(|e| e.into_inner());
+        let server = crate::server::new_for_test();
+        let listener = hbb_common::tcp::new_listener("127.0.0.1:0", false)
+            .await
+            .unwrap();
+        let (controller, accepted) = tokio::join!(
+            tokio::net::TcpStream::connect(listener.local_addr().unwrap()),
+            listener.accept()
+        );
+        let (mut controller, (accepted, addr)) = (controller.unwrap(), accepted.unwrap());
+        let served = Stream::Tcp(hbb_common::tcp::FramedStream::from(accepted, addr));
+        let handshake = tokio::spawn(async move {
+            crate::server::create_tcp_connection(server, served, addr, true, Default::default())
+                .await
+        });
+        let n = MAX_UNAUTHORIZED_MESSAGE + 1;
+        controller
+            .write_all(&(((n << 2) | 0x3) as u32).to_le_bytes())
+            .await
+            .unwrap();
+        match hbb_common::timeout(2000, handshake).await {
+            Ok(Ok(Err(e))) => assert!(e.to_string().contains("Too big packet"), "{}", e),
+            Ok(Ok(Ok(_))) => panic!("a frame over the cap was accepted"),
+            Ok(Err(e)) => panic!("the handshake task panicked: {}", e),
+            Err(_) => panic!("the handshake waited for a payload the header should have refused"),
+        }
+        assert_eq!(unauthorized_count(), 0);
     }
 
     #[cfg(feature = "flutter")]

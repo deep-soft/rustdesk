@@ -1,9 +1,7 @@
 #[cfg(not(any(target_os = "android", target_os = "ios")))]
-use crate::clipboard::clipboard_listener;
+use crate::clipboard::clipboard_listener::{self, ClipboardEvent};
 use async_trait::async_trait;
 use bytes::Bytes;
-#[cfg(not(any(target_os = "android", target_os = "ios")))]
-use clipboard_master::CallbackResult;
 #[cfg(not(target_os = "linux"))]
 use cpal::{
     traits::{DeviceTrait, HostTrait, StreamTrait},
@@ -57,7 +55,7 @@ use hbb_common::{
     rand,
     rendezvous_proto::*,
     sha2::{Digest, Sha256},
-    socket_client::{connect_tcp, connect_tcp_local, ipv4_to_ipv6, new_direct_udp_for},
+    socket_client::{connect_tcp, connect_tcp_local, ipv4_to_ipv6, new_direct_udp_for_unverified},
     sodiumoxide::{base64, crypto::sign},
     timeout,
     tokio::{
@@ -490,7 +488,7 @@ impl Client {
         // no need to care about multiple rendezvous servers case, since it is acutally not used any more.
         // Shared state for UDP NAT test result
         if crate::get_udp_punch_enabled() && !interface.is_force_relay() {
-            if let Ok((socket, addr)) = new_direct_udp_for(&rendezvous_server).await {
+            if let Ok((socket, addr)) = new_direct_udp_for_unverified(&rendezvous_server).await {
                 let udp_port = Arc::new(Mutex::new(0));
                 let up_cloned = udp_port.clone();
                 let socket_cloned = socket.clone();
@@ -1694,7 +1692,9 @@ impl Client {
                 let bytes = res?;
                 if let Ok(msg_in) = Message::parse_from_bytes(&bytes) {
                     if let Some(message::Union::SignedId(si)) = msg_in.union {
-                        if let Ok((id, their_pk_b, signed_fp)) = decode_id_pk_dtls(&si.id, &sign_pk) {
+                        if let Ok((id, their_pk_b, signed_fp, kx_version)) =
+                            decode_id_pk_dtls(&si.id, &sign_pk)
+                        {
                             if id == peer_id {
                                 // WebRTC only: bind the DTLS channel to the verified peer identity.
                                 // webrtc-rs already bound the certificate to the remote SDP, so
@@ -1710,14 +1710,31 @@ impl Client {
                                 }
                                 let (asymmetric_value, symmetric_value, key) =
                                     create_symmetric_key_msg(their_pk_b);
+                                // A WebRTC stream is encrypted by DTLS and takes no stream
+                                // key of its own, split or not, so the pick says what runs: 0.
+                                let picked = if is_webrtc {
+                                    0
+                                } else {
+                                    hbb_common::tcp::kx_version_for(kx_version)
+                                };
                                 let mut msg_out = Message::new();
                                 msg_out.set_public_key(PublicKey {
-                                    asymmetric_value,
+                                    asymmetric_value: asymmetric_value.clone(),
                                     symmetric_value,
+                                    kx_version: picked,
                                     ..Default::default()
                                 });
                                 timeout(CONNECT_TIMEOUT, conn.send(&msg_out)).await??;
-                                conn.set_key(key);
+                                conn.set_negotiated_key(
+                                    key,
+                                    true,
+                                    &hbb_common::tcp::KxTranscript {
+                                        initiator_pk: &asymmetric_value,
+                                        responder_pk: &their_pk_b,
+                                        advertised: kx_version,
+                                        picked,
+                                    },
+                                )?;
                             } else {
                                 if is_webrtc {
                                     bail!("WebRTC handshake id mismatch (possible MITM)");
@@ -1923,14 +1940,19 @@ impl Client {
                     break;
                 }
                 match rx_cb_result.recv_timeout(Duration::from_millis(CLIPBOARD_INTERVAL)) {
-                    Ok(CallbackResult::Next) => {
-                        handler.check_clipboard();
+                    Ok(ClipboardEvent::Changed) => {
+                        handler.check_clipboard(true);
                     }
-                    Ok(CallbackResult::Stop) => {
+                    #[cfg(all(target_os = "linux", feature = "unix-file-copy-paste"))]
+                    Ok(ClipboardEvent::InitialSelection) => {
+                        // Preserve file startup sync without bypassing text initial-sync settings.
+                        handler.check_clipboard(false);
+                    }
+                    Ok(ClipboardEvent::Stop) => {
                         log::debug!("Clipboard listener stopped");
                         break;
                     }
-                    Ok(CallbackResult::StopWithError(err)) => {
+                    Ok(ClipboardEvent::StopWithError(err)) => {
                         log::error!("Clipboard listener stopped with error: {}", err);
                         break;
                     }
@@ -2032,16 +2054,16 @@ impl ClientClipboardHandler {
         }
     }
 
-    fn check_clipboard(&mut self) {
+    fn check_clipboard(&mut self, check_text: bool) {
         if CLIPBOARD_STATE.lock().unwrap().running {
             #[cfg(feature = "unix-file-copy-paste")]
-            if let Some(urls) = check_clipboard_files(&mut self.ctx, ClipboardSide::Client, false) {
-                if !urls.is_empty() {
-                    #[cfg(target_os = "macos")]
-                    if crate::clipboard::is_file_url_set_by_rustdesk(&urls) {
-                        return;
-                    }
-                    if self.is_file_required() {
+            if self.is_file_required() {
+                if let Some(urls) = check_clipboard_files(&mut self.ctx, ClipboardSide::Client, false) {
+                    if !urls.is_empty() {
+                        #[cfg(target_os = "macos")]
+                        if crate::clipboard::is_file_url_set_by_rustdesk(&urls) {
+                            return;
+                        }
                         match clipboard::platform::unix::serv_files::sync_files(&urls) {
                             Ok(()) => {
                                 let msg = crate::clipboard_file::clip_2_msg(
@@ -2058,8 +2080,8 @@ impl ClientClipboardHandler {
                 }
             }
 
-            if let Some(msg) = check_clipboard(&mut self.ctx, ClipboardSide::Client, false) {
-                if self.is_text_required() {
+            if check_text && self.is_text_required() {
+                if let Some(msg) = check_clipboard(&mut self.ctx, ClipboardSide::Client, false) {
                     self.send_msg(msg, false);
                 }
             }
@@ -4954,6 +4976,8 @@ pub enum Data {
     RejectInsecureConnection,
     Login((String, String, String, bool)),
     Message(Message),
+    #[cfg(not(any(target_os = "android", target_os = "ios")))]
+    InitialClipboard(usize, Option<Message>),
     SendFiles((i32, JobType, String, String, i32, bool, bool)),
     RemoveDirAll((i32, String, bool, bool)),
     ConfirmDeleteFiles((i32, i32)),
@@ -5350,6 +5374,15 @@ pub mod peer_online {
                 match msg_in.union {
                     Some(rendezvous_message::Union::OnlineResponse(online_response)) => {
                         let states = online_response.states;
+                        // One bit per ID, rounded up to whole bytes:
+                        // 0 IDs -> 0 bytes; 1..=8 -> 1; 9..=16 -> 2; 17..=24 -> 3.
+                        let required_len = ids.len().div_ceil(u8::BITS as usize);
+                        if states.len() < required_len {
+                            bail!(
+                                "Invalid online response: expected at least {required_len} state bytes, got {}",
+                                states.len()
+                            );
+                        }
                         let mut onlines = Vec::new();
                         let mut offlines = Vec::new();
                         for i in 0..ids.len() {
@@ -5793,5 +5826,144 @@ mod webrtc_race_tests {
         .unwrap_err()
         .to_string();
         assert!(err.contains("webrtc dead") && err.contains("relay dead"), "{}", err);
+    }
+}
+
+#[cfg(test)]
+mod kx_tests {
+    use super::*;
+    use hbb_common::{
+        sodiumoxide::crypto::box_,
+        tcp::{Encrypt, FramedStream, KxTranscript, KX_VERSION_LATEST},
+    };
+
+    const PEER_ID: &str = "123456789";
+
+    /// What the stand-in controlled peer saw: the version the controller picked, and whether the
+    /// controller's first application message decrypted.
+    struct Seen {
+        picked: u32,
+        decrypted: bool,
+    }
+
+    fn test_delay(time: i64) -> Message {
+        let mut msg = Message::new();
+        msg.set_test_delay(TestDelay {
+            time,
+            ..Default::default()
+        });
+        msg
+    }
+
+    fn delay_in(bytes: &[u8]) -> Option<i64> {
+        match Message::parse_from_bytes(bytes).ok()?.union? {
+            message::Union::TestDelay(t) => Some(t.time),
+            _ => None,
+        }
+    }
+
+    /// A stand-in controlled peer on loopback. It advertises `advertised` in its signed identity
+    /// and runs the key under `run`, or under the version the controller picked when `run` is
+    /// `None`, then sends one message and reads one. Returns the host, its identity as the
+    /// rendezvous server would sign it, and what it saw.
+    async fn controlled_stub(
+        advertised: u32,
+        run: Option<u32>,
+        rs_sk: sign::SecretKey,
+    ) -> (String, Vec<u8>, oneshot::Receiver<Seen>) {
+        let (sign_pk, sign_sk) = sign::gen_keypair();
+        let id_pk = |pk: &[u8], kx_version| {
+            IdPk {
+                id: PEER_ID.to_owned(),
+                pk: pk.to_vec().into(),
+                kx_version,
+                ..Default::default()
+            }
+            .write_to_bytes()
+            .unwrap()
+        };
+        let signed_id_pk = sign::sign(&id_pk(&sign_pk.0, 0), &rs_sk);
+        let listener = hbb_common::tcp::new_listener("127.0.0.1:0", false)
+            .await
+            .unwrap();
+        let host = listener.local_addr().unwrap().to_string();
+        let (tx, rx) = oneshot::channel();
+        tokio::spawn(async move {
+            let (stream, addr) = listener.accept().await.unwrap();
+            let mut s = FramedStream::from(stream, addr);
+            let (our_pk_b, our_sk_b) = box_::gen_keypair();
+            let mut msg = Message::new();
+            msg.set_signed_id(SignedId {
+                id: sign::sign(&id_pk(&our_pk_b.0, advertised), &sign_sk).into(),
+                ..Default::default()
+            });
+            s.send(&msg).await.unwrap();
+            let bytes = s.next().await.unwrap().unwrap();
+            let Some(message::Union::PublicKey(pk)) =
+                Message::parse_from_bytes(&bytes).unwrap().union
+            else {
+                panic!("expected the controller's public key");
+            };
+            let key =
+                Encrypt::decode(&pk.symmetric_value, &pk.asymmetric_value, &our_sk_b).unwrap();
+            let t = KxTranscript {
+                initiator_pk: &pk.asymmetric_value,
+                responder_pk: &our_pk_b.0,
+                advertised,
+                picked: run.unwrap_or(pk.kx_version),
+            };
+            if t.picked == 0 {
+                s.set_key(key);
+            } else {
+                s.set_key_split(key, false, &t).unwrap();
+            }
+            s.send(&test_delay(2)).await.unwrap();
+            let decrypted = matches!(s.next().await, Some(Ok(b)) if delay_in(&b) == Some(1));
+            tx.send(Seen {
+                picked: pk.kx_version,
+                decrypted,
+            })
+            .ok();
+        });
+        (host, signed_id_pk, rx)
+    }
+
+    /// The controller's handshake against the stub, then one application message each way.
+    /// Returns what the stub saw and whether the stub's message decrypted on this side.
+    async fn handshake(advertised: u32, run: Option<u32>) -> (Seen, bool) {
+        let (rs_pk, rs_sk) = sign::gen_keypair();
+        let (host, signed_id_pk, seen) = controlled_stub(advertised, run, rs_sk).await;
+        let mut conn = connect_tcp(host, 3000).await.unwrap();
+        let pk =
+            Client::secure_connection(PEER_ID, signed_id_pk, &crate::encode64(rs_pk.0), &mut conn)
+                .await
+                .unwrap();
+        assert!(pk.is_some() && conn.is_secured());
+        conn.send(&test_delay(1)).await.unwrap();
+        let decrypted = matches!(conn.next().await, Some(Ok(b)) if delay_in(&b) == Some(2));
+        (seen.await.unwrap(), decrypted)
+    }
+
+    #[tokio::test]
+    async fn test_new_peers_pick_version_1_and_exchange_application_data() {
+        let (seen, decrypted) = handshake(KX_VERSION_LATEST, None).await;
+        assert_eq!(seen.picked, 1);
+        assert!(seen.decrypted && decrypted);
+    }
+
+    #[tokio::test]
+    async fn test_a_peer_without_versions_gets_version_0() {
+        let (seen, decrypted) = handshake(0, Some(0)).await;
+        assert_eq!(seen.picked, 0);
+        assert!(seen.decrypted && decrypted);
+    }
+
+    #[tokio::test]
+    async fn test_a_pick_lowered_in_transit_decrypts_nothing() {
+        // The controlled side takes 0 from a controller without versions, so a lowered pick is
+        // caught by the keys disagreeing on the first application message, not before.
+        let (seen, decrypted) = handshake(KX_VERSION_LATEST, Some(0)).await;
+        assert_eq!(seen.picked, 1);
+        assert!(!seen.decrypted && !decrypted);
     }
 }
