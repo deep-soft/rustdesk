@@ -2080,10 +2080,18 @@ jobs:
               cargo test --locked --lib --features drm drm_capturer_tests
             run_drm_tests "rustdesk ipc::test" \
               cargo test --locked --lib --features drm ipc::test
+            run_drm_tests "rustdesk cursor_pos_tests" \
+              cargo test --locked --lib --features drm cursor_pos_tests
+            run_drm_tests "rustdesk peer_abs_sample_tests" \
+              cargo test --locked --lib --features drm peer_abs_sample_tests
+            run_drm_tests "rustdesk input_map_tests" \
+              cargo test --locked --lib --features drm input_map_tests
             run_drm_tests "scrap hotspot_provenance_tests" \
               cargo test --locked -p scrap --features drm hotspot_provenance_tests
             run_drm_tests "scrap hotspot_guess_tests" \
               cargo test --locked -p scrap --features drm hotspot_guess_tests
+            run_drm_tests "scrap plane_rotation_tests" \
+              cargo test --locked -p scrap --features drm plane_rotation_tests
             cargo build --locked --lib --features "$FEATURES" --release
             rm -rf target/release/deps target/release/build
             rm -rf ~/.cargo
