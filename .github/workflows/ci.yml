@@ -9,20 +9,20 @@ env:
 
 on:
   workflow_dispatch:
-#  pull_request:
-#    paths-ignore:
-#      - "docs/**"
-#      - "README.md"
-#  push:
-#    branches:
-#      - master
-#    paths-ignore:
-#      - ".github/**"
-#      - "docs/**"
-#      - "README.md"
-#      - "res/**"
-#      - "appimage/**"
-#      - "flatpak/**"
+  pull_request:
+    paths-ignore:
+      - "docs/**"
+      - "README.md"
+  push:
+    branches:
+      - master
+    paths-ignore:
+      - ".github/**"
+      - "docs/**"
+      - "README.md"
+      - "res/**"
+      - "appimage/**"
+      - "flatpak/**"
 
 jobs:
   # ensure_cargo_fmt:
@@ -234,7 +234,7 @@ jobs:
             CARGO_TEST_OPTIONS="--lib --bin ${PROJECT_NAME}"
             ;;
           *)
-            CARGO_TEST_OPTIONS="--workspace --no-fail-fast -- --skip test_get_cursor_pos --skip test_get_key_state"
+            CARGO_TEST_OPTIONS="--workspace --no-fail-fast"
             ;;
         esac;
 
