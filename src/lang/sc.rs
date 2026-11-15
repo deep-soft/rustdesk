@@ -638,7 +638,7 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("d3d_render_tip", "Cando sa renderizatzione D3D est abilitada, s'ischermu de controllu remotu diat pòdere èssere nieddu in unas cantas màchinas"),
         ("Use D3D rendering", "Imprea sa renderizatzione D3D"),
         ("Printer", "Imprentadora"),
-        ("printer-os-requirement-tip", "Pro pòdere impreare s'imprentadora in seddida bisòngiat a installare {} in custu dispositivu."),
+        ("printer-os-requirement-tip", "Pro pòdere impreare s'imprentadora in seddida bisòngiat Windows 10 o una versione prus noa."),
         ("printer-requires-installed-{}-client-tip", "Pro impreare s'imprenta remota, bisòngiat a installare {} in custu dispositivu."),
         ("printer-{}-not-installed-tip", "S'imprentadora {} no est installada"),
         ("printer-{}-ready-tip", "S'imprentadora {} est installada e pronta pro s'impreu."),
@@ -825,5 +825,6 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("Renew trust", "Annoa sa fidùtzia"),
         ("install-directory-not-empty-tip", "Sa cartella seletzionada non est bòida. S'installatzione diat pòdere iscantzellare sos datos chi bi sunt. Ti cussigiamus de isseberare un'àtera cartella."),
         ("Request approval", "Pedi s'aprovatzione"),
+        ("Forever", "Pro semper"),
     ].iter().cloned().collect();
 }
