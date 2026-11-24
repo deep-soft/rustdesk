@@ -532,7 +532,6 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("Open in new window", "Åbn i et nyt vindue"),
         ("Show displays as individual windows", "Vis skærme som selvstændige vinduer"),
         ("Use all my displays for the remote session", "Brug alle mine skærme til fjernforbindelsen"),
-        ("selinux_tip", "SELinux er aktiveret på din enhed, hvilket kan forhindre RustDesk i at køre normalt."),
         ("Change view", "Skift visning"),
         ("Big tiles", "Store fliser"),
         ("Small tiles", "Små fliser"),
@@ -826,5 +825,10 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("install-directory-not-empty-tip", "Den valgte mappe er ikke tom. Installationen kan slette eksisterende data. Overvej at vælge en anden mappe."),
         ("Request approval", "Anmod om godkendelse"),
         ("Forever", "For evigt"),
+        ("username-login-disabled-oidc-unavailable", "Login med brugernavn og adgangskode er deaktiveret, og ingen OIDC-loginmetoder er tilgængelige."),
+        ("Use DRM screen capture", "Brug DRM-skærmoptagelse"),
+        ("drm-capture-tip", "Optager skærmen direkte fra grafikkortet via RustDesk-tjenesten uden Waylands forespørgsel om skærmdeling, også på login-skærmen. Virker muligvis ikke på alle enheder; hvis forbindelser stadig beder om skærmdeling, så slå dette fra eller brug X11. Ændring afbryder de aktuelle sessioner."),
+        ("wayland-drm-tip", "Prøv DRM-skærmoptagelse for ubemandet adgang under Wayland, eller brug X11, hvis det ikke virker."),
+        ("login-wayland-drm-tip", "Prøv DRM-skærmoptagelse for at få adgang til Waylands login-skærm, eller skift den til X11."),
     ].iter().cloned().collect();
 }

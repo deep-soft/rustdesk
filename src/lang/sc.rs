@@ -532,7 +532,6 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("Open in new window", "Aberi in una ventana noa"),
         ("Show displays as individual windows", "Mustra sos ischermos comente ventanas individuales"),
         ("Use all my displays for the remote session", "In sa sessione remota imprea totu sos ischermos"),
-        ("selinux_tip", "In custu dispositivu est abilitadu SELinux, chi diat pòdere su funtzionamentu curretu de RustDesk comente ala controllada."),
         ("Change view", "Modìfica vista"),
         ("Big tiles", "Iconas mannas"),
         ("Small tiles", "Iconas minores"),
@@ -826,5 +825,10 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("install-directory-not-empty-tip", "Sa cartella seletzionada non est bòida. S'installatzione diat pòdere iscantzellare sos datos chi bi sunt. Ti cussigiamus de isseberare un'àtera cartella."),
         ("Request approval", "Pedi s'aprovatzione"),
         ("Forever", "Pro semper"),
+        ("username-login-disabled-oidc-unavailable", "S'atzessu cun su nùmene utente e sa crae est disabilitadu, e non b'at perunu mètodu de atzessu OIDC a disponimentu."),
+        ("Use DRM screen capture", ""),
+        ("drm-capture-tip", ""),
+        ("wayland-drm-tip", ""),
+        ("login-wayland-drm-tip", ""),
     ].iter().cloned().collect();
 }

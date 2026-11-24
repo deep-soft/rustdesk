@@ -532,7 +532,6 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("Open in new window", "Otvori u novom prozoru"),
         ("Show displays as individual windows", "Prikaži zaslone kao pojedinačne prozore"),
         ("Use all my displays for the remote session", "Koristi sve moje zaslone za udaljenu sesiju"),
-        ("selinux_tip", "Na vašem uređaju je omogućen SELinux, što može spriječiti RustDesk da pravilno radi kao upravljana strana."),
         ("Change view", "Promjena prikaza"),
         ("Big tiles", "Velike pločice"),
         ("Small tiles", "Male pločice"),
@@ -826,5 +825,10 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("install-directory-not-empty-tip", "Odabrana mapa nije prazna. Instalacija može izbrisati postojeće podatke. Razmislite o odabiru druge mape."),
         ("Request approval", "Zatraži odobrenje"),
         ("Forever", "Zauvijek"),
+        ("username-login-disabled-oidc-unavailable", "Prijava korisničkim imenom i lozinkom je onemogućena i nema dostupnih načina prijave putem OIDC-a."),
+        ("Use DRM screen capture", "Koristi DRM snimanje zaslona"),
+        ("drm-capture-tip", "Snima zaslon izravno s grafičke kartice putem usluge RustDesk, bez Waylandova upita za dijeljenje zaslona, uključujući zaslon za prijavu. Možda neće raditi na svakom uređaju; ako veze i dalje traže dijeljenje zaslona, isključite ovo ili koristite X11. Promjena prekida trenutne sesije."),
+        ("wayland-drm-tip", "Za pristup bez nadzora na Waylandu isprobajte DRM snimanje zaslona ili koristite X11 ako ne radi."),
+        ("login-wayland-drm-tip", "Za pristup Waylandovu zaslonu za prijavu isprobajte DRM snimanje zaslona ili ga prebacite na X11."),
     ].iter().cloned().collect();
 }
